@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極淨化大師版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極精準收合版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -157,23 +157,22 @@ function getInstId(id, item) {
     return base;
 }
 
-// ✨ 終極淨化器：針對組合包、代碼、後綴進行完美切割 ✨
+// ✨ 終極淨化器 (修復貪吃 Regex，完美保留如火紅版等名字) ✨
 function cleanPartName(rawName, instId, shortCat) {
     if (!rawName) return instId;
     let name = String(rawName).trim();
     
-    // 如果本來就是空殼資料，直接標記，待會系統會直接剔除它
-    if (name === "■" || name === "(機密/特殊聯名)" || name.includes("機密")) {
-        return `機密/特殊聯名`;
-    }
+    if (name === "■" || name === "(機密/特殊聯名)") return `機密/特殊聯名`;
 
-    // 第一刀：無情清除所有產品代碼前綴 (例如 BX-27, BXG-12-04, PRD-XXXX 等)
+    // 第一刀：無情清除所有產品代碼前綴
     let cleaned = name.replace(/(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[A-Za-z0-9\-]+\s*/ig, ''); 
     
+    // 第二刀：精準清除顏色與版本描述 (用字典取代貪吃萬用字元)
     let suffixes = [
         /(金屬塗層|メタルコート|Metallic Coat)[:：]?\s*[A-Za-z0-9\u4e00-\u9fa5]+/ig,
-        /[A-Za-z0-9\u4e00-\u9fa5\s]+(Ver\.|バージョン|版)/ig,
-        /(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定)\s*(Ver\.)?/ig,
+        // 精準列出各種顏色與異色詞彙，不再誤殺原本的名字
+        /(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|透明)\s*(Ver\.|バージョン|版)?/ig,
+        /(Ver\.|バージョン|版)/ig,
         /中收錄.*$/ig,
         /ランダムブースター.*$/ig,
         /\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig,
@@ -182,14 +181,13 @@ function cleanPartName(rawName, instId, shortCat) {
     ];
     suffixes.forEach(regex => { cleaned = cleaned.replace(regex, ''); });
 
-    // 第二刀：若是上蓋部位，無情清除夾帶的固鎖與軸心後綴 (例如 1-80GB, 4-60R)
-    // 確保只針對上蓋執行，避免固鎖的本名被切掉
+    // 第三刀：若是上蓋部位，清除夾帶的固鎖與軸心後綴 (例如 1-80GB, 3-70A)
     if (['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'LockChip', 'TopPart'].includes(shortCat)) {
         cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
     }
     
     let finalName = cleaned.trim();
-    if (finalName === '') return `機密/特殊聯名`; // 若切完發現一無所有，標記為空殼
+    if (finalName === '') return `機密/特殊聯名`;
     
     return finalName; 
 }
@@ -239,23 +237,27 @@ async function loadDatabase() {
                 let nameObj = item.name || item.catalog_title;
                 let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
                 
-                // 🛑 核心修復1：全域垃圾過濾網 🛑
-                // 擴充過濾字眼，且直接套用至所有部位，包含固鎖區
+                // 全域垃圾過濾網 (活動軸心等)
                 if (/軸心套組|軸心組|加贈活動|活動加贈|限定軸心|活動軸心|加贈軸心活動|加贈軸心/i.test(rawNameTW)) {
                     continue; 
                 }
 
                 let shortCat = getTrueCategoryFromId(id, defaultCat);
                 let instId = getInstId(id, item);
+                let struct = setStructureMap[instId];
+
+                // 🛑 CX2 互斥防禦：如果此陀螺具備鋼鐵戰刃(CX2)，則堅決拒絕它的「主要戰刃(CX1)」載入 🛑
+                if (shortCat === 'MainBlade' && struct['MetalBlade']) {
+                    continue; 
+                }
                 
                 let cleanName = cleanPartName(rawNameTW, instId, shortCat);
                 
-                // 🛑 核心修復2：剔除幽靈機密欄位 🛑
+                // 剔除幽靈機密欄位
                 if (cleanName === "機密/特殊聯名") {
-                    continue; // 發現空殼，直接消滅不顯示
+                    continue; 
                 }
 
-                let struct = setStructureMap[instId];
                 let sysType = 'BX';
                 if (struct['MetalBlade']) sysType = 'CX2';
                 else if (struct['MainBlade']) sysType = 'CX1'; 
@@ -319,7 +321,7 @@ async function loadDatabase() {
     }
 
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 資料庫就緒！(完美群組化、全域雜物與幽靈清零完成)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(火紅版收合完成、CX主要戰刃互斥已啟動)</span>`;
 }
 
 // ================== 牌組總覽 ==================
