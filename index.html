@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極結構辨識版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極物理建圖版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -114,7 +114,7 @@ window.handleImgError = function(img) {
     }
 };
 
-// ================== 核心資料庫與狀態 ==================
+// ================== 核心資料庫 ==================
 let partsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
 const BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
 let currentDecks = [ { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} } ];
@@ -123,18 +123,20 @@ let selectingPartCategory = "";
 let currentSelectedPartGroup = null; 
 let currentFilterType = "ALL";
 
-// 全局的結構地圖，用來儲存每個 set_id 擁有什麼物理零件
+// 全局結構地圖
 let setStructureMap = {};
 
 window.onload = async function() { await loadDatabase(); renderDeckOverview(); };
 
-// ================== 淨化器 ==================
+// ================== 名稱淨化器 ==================
 function cleanPartName(rawName) {
     if (!rawName) return "未命名零件";
     let name = String(rawName);
     
+    // 移除編號
     let cleaned = name.replace(/^(BX|UX|CX|BXG|BXH|BXC|BXR)[a-zA-Z0-9\-]*\s+/ig, ''); 
     
+    // 徹底移除分類贅字，確保能黏合出「焰神勇氣C」
     let suffixes = [
         /(金屬塗層|メタルコート|Metallic Coat)[:：]?\s*[A-Za-z0-9\u4e00-\u9fa5]+/ig,
         /[A-Za-z0-9\u4e00-\u9fa5\s]+(Ver\.|バージョン|版)/ig,
@@ -142,6 +144,7 @@ function cleanPartName(rawName) {
         /中收錄.*$/ig,
         /ランダムブースター.*$/ig,
         /\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig,
+        /\s*(紋章|ロックチップ)/ig,
         /\s*(メタル|メイン|オーバー|アシスト)ブレード/ig
     ];
     suffixes.forEach(regex => { cleaned = cleaned.replace(regex, ''); });
@@ -151,43 +154,19 @@ function cleanPartName(rawName) {
     return finalName; 
 }
 
-// ✨ 物理結構導向：標籤賦予引擎 ✨
-function extractTags(item, rawName, setId) {
-    let tags = new Set();
-    let upperName = String(rawName).toUpperCase();
-    let upperId = String(setId).toUpperCase();
-    let fullText = upperName + " " + upperId;
-    
-    // 1. 核心系統判定 (依照 setStructureMap 的物理結構決定！)
-    let struct = setStructureMap[setId] || {};
-    if (struct.hasMetal || struct.hasMain) {
-        // 只要這包產品裡有 MetalBlade 或 MainBlade，全部零件都會被標記為 CX 系統！
-        tags.add('CX');
-    } else if (struct.hasBlade && (fullText.includes('UX') || item.series === 'UX')) {
-        tags.add('UX');
-    } else if (struct.hasBlade) {
-        tags.add('BX'); 
+// 取得實體編號 (如 UX-18-04)
+function getInstId(id, item) {
+    let parts = id.split('-');
+    if (parts.length >= 2 && ['BL','MB','MTB','OB','AB','LC','RT','BT'].includes(parts[0])) {
+        return parts.slice(1).join('-'); 
     }
-    
-    // 2. 復刻 / 聯名
-    if (fullText.includes('BXG') || upperName.includes('復刻') || upperName.includes('聯名') || fullText.includes('CROSSOVER')) tags.add('BXG');
-    
-    // 3. 賽事 / EVE
-    if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('BXH') || upperName.includes('G1') || upperName.includes('G2') || upperName.includes('G3') || upperName.includes('大賽') || upperName.includes('CUP')) tags.add('EVE');
-    
-    // 4. 限定版 / 機密 (不含抽包)
-    if (fullText.includes('LIMITED') || upperName.includes('限定') || upperName.includes('非売品') || fullText.includes('PRD')) tags.add('LIMITED');
-    
-    // 5. 隨機抽包
-    if (fullText.includes('ランダム') || upperName.includes('RANDOM') || upperName.includes('抽包') || upperName.includes('隨機')) tags.add('RANDOM');
-    
-    // Fallback
-    if (!tags.has('BX') && !tags.has('UX') && !tags.has('CX')) tags.add('BX'); 
-    
-    return Array.from(tags);
+    let base = item.base_set_id || item.set_id || "UNKNOWN";
+    let suffixMatch = id.match(/-\d{2}$/);
+    if (suffixMatch && !base.endsWith(suffixMatch[0])) return base + suffixMatch[0];
+    return base;
 }
 
-// ================== 資料庫解析 (兩階段讀取法 Two-Pass Parsing) ==================
+// ================== 兩階段結構建圖引擎 (Two-Pass Parsing) ==================
 async function loadDatabase() {
     const statusDiv = document.getElementById('dataStatus');
     try {
@@ -195,53 +174,79 @@ async function loadDatabase() {
         const mainData = await res.json();
         const categoryMap = { 'BeybladePartsBlade': 'Blade', 'BeybladePartsMainBlade': 'MainBlade', 'BeybladePartsOverBlade': 'OverBlade', 'BeybladePartsMetalBlade': 'MetalBlade', 'BeybladePartsAssistBlade': 'AssistBlade', 'BeybladePartsLockChip': 'LockChip', 'BeybladePartsRatchet': 'Ratchet', 'BeybladePartsBit': 'Bit' };
 
-        // 🟢 【第一階段】建立結構地圖 (Mapping)
+        // 🟢 第一階段：建立「編號實體對應地圖」
         for (const [rawCat, obj] of Object.entries(mainData.data)) {
-            let shortCat = categoryMap[rawCat];
-            if (!shortCat) continue;
-            
+            let defaultCat = categoryMap[rawCat];
+            if (!defaultCat) continue;
             for (const [id, item] of Object.entries(obj)) {
-                // 如果沒有 set_id，用產品編號前綴當作 fallback
-                let fallbackSetId = id.includes('-') ? id.split('-').slice(0,2).join('-') : id;
-                let setId = item.base_set_id || item.set_id || fallbackSetId;
+                let nameObj = item.name || item.catalog_title;
+                let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
                 
-                if (!setStructureMap[setId]) {
-                    setStructureMap[setId] = { hasMetal: false, hasMain: false, hasBlade: false };
-                }
-                if (shortCat === 'MetalBlade') setStructureMap[setId].hasMetal = true;
-                if (shortCat === 'MainBlade') setStructureMap[setId].hasMain = true;
-                if (shortCat === 'Blade') setStructureMap[setId].hasBlade = true;
+                // 名稱結構校正
+                let shortCat = defaultCat;
+                if (rawNameTW.match(/(鋼鐵戰刃|メタルブレード|Metal Blade)/i)) shortCat = 'MetalBlade';
+                else if (rawNameTW.match(/(主要戰刃|メインブレード|Main Blade)/i)) shortCat = 'MainBlade';
+                else if (rawNameTW.match(/(超越戰刃|オーバーブレード|Over Blade)/i)) shortCat = 'OverBlade';
+                else if (rawNameTW.match(/(輔助戰刃|アシストブレード|Assist Blade)/i)) shortCat = 'AssistBlade';
+                else if (rawNameTW.match(/(紋章|ロックチップ|Lock Chip)/i)) shortCat = 'LockChip';
+
+                let instId = getInstId(id, item);
+                if (!setStructureMap[instId]) setStructureMap[instId] = {};
+                setStructureMap[instId][shortCat] = true; // 記錄這個編號有哪些物理零件
             }
         }
 
-        // 🟢 【第二階段】正式解析零件與賦予標籤
+        // 🟢 第二階段：依據建圖結果賦予標籤與分類
         for (const [rawCat, obj] of Object.entries(mainData.data)) {
-            let shortCat = categoryMap[rawCat];
-            if (!shortCat) continue;
-            
+            let defaultCat = categoryMap[rawCat];
+            if (!defaultCat) continue;
             for (const [id, item] of Object.entries(obj)) {
-                let getName = (nameObj) => {
-                    if (!nameObj) return null;
-                    if (typeof nameObj === 'string') return nameObj;
-                    return nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj['en-US'] || nameObj['en-SG'] || nameObj.en_name || null;
-                };
+                let nameObj = item.name || item.catalog_title;
+                let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
                 
-                let rawNameTW = getName(item.name) || getName(item.catalog_title) || "";
-                
-                let fallbackSetId = id.includes('-') ? id.split('-').slice(0,2).join('-') : id;
-                let setId = item.base_set_id || item.set_id || fallbackSetId;
-                
+                let instId = getInstId(id, item);
                 if (rawNameTW === "■" || rawNameTW.trim() === "") {
-                    rawNameTW = `${setId} (機密/特殊聯名)`;
+                    rawNameTW = `${instId} (機密/特殊聯名)`;
                 }
                 
+                let shortCat = defaultCat;
+                if (rawNameTW.match(/(鋼鐵戰刃|メタルブレード|Metal Blade)/i)) shortCat = 'MetalBlade';
+                else if (rawNameTW.match(/(主要戰刃|メインブレード|Main Blade)/i)) shortCat = 'MainBlade';
+                else if (rawNameTW.match(/(超越戰刃|オーバーブレード|Over Blade)/i)) shortCat = 'OverBlade';
+                else if (rawNameTW.match(/(輔助戰刃|アシストブレード|Assist Blade)/i)) shortCat = 'AssistBlade';
+                else if (rawNameTW.match(/(紋章|ロックチップ|Lock Chip)/i)) shortCat = 'LockChip';
+
+                let struct = setStructureMap[instId];
+                
+                // ✨ 絕對互斥原則：判斷該實體的系統歸屬 ✨
+                let sysType = 'BX';
+                if (struct['MetalBlade']) {
+                    sysType = 'CX2'; // 有鋼鐵戰刃就是 CX 超越，絕對不可能是 CX 一般！
+                    if (shortCat === 'MainBlade') shortCat = 'Blade'; // 官方錯置防禦
+                } else if (struct['MainBlade']) {
+                    sysType = 'CX1'; // 只有主要戰刃，判定為 CX 一般
+                } else if (rawNameTW.includes('UX') || item.series === 'UX' || instId.includes('UX')) {
+                    sysType = 'UX';
+                }
+
                 let cleanName = cleanPartName(rawNameTW);
                 let hasColorWord = /(Metallic Coat|メタルコート|Ver\.|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定)/i.test(rawNameTW);
                 
-                // 傳入 setId，讓引擎依照物理結構賦予標籤
-                let variantTags = extractTags(item, rawNameTW, setId);
+                // 標籤賦予
+                let tags = new Set();
+                let upperName = String(rawNameTW).toUpperCase();
+                let fullText = upperName + " " + instId.toUpperCase();
+                
+                if (sysType === 'CX1' || sysType === 'CX2') tags.add('CX');
+                else if (sysType === 'UX') tags.add('UX');
+                else tags.add('BX');
+                
+                if (fullText.includes('BXG') || upperName.includes('復刻') || upperName.includes('聯名') || fullText.includes('CROSSOVER')) tags.add('BXG');
+                if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('BXH') || upperName.includes('G1') || upperName.includes('G2') || upperName.includes('G3') || upperName.includes('大賽') || upperName.includes('CUP')) tags.add('EVE');
+                if (fullText.includes('LIMITED') || upperName.includes('限定') || upperName.includes('非売品') || fullText.includes('PRD')) tags.add('LIMITED');
+                if (fullText.includes('ランダム') || upperName.includes('RANDOM') || upperName.includes('抽包') || upperName.includes('隨機')) tags.add('RANDOM');
 
-                // 屬性戰術分析
+                // 戰術分析
                 let bitType = 'Balance';
                 if (shortCat === 'Bit') {
                     let st = item.defaultStatus || {};
@@ -258,15 +263,16 @@ async function loadDatabase() {
 
                 let variantObj = {
                     id: id, rawName: rawNameTW, image: `${BASE_IMG_URL}${shortCat}/${id}.png`,
-                    category: shortCat, hasColorWord: hasColorWord, set_id: setId, tags: variantTags, bitType: bitType
+                    category: shortCat, hasColorWord: hasColorWord, set_id: item.base_set_id || item.set_id || id, 
+                    tags: Array.from(tags), bitType: bitType, instId: instId, sysType: sysType
                 };
 
                 let existingPart = partsDb[shortCat].find(p => p.clean_name === cleanName);
                 if (existingPart) {
                     existingPart.variants.push(variantObj);
-                    variantTags.forEach(t => { if(!existingPart.tags.includes(t)) existingPart.tags.push(t); });
+                    variantObj.tags.forEach(t => { if(!existingPart.tags.includes(t)) existingPart.tags.push(t); });
                 } else {
-                    partsDb[shortCat].push({ clean_name: cleanName, category: shortCat, tags: [...variantTags], bitType: bitType, variants: [variantObj] });
+                    partsDb[shortCat].push({ clean_name: cleanName, category: shortCat, tags: [...variantObj.tags], bitType: bitType, variants: [variantObj] });
                 }
             }
         }
@@ -292,13 +298,12 @@ async function loadDatabase() {
             });
         }
 
-        // 大一統上蓋庫 (涵蓋 BX, UX, CX)
         partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
-        statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(已實裝 物理結構解析引擎 Two-Pass Parsing)</span>`;
+        statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(已實裝 兩階段結構互斥建圖引擎)</span>`;
     } catch (e) { console.error(e); statusDiv.innerHTML = `<span style="color:#e74c3c;">❌ 無法讀取 main_db.json</span>`; }
 }
 
-// ================== 牌組總覽 ==================
+// ================== 牌組總覽 (自動還原「焰神勇氣C」命名) ==================
 function renderDeckOverview() {
     const container = document.getElementById('deckOverview');
     container.innerHTML = '';
@@ -330,6 +335,7 @@ function getDeckFullName(deck) {
     let rbSuffix = (ratchetName || bitName) ? ` ${ratchetName}${bitName}` : "";
 
     let name = "";
+    // ✨ 依照真實組合邏輯黏合名稱，去除空格，完美呈現「焰神勇氣C」 ✨
     if (deck.mode === 'standard') {
         name = top.clean_name + rbSuffix;
     } else if (deck.mode === 'cx1') {
@@ -340,12 +346,12 @@ function getDeckFullName(deck) {
         let lock = deck.parts.LockChip ? deck.parts.LockChip.clean_name : "";
         let over = deck.parts.OverBlade ? deck.parts.OverBlade.clean_name : "";
         let assist = deck.parts.AssistBlade ? deck.parts.AssistBlade.clean_name : "";
-        name = `${lock}${top.clean_name}${over}${assist}${rbSuffix}`;
+        name = `${lock}${over}${top.clean_name}${assist}${rbSuffix}`;
     }
     return name.trim();
 }
 
-// ================== 動態插槽編輯器 (完美精準判定模式) ==================
+// ================== 動態插槽編輯器 ==================
 function openEditor(index) {
     editingDeckIndex = index;
     document.getElementById('currentEditingDeckNum').innerText = `陀螺 ${index + 1}`;
@@ -359,7 +365,6 @@ function renderEditorSlots() {
     
     deck.mode = 'standard';
     if (topPart) {
-        // ✨ 因為採用了結構地圖判定，這裡依據真實所選零件分類精準展開 CX 插槽 ✨
         if (topPart.category === 'MainBlade') deck.mode = 'cx1';
         else if (topPart.category === 'MetalBlade') deck.mode = 'cx2';
     }
@@ -528,7 +533,7 @@ function openVariantModal(partGroup) {
     container.innerHTML = '';
     
     partGroup.variants.forEach((variant, vIndex) => {
-        let displayRawName = variant.rawName.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃|(メタル|メイン|オーバー|アシスト)ブレード/ig, '').trim();
+        let displayRawName = variant.rawName.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃|(紋章)|(ロックチップ|メタル|メイン|オーバー|アシスト)ブレード/ig, '').trim();
         
         container.innerHTML += `
             <div class="grid-item" onclick="applyVariantByIndex(${vIndex})">
@@ -544,28 +549,17 @@ function applyVariantByIndex(vIndex) {
     applyVariant(currentSelectedPartGroup.variants[vIndex], currentSelectedPartGroup.clean_name);
 }
 
-function findPartByExactPrefixOrSetId(category, targetVariant) {
-    if (!targetVariant) return null;
-    let setId = targetVariant.set_id;
-
-    let partsInSet = [];
+// ✨ 利用實體編號 (instId) 絕對精準抓取對應零件 ✨
+function findPartByInstanceId(category, instId) {
+    if (!instId) return null;
     for (let group of partsDb[category] || []) {
         for (let v of group.variants) {
-            if (v.set_id === setId) {
-                partsInSet.push({ id: v.id, clean_name: group.clean_name, image: v.image, rawName: v.rawName, category: v.category });
+            if (v.instId === instId) {
+                return { id: v.id, clean_name: group.clean_name, image: v.image, rawName: v.rawName, category: v.category };
             }
         }
     }
-    if (partsInSet.length === 0) return null;
-
-    let subIdMatch = targetVariant.rawName.match(/-\d{2}/) || targetVariant.id.match(/-\d{2}$/);
-    if (subIdMatch) {
-        let subId = subIdMatch[0];
-        let exactMatch = partsInSet.find(p => p.rawName.includes(subId) || p.id.endsWith(subId));
-        if (exactMatch) return exactMatch;
-    }
-    
-    return partsInSet[0]; 
+    return null;
 }
 
 function getIntegratedDummy(type) {
@@ -582,21 +576,20 @@ function applyVariant(variant, cleanName) {
     let finalPart = { id: variant.id, clean_name: cleanName, image: variant.image, rawName: variant.rawName, category: variant.category };
     let deck = currentDecks[editingDeckIndex];
 
-    let isCXSystemPart = selectingPartCategory === 'TopPart' && variant.tags.includes('CX') && (variant.category === 'MetalBlade' || variant.category === 'MainBlade');
+    if (selectingPartCategory === 'TopPart' && variant.tags.includes('CX')) {
+        let instId = variant.instId; // 抓取該陀螺的實體身份證
+        let lock = findPartByInstanceId('LockChip', instId);
+        let metal = findPartByInstanceId('MetalBlade', instId);
+        let over = findPartByInstanceId('OverBlade', instId);
+        let main = findPartByInstanceId('MainBlade', instId);
+        let assist = findPartByInstanceId('AssistBlade', instId);
 
-    if (isCXSystemPart) {
-        let lock = findPartByExactPrefixOrSetId('LockChip', variant);
-        let metal = findPartByExactPrefixOrSetId('MetalBlade', variant);
-        let over = findPartByExactPrefixOrSetId('OverBlade', variant);
-        let main = findPartByExactPrefixOrSetId('MainBlade', variant);
-        let assist = findPartByExactPrefixOrSetId('AssistBlade', variant);
-
-        if (metal || variant.category === 'MetalBlade') { 
+        if (variant.sysType === 'CX2' || metal) { 
             deck.parts['TopPart'] = metal || finalPart; 
             deck.parts['LockChip'] = lock; 
             deck.parts['OverBlade'] = over; 
             deck.parts['AssistBlade'] = assist;
-        } else if (main || variant.category === 'MainBlade') { 
+        } else if (variant.sysType === 'CX1' || main) { 
             deck.parts['TopPart'] = main || finalPart; 
             deck.parts['LockChip'] = lock; 
             deck.parts['AssistBlade'] = assist;
