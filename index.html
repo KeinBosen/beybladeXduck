@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (雙核·智慧連動版)</title>
+    <title>BEYBLADE X 專業賽事系統 (雙核·完美連動版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -156,10 +156,16 @@ function getInstId(id, item) {
     return base;
 }
 
+// ✨ 修復單字元(O, F, T)被誤判為未命名的 Bug ✨
 function cleanPartName(rawName, instId) {
     if (!rawName) return instId;
-    let name = String(rawName);
+    let name = String(rawName).trim();
     
+    // 如果是官方的空白或黑色方塊，直接掛上機密名稱
+    if (name === "■" || name === "(機密/特殊聯名)") {
+        return `機密/特殊聯名 (${instId})`;
+    }
+
     // 移除常見前綴
     let cleaned = name.replace(/^(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[a-zA-Z0-9\-]*\s+/ig, ''); 
     
@@ -178,10 +184,17 @@ function cleanPartName(rawName, instId) {
     
     let finalName = cleaned.trim();
     
-    // 孤兒救援
-    if (finalName === '' || finalName.length <= 1) {
-        return `未命名裝備 (${instId})`; 
+    // 如果包含機密字眼，直接加上實體 ID 避免被同名收合
+    if (finalName.includes('機密')) {
+        return `機密/特殊聯名 (${instId})`;
     }
+
+    // 終極救援：如果淨化過頭導致名字沒了（例如原名只有 "BX-01"）
+    if (finalName === '') {
+        return name === '' ? `機密/特殊聯名 (${instId})` : name;
+    }
+    
+    // 直接回傳淨化後的名稱（即使長度只有1也合法，例如 "O", "F"）
     return finalName; 
 }
 
@@ -259,7 +272,7 @@ async function loadDatabase() {
                 if (fullText.includes('BXG') || upperName.includes('復刻') || upperName.includes('聯名') || fullText.includes('CROSSOVER') || item.series === 'BXG') tags.add('BXG');
                 if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('BXH') || upperName.includes('G1') || upperName.includes('G2') || upperName.includes('G3') || upperName.includes('大賽') || upperName.includes('CUP')) tags.add('EVE');
                 
-                // ✨ 修正：移除了 PRD 的限定判定，PRD 將被視為常規商品代碼 ✨
+                // 限定判定 (排除 PRD 的干擾)
                 if (fullText.includes('LIMITED') || upperName.includes('限定') || upperName.includes('非売品')) tags.add('LIMITED');
                 if (fullText.includes('ランダム') || upperName.includes('RANDOM') || upperName.includes('抽包') || upperName.includes('隨機')) tags.add('RANDOM');
 
@@ -306,7 +319,7 @@ async function loadDatabase() {
     }
 
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 雙核資料庫就緒！(PRD標籤已校正，CX智慧連動已啟動)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 雙核資料庫就緒！(名稱修復完畢，CX智慧連動啟動)</span>`;
 }
 
 // ================== 牌組總覽 ==================
