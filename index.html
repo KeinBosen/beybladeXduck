@@ -225,6 +225,12 @@ async function loadDatabase() {
 
                 let cleanName = cleanPartName(rawNameTW, instId);
                 let hasColorWord = /(Metallic Coat|メタルコート|Ver\.|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定)/i.test(rawNameTW);
+
+
+// 👇 請在這裡加入這段「強制獨立」代碼：
+if (id.includes('PRD') || id.includes('BXG')) {
+    cleanName = cleanName + ' (特殊聯名)'; 
+}
                 
                 let tags = new Set();
                 let upperName = String(rawNameTW).toUpperCase();
