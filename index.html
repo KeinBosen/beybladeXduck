@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極精準收合版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極手術刀修復版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -157,35 +157,43 @@ function getInstId(id, item) {
     return base;
 }
 
-// ✨ 終極淨化器 (修復貪吃 Regex，完美保留如火紅版等名字) ✨
+// ✨ 終極手術刀修復版：完美保護基底名稱、精準切除塗裝後綴 ✨
 function cleanPartName(rawName, instId, shortCat) {
     if (!rawName) return instId;
     let name = String(rawName).trim();
     
     if (name === "■" || name === "(機密/特殊聯名)") return `機密/特殊聯名`;
 
-    // 第一刀：無情清除所有產品代碼前綴
+    // 1. 無情清除所有產品代碼前綴 (BX-XX 等)
     let cleaned = name.replace(/(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[A-Za-z0-9\-]+\s*/ig, ''); 
-    
-    // 第二刀：精準清除顏色與版本描述 (用字典取代貪吃萬用字元)
-    let suffixes = [
-        /(金屬塗層|メタルコート|Metallic Coat)[:：]?\s*[A-Za-z0-9\u4e00-\u9fa5]+/ig,
-        // 精準列出各種顏色與異色詞彙，不再誤殺原本的名字
-        /(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|透明)\s*(Ver\.|バージョン|版)?/ig,
-        /(Ver\.|バージョン|版)/ig,
-        /中收錄.*$/ig,
-        /ランダムブースター.*$/ig,
-        /\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig,
-        /\s*(紋章|ロックチップ)/ig,
-        /\s*(メタル|メイン|オーバー|アシスト)ブレード/ig
-    ];
-    suffixes.forEach(regex => { cleaned = cleaned.replace(regex, ''); });
 
-    // 第三刀：若是上蓋部位，清除夾帶的固鎖與軸心後綴 (例如 1-80GB, 3-70A)
+    // 2. 移除上蓋夾帶的 1-80GB, 3-70A 等固鎖與軸心後綴 (僅限上蓋類別)
     if (['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'LockChip', 'TopPart'].includes(shortCat)) {
         cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
     }
-    
+
+    // 3. 切除「金屬塗層/金屬塗裝」 (現在支援 '/' 符號，完美消滅藍/綠，並加入塗裝關鍵字)
+    cleaned = cleaned.replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '');
+
+    // 4. 切除與「版 / Ver」黏在一起的顏色字眼 (這樣就不會誤殺銀狼跟紅鐮！)
+    cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|透明)(Ver\.|バージョン|版)/ig, '');
+
+    // 5. 切除前面帶有空格的獨立版本詞 (例如 " 紀念版", " 2024Ver.")
+    cleaned = cleaned.replace(/\s+[A-Za-z0-9\u4e00-\u9fa5]+(Ver\.|バージョン|版)/ig, '');
+
+    // 6. 移除獨立的顏色/狀態單字 (前面一定要有空格才切除，例如 " Black")
+    cleaned = cleaned.replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '');
+
+    // 7. 移除括號內的顏色/狀態 (例如 "(限定)", "(紅)")
+    cleaned = cleaned.replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet)[\)）]/ig, '');
+
+    // 8. 其他雜項移除
+    cleaned = cleaned.replace(/中收錄.*$/ig, '');
+    cleaned = cleaned.replace(/ランダムブースター.*$/ig, '');
+    cleaned = cleaned.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig, '');
+    cleaned = cleaned.replace(/\s*(紋章|ロックチップ)/ig, '');
+    cleaned = cleaned.replace(/\s*(メタル|メイン|オーバー|アシスト)ブレード/ig, '');
+
     let finalName = cleaned.trim();
     if (finalName === '') return `機密/特殊聯名`;
     
@@ -237,7 +245,7 @@ async function loadDatabase() {
                 let nameObj = item.name || item.catalog_title;
                 let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
                 
-                // 全域垃圾過濾網 (活動軸心等)
+                // 全域垃圾過濾網
                 if (/軸心套組|軸心組|加贈活動|活動加贈|限定軸心|活動軸心|加贈軸心活動|加贈軸心/i.test(rawNameTW)) {
                     continue; 
                 }
@@ -246,7 +254,7 @@ async function loadDatabase() {
                 let instId = getInstId(id, item);
                 let struct = setStructureMap[instId];
 
-                // 🛑 CX2 互斥防禦：如果此陀螺具備鋼鐵戰刃(CX2)，則堅決拒絕它的「主要戰刃(CX1)」載入 🛑
+                // CX2 互斥防禦：如果此陀螺具備鋼鐵戰刃(CX2)，則堅決拒絕它的「主要戰刃(CX1)」
                 if (shortCat === 'MainBlade' && struct['MetalBlade']) {
                     continue; 
                 }
@@ -321,7 +329,7 @@ async function loadDatabase() {
     }
 
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(火紅版收合完成、CX主要戰刃互斥已啟動)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(完美保護原名，空力天馬與天蠍長矛已大團圓！)</span>`;
 }
 
 // ================== 牌組總覽 ==================
