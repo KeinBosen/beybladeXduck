@@ -2,683 +2,1406 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 極限戰情室 & 兵工廠 雙核融合版</title>
+    <title>BEYBLADE X 專業賽事系統 (極限戰情室 最終進化版)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* ================= 科技感全域設定 & SPA 架構 ================= */
+        /* ================= 科技感全域設定 & 巨集排版 ================= */
         * { box-sizing: border-box; }
-        body { font-family: '微軟正黑體', sans-serif; margin: 20px; background-color: #0a0b10; color: #d8dee9; font-size: 20px; 
-               background-image: linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px); background-size: 50px 50px; }
+        
+        body { 
+            font-family: '微軟正黑體', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 30px; 
+            background-color: #0a0b10; 
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            color: #d8dee9; 
+            font-size: 24px; 
+        }
         input, select, button { font-family: inherit; }
         
-        h1 { color: #0ff; text-align: center; text-shadow: 0 0 15px rgba(0, 255, 255, 0.8); font-size: 42px; margin-bottom: 20px; margin-top: 10px; }
-        h2 { color: #66fcf1; border-bottom: 2px dashed rgba(102, 252, 241, 0.3); padding-bottom: 10px; margin-top: 0; display:flex; justify-content:space-between; align-items:center; }
+        h1 { 
+            color: #0ff; text-align: center; 
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.4); 
+            letter-spacing: 6px; margin-bottom: 40px; font-size: 48px;
+        }
+        h2 { 
+            color: #66fcf1; border-bottom: 3px dashed rgba(102, 252, 241, 0.3); 
+            padding-bottom: 15px; margin-top: 0; font-size: 36px;
+            display: flex; justify-content: space-between; align-items: center; 
+            text-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
+        }
+        h3 { font-size: 28px; }
+        
+        .setup-box, .box, .modal-content, .edit-modal-content { 
+            position: relative; background: rgba(15, 18, 25, 0.85); backdrop-filter: blur(8px);
+            padding: 35px; border-radius: 24px; border: 1px solid rgba(0, 255, 255, 0.2); 
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(0, 255, 255, 0.05); 
+            margin-bottom: 30px; z-index: 1; overflow: hidden; 
+        }
+        .setup-box::before { 
+            content: ""; position: absolute; top: 0; right: 30px; bottom: 0; left: 0; 
+            background-image: url('Beyblade_X_Logo_(black).svg.png'); background-repeat: no-repeat; 
+            background-position: right center; background-size: contain; 
+            opacity: 0.1; filter: invert(1) drop-shadow(0 0 15px #0ff); z-index: -1; 
+        }
 
-        /* ✨ 導航列與視圖切換 ✨ */
-        .top-nav { display: flex; justify-content: center; gap: 20px; margin-bottom: 25px; background: rgba(15, 18, 25, 0.9); padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 255, 255, 0.3); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-        .nav-btn { background: #111; color: #aaa; border: 2px solid #555; padding: 12px 30px; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; transition: 0.3s; }
-        .nav-btn:hover:not(:disabled) { border-color: #0ff; color: #fff; }
-        .nav-btn.active { background: #45a29e; color: #000; border-color: #66fcf1; box-shadow: 0 0 15px rgba(102,252,241,0.6); }
+        .full-width-box { flex: 0 0 100% !important; max-width: 100% !important; }
 
-        .view-section { display: none; animation: fadeIn 0.4s ease-in-out; }
-        .view-section.view-active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        select, input[type="text"] { 
+            padding: 15px; font-size: 24px; background: rgba(0, 0, 0, 0.6); 
+            color: #fff; border: 2px solid #45a29e; border-radius: 12px; transition: 0.3s; 
+        }
+        select:focus, input[type="text"]:focus { outline: none; border-color: #0ff; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6); }
+        select { cursor: pointer; }
+        
+        input[type="color"] { cursor: pointer; border: 2px solid #0ff; border-radius: 50%; padding: 0; width: 54px; height: 54px; background: transparent; transition: 0.2s; box-shadow: 0 0 12px rgba(0, 255, 255, 0.4); }
+        input[type="color"]:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 
-        /* 模組框與按鈕共用 */
-        .box, .modal-content, .setup-box { background: rgba(15, 18, 25, 0.85); padding: 25px; border-radius: 20px; border: 1px solid rgba(0, 255, 255, 0.2); margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; overflow: hidden; backdrop-filter: blur(8px); }
-        button { color: white; border: 2px solid transparent; padding: 12px 20px; font-size: 18px; cursor: pointer; border-radius: 10px; font-weight: bold; transition: 0.2s; }
-        .btn-blue { background: #1f2833; border-color: #45a29e; color: #66fcf1; } .btn-blue:hover { background: #45a29e; color: #000; box-shadow: 0 0 15px #45a29e; }
-        .btn-danger { background: #1f2833; border-color: #e74c3c; color: #e74c3c; } .btn-danger:hover { background: #e74c3c; color: #fff; box-shadow: 0 0 15px #e74c3c; }
-        .btn-green { background: #1f2833; border-color: #2ecc71; color: #2ecc71; } .btn-green:hover { background: #2ecc71; color: #000; box-shadow: 0 0 15px #2ecc71; }
-        .btn-yellow { background: #1f2833; border-color: #f1c40f; color: #f1c40f; } .btn-yellow:hover { background: #f1c40f; color: #000; box-shadow: 0 0 15px #f1c40f; }
-
-        input[type="text"], select { padding: 10px 15px; font-size: 20px; background: rgba(0, 0, 0, 0.6); color: #fff; border: 2px solid #45a29e; border-radius: 12px; }
-        input[type="color"] { cursor: pointer; border: 2px solid #0ff; border-radius: 50%; padding: 0; width: 40px; height: 40px; background: transparent; }
-
-        /* Modal 彈出層 */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; overflow-y: auto; padding: 25px; backdrop-filter: blur(5px); }
-        .modal-content { max-width: 1400px; margin: 0 auto; border: 2px solid #0ff; }
-
-        /* ================= 兵工廠專屬 CSS ================= */
-        .deck-overview-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-        .deck-card { width: 340px; background: rgba(0,0,0,0.6); border: 2px solid #45a29e; border-radius: 16px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; }
-        .deck-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,255,255,0.3); border-color: #0ff; }
-        .deck-name { font-size: 20px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; line-height: 1.3; }
-        .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
-
-        /* ✨ 3D 疊加引擎 (原尺寸 180px) ✨ */
-        .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-        .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
-        .stack-base { position: absolute; width: 140px; height: 140px; top: 10px; left: 10px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-        .stack-mid { position: absolute; width: 140px; height: 140px; top: 30px; left: 30px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-        .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
-        .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
-
-        /* ✨ 賽事圖標微縮引擎 (支援名單與對戰卡片縮放) ✨ */
-        .mini-icon-wrapper { width: 80px; height: 80px; position: relative; display: inline-block; }
-        .mini-icon-wrapper .deck-img { width: 80px; height: 80px; margin: 0; }
-        .mini-icon-wrapper .stack-container { transform: scale(0.44); transform-origin: top left; margin: 0; position: absolute; top: 0; left: 0; }
-
-        .editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
-        .part-slot { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); border: 2px dashed #45a29e; padding: 10px 20px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
-        .part-slot:hover { border-color: #0ff; background: rgba(0,255,255,0.1); }
-        .part-label { font-size: 20px; color: #c5c6c7; font-weight: bold; width: 220px; }
-        .part-preview { display: flex; align-items: center; gap: 15px; }
-        .part-thumb { width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8)); }
-        .part-val { font-size: 22px; color: #fff; font-weight: bold; width: 250px; text-align: right; }
-
-        .grid-modal { z-index: 1050; }
-        .grid-container { max-height: 60vh; overflow-y: auto; padding: 10px; margin-top: 10px; }
-        .grid-inner { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        .grid-item { position: relative; background: rgba(255,255,255,0.05); border: 2px solid #555; border-radius: 12px; padding: 15px 10px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: space-between;}
-        .grid-item:hover { border-color: #f1c40f; background: rgba(241,196,15,0.1); transform: scale(1.05); }
-        .grid-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-        .grid-title { font-size: 18px; font-weight: bold; color: #fff; word-break: break-all; }
-        .variant-badge { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; }
-        .filter-btn { background: #111; border: 2px solid #555; color: #aaa; padding: 8px 18px; border-radius: 20px; font-size: 16px; margin: 5px; cursor: pointer; }
-        .filter-btn.active { background: #f1c40f; border-color: #f1c40f; color: #000; font-weight: bold; }
-
-        /* ================= 賽事專屬 CSS ================= */
+        .setup-row { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
+        .setup-row label { font-size: 24px; font-weight: bold; color: #c5c6c7; }
+        
         .player-inputs-container { display: flex; gap: 25px; margin: 20px 0; flex-wrap: wrap; }
         .player-field { display: flex; flex-direction: column; background: rgba(255,255,255,0.02); padding: 15px 20px; border-radius: 16px; border: 2px solid rgba(255,255,255,0.05); }
+        .player-field label { font-size: 21px; font-weight: bold; margin-bottom: 12px; }
         .player-field select { border-width: 3px; font-weight: bold; width: 180px; border-radius: 12px; }
         
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: rgba(0,0,0,0.3); border-radius: 16px; border: 2px solid rgba(0,255,255,0.2); }
-        th, td { border-bottom: 2px solid rgba(0,255,255,0.1); border-right: 2px solid rgba(0,255,255,0.1); padding: 15px; text-align: center; }
-        th { background: rgba(15, 18, 25, 0.9); color: #66fcf1; }
+        button { 
+            color: white; border: 2px solid transparent; padding: 15px 25px; font-size: 22px; 
+            cursor: pointer; border-radius: 12px; margin-right: 15px; margin-top: 15px; 
+            font-weight: bold; transition: 0.3s; letter-spacing: 2px;
+        }
+        .btn-blue { background: #1f2833; border-color: #45a29e; color: #66fcf1; } .btn-blue:hover { background: #45a29e; color: #0b0c10; box-shadow: 0 0 20px #45a29e; }
+        .btn-danger { background: #1f2833; border-color: #e74c3c; color: #e74c3c; } .btn-danger:hover { background: #e74c3c; color: #fff; box-shadow: 0 0 20px #e74c3c; }
+        .btn-green { background: #1f2833; border-color: #2ecc71; color: #2ecc71; } .btn-green:hover { background: #2ecc71; color: #0b0c10; box-shadow: 0 0 20px #2ecc71; }
+        .btn-yellow { background: #1f2833; border-color: #f1c40f; color: #f1c40f; } .btn-yellow:hover { background: #f1c40f; color: #0b0c10; box-shadow: 0 0 20px #f1c40f; }
+        .btn-purple { background: #1f2833; border-color: #b056df; color: #b056df; } .btn-purple:hover { background: #b056df; color: #fff; box-shadow: 0 0 20px #b056df; }
         
-        .match-card { background: linear-gradient(145deg, rgba(25, 30, 40, 0.9), rgba(10, 12, 18, 0.9)); border-radius: 18px; border: 2px solid rgba(0, 255, 255, 0.15); padding: 25px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); transition: 0.3s; border-left: 8px solid #45a29e; margin-bottom: 25px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 20px; background: rgba(0,0,0,0.3); border-radius: 16px; overflow: hidden; border: 2px solid rgba(0,255,255,0.2); }
+        th, td { border-bottom: 2px solid rgba(0,255,255,0.1); border-right: 2px solid rgba(0,255,255,0.1); padding: 20px 15px; text-align: center; vertical-align: middle; white-space: nowrap; }
+        th { background: rgba(15, 18, 25, 0.9); color: #66fcf1; font-size: 24px; text-shadow: 0 0 8px rgba(102,252,241,0.5); position: sticky; top: 0; z-index: 2; }
+        th:last-child, td:last-child { border-right: none; }
+        tr:last-child td { border-bottom: none; }
+        
+        .rank-number { font-size: 42px; font-weight: 900; font-style: italic; display: inline-block; }
+        .big-wl { font-size: 42px; font-weight: 900; font-family: 'Courier New', Courier, monospace; }
+        .win-color { color: #2ecc71; text-shadow: 0 0 15px rgba(46,204,113,0.6); }
+        .loss-color { color: #e74c3c; text-shadow: 0 0 15px rgba(231,76,60,0.6); }
+        
+        .match-box { display: inline-block; width: 300px; text-align: center; color: #fff; padding: 12px 10px; margin: 6px; border-radius: 8px; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; border: 2px solid rgba(255,255,255,0.2); }
+
+        .flex-container { display: flex; gap: 30px; flex-wrap: wrap; margin-bottom: 40px; align-items: flex-start; }
+        .box { flex: 0 0 calc(50% - 15px); max-width: calc(50% - 15px); }
+        
+        .sticky-box { position: sticky; top: 30px; z-index: 10; max-height: calc(100vh - 60px); overflow-y: auto; transition: box-shadow 0.3s; }
+        .sticky-box::-webkit-scrollbar { width: 10px; }
+        .sticky-box::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 8px; margin-top: 15px; margin-bottom: 15px; }
+        .sticky-box::-webkit-scrollbar-thumb { background: rgba(69, 162, 158, 0.6); border-radius: 8px; border: 1px solid #0ff; }
+        .sticky-box::-webkit-scrollbar-thumb:hover { background: #66fcf1; }
+
+        @media (max-width: 1400px) { .box { flex: 0 0 100%; max-width: 100%; } .sticky-box { position: static; max-height: none; } }
+        
+        .player-pill { 
+            display: inline-flex; align-items: center; gap: 15px; padding: 8px 27px 8px 9px; 
+            border-radius: 45px; border: 3px solid; background: rgba(0,0,0,0.5); 
+            font-weight: bold; font-size: 24px; cursor: pointer; transition: 0.3s; 
+            white-space: nowrap; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); max-width: 100%; 
+        }
+        .player-pill:hover { transform: translateY(-3px) scale(1.02); filter: brightness(1.2); }
+        
+        .player-pill.small { padding: 4px 15px 4px 6px; font-size: 18px; border-width: 2px; border-radius: 30px; }
+        .player-pill.small .avatar { border-width: 2px; }
+        .player-name-truncate { display: inline-block; max-width: 8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+        .avatar { width: 54px; height: 54px; border-radius: 50%; background-color: #222; background-repeat: no-repeat; display: inline-block; flex-shrink: 0; border: 3px solid currentColor; box-shadow: 0 0 12px currentColor; }
+        
+        .schedule-grid { display: flex; flex-direction: column; gap: 35px; margin-top: 25px; }
+        
+        .match-card { 
+            background: linear-gradient(145deg, rgba(25, 30, 40, 0.9), rgba(10, 12, 18, 0.9)); 
+            border-radius: 18px; border: 2px solid rgba(0, 255, 255, 0.15); 
+            padding: 30px 35px; display: flex; flex-direction: column; gap: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7); transition: 0.3s; position: relative; border-left: 8px solid #45a29e; 
+        }
+        .match-card:hover { box-shadow: 0 12px 35px rgba(0, 255, 255, 0.15); border-color: rgba(0,255,255,0.4); }
         .match-card.finished { opacity: 0.8; border-left-color: #2ecc71; }
-        .match-header { display: flex; justify-content: space-between; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .match-card.error { border-left-color: #e74c3c; box-shadow: 0 0 20px rgba(231,76,60,0.4); border-color: rgba(231,76,60,0.3); }
+        
+        .match-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
+        .match-number { font-size: 24px; font-weight: bold; color: #0b0c10; background: #66fcf1; padding: 6px 18px; border-radius: 8px; box-shadow: 0 0 12px rgba(102,252,241,0.6); }
+        .encounter-badge { font-size: 20px; background: rgba(255,255,255,0.1); padding: 6px 15px; border-radius: 8px; color: #aaa; border: 1px solid rgba(255,255,255,0.2); }
+        .match-status { font-weight: bold; font-size: 21px; padding: 6px 18px; border-radius: 8px; background: rgba(0,0,0,0.5); border: 2px solid currentColor; text-shadow: 0 0 8px currentColor; }
+        
         .match-body { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; }
-        .player-side { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 35%; }
-        .score-display { width: 100px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: bold; background: rgba(0,0,0,0.7); color: #0ff; border: 3px solid #45a29e; border-radius: 12px; cursor: pointer; transition: 0.3s; }
-        .score-display:hover { background: rgba(0,255,255,0.1); box-shadow: 0 0 15px #0ff; }
+        .player-side { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 35%; }
         
-        .player-pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 20px 8px 8px; border-radius: 40px; border: 3px solid; background: rgba(0,0,0,0.5); font-weight: bold; font-size: 20px; }
-        .avatar { width: 45px; height: 45px; border-radius: 50%; background-color: #222; border: 2px solid currentColor; background-repeat: no-repeat; display:flex; align-items:center; justify-content:center; }
+        .score-display { 
+            width: 120px; height: 75px; display: flex; align-items: center; justify-content: center;
+            font-size: 45px; font-weight: bold; font-family: 'Courier New', Courier, monospace;
+            background: rgba(0,0,0,0.7); color: #0ff; border: 3px solid #45a29e; border-radius: 12px; 
+            cursor: pointer; transition: 0.3s; 
+            box-shadow: inset 0 0 15px rgba(0,255,255,0.2), 0 4px 10px rgba(0,0,0,0.5); text-shadow: 0 0 12px #0ff;
+        }
+        .score-display:hover { border-color: #0ff; background: rgba(0,255,255,0.1); box-shadow: inset 0 0 25px rgba(0,255,255,0.5), 0 0 15px rgba(0,255,255,0.5); transform: scale(1.05); }
         
-        .roster-card { min-width:320px; background:rgba(0,0,0,0.8); border:2px solid #aaa; border-radius:20px; padding:25px; text-align:center; box-shadow:0 0 20px rgba(0,0,0,0.5); scroll-snap-align: center; }
+        .vs-badge { font-size: 54px; font-weight: 900; color: transparent; -webkit-text-stroke: 2px #e74c3c; text-shadow: 0 0 20px rgba(231,76,60,0.8); font-style: italic; letter-spacing: 3px; }
         
-        /* 雙艙佈局 */
-        .flex-container { display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-start; }
-        .half-box { flex: 0 0 calc(50% - 15px); max-width: calc(50% - 15px); }
-        .sticky-box { position: sticky; top: 20px; z-index: 10; max-height: calc(100vh - 40px); overflow-y: auto; }
-        @media (max-width: 1400px) { .half-box { flex: 0 0 100%; max-width: 100%; } .sticky-box { position: static; max-height: none; } }
+        /* Modal & 輕量計分面板 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; overflow-y: auto; padding: 25px; backdrop-filter: blur(10px); }
+        .modal-content, .edit-modal-content { max-width: 1400px; margin: 0 auto; }
+        .edit-modal-content { max-width: 600px; margin: 5% auto; text-align: center; border-color: #f1c40f; }
+        .slider-group { text-align: left; margin-bottom: 25px; }
+        .slider-group label { display: block; margin-bottom: 8px; color: #66fcf1; font-size: 21px; }
+        .slider-group input[type="range"], .slider-group input[type="text"] { width: 100%; }
+        .slider-group input[type="range"] { cursor: pointer; accent-color: #0ff; }
         
-        ::-webkit-scrollbar { width: 10px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
-        ::-webkit-scrollbar-thumb { background: rgba(69, 162, 158, 0.6); border-radius: 8px; }
-        ::-webkit-scrollbar-thumb:hover { background: #66fcf1; }
+        .scoring-panel { display: flex; gap: 20px; justify-content: center; margin: 15px 0; align-items: stretch; }
+        .player-score-col { flex: 1; padding: 15px 25px; border-radius: 20px; background: rgba(0,0,0,0.5); border: 2px solid #444; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); position: relative; }
+        .score-huge { font-size: 85px; font-weight: 900; line-height: 1; margin: 0 0 5px 0; font-family: 'Courier New', monospace; text-shadow: 0 0 20px currentColor; }
+        .win-btn { width: 100%; padding: 12px 20px; font-size: 22px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 2px solid; transition: 0.2s; background: rgba(0,0,0,0.8); display:flex; justify-content: space-between; align-items:center; margin-top: 5px; }
+        .win-btn:hover { filter: brightness(1.3); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.6); }
+        .win-pts { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 6px; font-family: monospace; font-size: 20px; }
+        .penalty-text { font-size: 18px; font-weight: bold; color: #e74c3c; text-shadow: 0 0 10px rgba(231,76,60,0.8); min-height: 25px; letter-spacing: 2px; margin: 0;}
+        
+        /* 戰局中顯示的陀螺資訊框 */
+        .active-bey-info { margin-top: 10px; padding: 10px; width: 100%; border-radius: 12px; background: rgba(0,0,0,0.6); border: 2px dashed rgba(255,255,255,0.3); text-align: center; }
+        .active-bey-info h4 { margin: 0 0 5px 0; font-size: 20px; color: #f1c40f; }
+        .active-bey-info p { margin: 0; font-size: 16px; color: #aaa; word-break: break-all; }
+
+        /* ======= 幻燈片選手卡片列 (Cover Flow) ======= */
+        #rosterListContainer {
+            display: flex; gap: 30px; overflow-x: auto; 
+            padding: 50px calc(50% - 140px);
+            scroll-snap-type: x mandatory; align-items: center; 
+            min-height: 480px; 
+        }
+        #rosterListContainer::-webkit-scrollbar { height: 12px; }
+        #rosterListContainer::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 8px; margin: 0 calc(50% - 140px); }
+        #rosterListContainer::-webkit-scrollbar-thumb { background: rgba(69, 162, 158, 0.6); border-radius: 8px; border: 1px solid #0ff; }
+        #rosterListContainer::-webkit-scrollbar-thumb:hover { background: #66fcf1; }
+
+        .roster-card {
+            flex: 0 0 300px; scroll-snap-align: center;
+            background: rgba(15, 18, 25, 0.95); border: 3px solid; border-radius: 24px;
+            padding: 40px 20px 25px 20px; display: flex; flex-direction: column; 
+            align-items: center; gap: 15px; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .roster-card .avatar { width: 130px; height: 130px; border-width: 4px; cursor: pointer; transition: 0.3s; }
+        .roster-card .avatar:hover { transform: scale(1.05); filter: brightness(1.2); }
+        
+        .name-edit-wrapper { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
+        .roster-card input[type="text"].card-name { 
+            width: 100%; text-align: center; font-size: 28px; font-weight: bold; 
+            border: none; border-bottom: 2px solid #45a29e; background: transparent; 
+            padding: 5px 35px 5px 5px; color: #fff; margin: 0; 
+        }
+        .roster-card input[type="text"].card-name:focus { border-bottom-color: #0ff; outline: none; box-shadow: 0 8px 10px -5px rgba(0,255,255,0.4); }
+        .pencil-icon { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 22px; pointer-events: none; opacity: 0.8; }
+
+        .roster-card .card-arrows { display: flex; width: 100%; justify-content: space-between; gap: 15px; margin-top: 5px; }
+        .roster-card .card-arrows button { flex: 1; margin: 0; padding: 12px; font-size: 20px; background: rgba(255,255,255,0.1); border: 2px solid #45a29e; border-radius: 12px; color: #0ff; transition: 0.3s; }
+        .roster-card .card-arrows button:hover:not(:disabled) { background: #45a29e; color: #000; box-shadow: 0 0 15px #45a29e; transform: scale(1.05); }
+        .roster-card .card-arrows button:disabled { opacity: 0.2; cursor: not-allowed; border-color: #555; color: #555; }
+        
+        .delete-card-btn {
+            position: absolute; top: 15px; right: 15px; background: transparent; color: #777; border: none;
+            font-size: 24px; cursor: pointer; font-weight: bold; transition: 0.3s; z-index: 10; padding: 5px;
+        }
+        .delete-card-btn:hover { color: #e74c3c; transform: scale(1.3) rotate(90deg); text-shadow: 0 0 10px rgba(231,76,60,0.8); }
+
+        /* ====== Deck Builder (牌組配置) 專屬樣式 ====== */
+        .deck-container { display: flex; gap: 20px; margin-top: 20px; overflow-x: auto; padding-bottom: 10px; }
+        .deck-slot { flex: 1; min-width: 300px; background: rgba(0,0,0,0.6); border: 2px solid #45a29e; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .deck-slot h4 { margin: 0; color: #66fcf1; font-size: 24px; text-align: center; border-bottom: 2px dashed rgba(102, 252, 241, 0.3); padding-bottom: 10px; }
+        .deck-part { display: flex; flex-direction: column; gap: 5px; }
+        .deck-part label { font-size: 18px; color: #c5c6c7; font-weight: bold; }
+        .deck-part input { font-size: 18px; padding: 10px; border-radius: 8px; border: 1px solid #45a29e; background: #1f2833; color: #fff; width: 100%; }
+        .mode-selector { margin-bottom: 10px; padding: 8px; font-size: 18px; background: #0b0c10; color: #f1c40f; border: 2px solid #f1c40f; border-radius: 8px; width: 100%; font-weight: bold; }
+
+        /* ================= 兵工廠專屬 CSS & 3D 疊加引擎 ================= */
+.deck-overview-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+.deck-card { width: 340px; background: rgba(0,0,0,0.6); border: 2px solid #45a29e; border-radius: 16px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; }
+.deck-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,255,255,0.3); border-color: #0ff; }
+.deck-name { font-size: 20px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; line-height: 1.3; }
+.deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
+
+.deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+.stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
+.stack-base { position: absolute; width: 140px; height: 140px; top: 10px; left: 10px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+.stack-mid { position: absolute; width: 140px; height: 140px; top: 30px; left: 30px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+.stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
+.stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
+
+.mini-icon-wrapper { width: 80px; height: 80px; position: relative; display: inline-block; margin-top: 5px; }
+.mini-icon-wrapper .deck-img { width: 80px; height: 80px; margin: 0; }
+.mini-icon-wrapper .stack-container { transform: scale(0.44); transform-origin: top left; margin: 0; position: absolute; top: 0; left: 0; }
+
+.editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+.part-slot { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); border: 2px dashed #45a29e; padding: 10px 20px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+.part-slot:hover { border-color: #0ff; background: rgba(0,255,255,0.1); }
+.part-label { font-size: 20px; color: #c5c6c7; font-weight: bold; width: 220px; text-align: left; }
+.part-preview { display: flex; align-items: center; gap: 15px; }
+.part-thumb { width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8)); }
+.part-val { font-size: 22px; color: #fff; font-weight: bold; width: 250px; text-align: right; }
+
+.grid-modal { z-index: 1060 !important; }
+.grid-container { max-height: 60vh; overflow-y: auto; padding: 10px; margin-top: 10px; }
+.grid-inner { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+.grid-item { position: relative; background: rgba(255,255,255,0.05); border: 2px solid #555; border-radius: 12px; padding: 15px 10px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: space-between;}
+.grid-item:hover { border-color: #f1c40f; background: rgba(241,196,15,0.1); transform: scale(1.05); }
+.grid-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+.grid-title { font-size: 18px; font-weight: bold; color: #fff; word-break: break-all; }
+.variant-badge { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; }
+.filter-btn { background: #111; border: 2px solid #555; color: #aaa; padding: 8px 18px; border-radius: 20px; font-size: 16px; margin: 5px; cursor: pointer; transition:0.2s; }
+.filter-btn:hover { border-color:#f1c40f; color:#fff;}
+.filter-btn.active { background: #f1c40f; border-color: #f1c40f; color: #000; font-weight: bold; }
+        
     </style>
 </head>
 <body>
 
-    <div class="top-nav">
-        <button id="nav-tournament" class="nav-btn active" onclick="switchTab('tournament')">🏆 專業賽事與對局管理</button>
-        <button id="nav-builder" class="nav-btn" onclick="switchTab('builder')">🛠️ 選手兵工廠 (裝備庫)</button>
+    <datalist id="list-blade"></datalist>
+    <datalist id="list-ratchet"></datalist>
+    <datalist id="list-bit"></datalist>
+    <datalist id="list-lockchip"></datalist>
+    <datalist id="list-mainblade"></datalist>
+    <datalist id="list-overblade"></datalist>
+    <datalist id="list-metalblade"></datalist>
+    <datalist id="list-assistblade"></datalist>
+
+    <h1>🏆 BEYBLADE X 專業賽事系統</h1>
+    <div id="dataStatusIndicator" style="text-align: center; font-size: 18px; color: #aaa; margin-top: -30px; margin-bottom: 20px;">
+        📡 正在嘗試讀取本地陀螺資料庫 (beyblade_data.json)...
     </div>
     
-    <div id="dataStatus" style="text-align:center; color:#aaa; margin-top:-10px; margin-bottom:15px;">📡 正在連線讀取資料庫...</div>
-
-    <div id="view-tournament" class="view-section view-active">
-        <div class="flex-container">
-            <div class="half-box">
-                <div class="setup-box">
-                    <h2>⚙️ 賽事設定與名單管理</h2>
-                    <div class="setup-row">
-                        <label>賽事名稱:</label>
-                        <input type="text" id="tourName" placeholder="例如: 2026 夏季盃" style="flex:1;">
-                    </div>
-                    <div class="setup-row" style="margin-bottom:0;">
-                        <button class="btn-yellow" onclick="document.getElementById('rosterModal').style.display='block';">👥 管理選手名單與配置</button>
-                        <button class="btn-green" onclick="generateSchedule()">🎲 生成賽程表</button>
-                        <button class="btn-danger" onclick="clearTournamentData()">🗑️ 重製清空</button>
-                    </div>
-                </div>
-
-                <div class="box">
-                    <h2>⚔️ 當前賽事對局</h2>
-                    <div id="scheduleContainer">
-                        <div style="color:#aaa; text-align:center; padding: 20px;">尚無賽程，請先設定參賽名單並點擊「生成賽程表」。</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="half-box sticky-box">
-                <div class="box">
-                    <h2>🏆 即時排名積分板</h2>
-                    <div style="overflow-x:auto;">
-                        <table id="standingsTable">
-                            <thead><tr><th>排名</th><th>選手</th><th>勝負</th><th>積分</th><th>勝率</th></tr></thead>
-                            <tbody id="standingsBody"><tr><td colspan="5" style="color:#aaa;">無資料</td></tr></tbody>
-                        </table>
-                    </div>
-                    <div style="text-align:center; margin-top:20px;">
-                        <button class="btn-yellow" onclick="finalizeTournament()">🎖️ 結束賽事並結算</button>
-                    </div>
-                </div>
-
-                <div class="box">
-                    <h2>📈 歷史賽事勝率圖表</h2>
-                    <div style="height: 350px;"><canvas id="careerChart"></canvas></div>
-                </div>
-            </div>
+    <div class="setup-box">
+        <div class="setup-row">
+            <label>賽事名稱：</label>
+            <input type="text" id="tournamentName" placeholder="例如：2026 高雄電競盃" style="width:300px;">
+            <label style="margin-left: 20px;">人數：</label>
+            <select id="playerCount" onchange="renderPlayerBoxes()">
+                <option value="2">2 人</option><option value="3">3 人</option><option value="4">4 人</option><option value="5" selected>5 人</option>
+                <option value="6">6 人</option><option value="7">7 人</option><option value="8">8 人</option>
+            </select>
+            <label style="margin-left: 20px;">賽制：</label>
+            <select id="roundCount">
+                <option value="1" selected>打 1 輪</option><option value="2">打 2 輪</option><option value="3">打 3 輪</option>
+            </select>
+            <button class="btn-purple" onclick="openRosterModal()" style="margin:0 0 0 auto;">👤 選手名單與裝備庫</button>
+        </div>
+        <label style="font-size: 24px; color: #c5c6c7;"><b>請從名單選擇出賽選手：</b></label>
+        <div id="playerBoxesContainer" class="player-inputs-container"></div>
+        <button class="btn-blue" onclick="generateNewSchedule()">🔀 生成賽程表 (智能防連戰)</button>
+        <button class="btn-danger" onclick="clearTournament()">🔄 清空並重置當前賽局</button>
+        <div style="float: right;">
+            <button class="btn-green" onclick="exportToCSV()">📥 匯出 Excel (CSV)</button>
+            <button class="btn-yellow" onclick="archiveTournament()">💾 結算並儲存至生涯紀錄</button>
         </div>
     </div>
 
-    <div id="view-builder" class="view-section">
+    <div class="flex-container">
         <div class="box">
-            <div style="text-align:center; margin-bottom: 25px; background: rgba(0,0,0,0.4); padding: 15px; border-radius:15px; border:1px solid #45a29e;">
-                <h2 style="color:#0ff; border:none; margin:0; justify-content:center;">目前編輯選手：<span id="builderPlayerName" style="font-size:32px; text-shadow: 0 0 10px currentColor;">尚未選擇</span></h2>
-                <p style="color:#aaa; margin:10px 0 20px 0;">所有的配置都會直接綁定儲存於此選手的名單中。</p>
-                <button class="btn-green" onclick="saveBuilderToPlayer()" style="font-size:24px; padding:12px 40px; box-shadow: 0 0 20px #2ecc71;">✅ 儲存並返回賽事名單</button>
+            <h2>📅 賽程對局區 (自動防丟失)</h2>
+            <div id="scheduleContainer" class="schedule-grid">
+                <div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>
             </div>
-            
-            <h2>⚔️ 先發 3on3 牌組</h2>
-            <div class="deck-overview-container" id="mainDeckOverview"></div>
+        </div>
 
-            <h2 style="margin-top: 40px; border-bottom: 2px dashed rgba(241, 196, 15, 0.3); color: #f1c40f;">🛡️ 備戰區 (Reserve)</h2>
-            <div class="deck-overview-container" id="reserveDeckOverview"></div>
-            
-            <div style="text-align: center; margin-top: 30px;">
-                <button class="btn-yellow" onclick="addReserveDeck()">➕ 新增備戰陀螺</button>
+        <div class="box sticky-box">
+            <h2>📊 即時戰績總表</h2>
+            <table id="summaryTable">
+                <thead><tr><th style="width:80px;">排名</th><th>選手</th><th>勝</th><th>敗</th><th>勝率</th><th>對局紀錄</th></tr></thead>
+                <tbody id="summaryBody"><tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="box full-width-box" style="margin-top: 30px;">
+        <h2 style="color: #f1c40f; border-bottom: 3px dashed rgba(241,196,15,0.3); text-shadow: 0 0 12px rgba(241,196,15,0.5);">📚 歷史生涯戰績與大數據勝率庫</h2>
+        <p style="color:#aaa; font-size:20px; margin-top:-10px;">*將滑鼠移至選手膠囊上，即可分析其「戰鬥風格雷達圖與專屬評價」</p>
+        
+        <div style="background: transparent; padding: 0; margin-bottom: 45px; overflow-x: auto;">
+            <table id="historyTable" style="margin-top:0;">
+                <thead>
+                    <tr>
+                        <th>選手名稱</th><th>參賽</th><th>勝</th><th>敗</th><th>生涯勝率</th>
+                        <th>總得分</th><th>總失分</th><th>總淨分</th>
+                        <th style="color:#e74c3c;">犯規頻率</th>
+                        <th style="color:#0ff;">轉停(1分)</th><th style="color:#f1c40f;">爆裂(2分)</th><th style="color:#e74c3c;">擊飛(2分)</th><th style="color:#b056df;">極限(3分)</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody"><tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">尚無歷史歸檔紀錄</td></tr></tbody>
+            </table>
+            <button class="btn-danger" onclick="clearHistory()" style="margin-top: 20px; font-size:22px;">🗑️ 刪除所有生涯紀錄</button>
+        </div>
+        
+        <div style="background: rgba(0,0,0,0.5); border: 2px solid rgba(241,196,15,0.3); border-radius: 24px; padding: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid rgba(0,255,255,0.2); padding-bottom: 15px;">
+                <h3 style="margin:0; color:#c5c6c7; text-shadow: 0 0 8px rgba(255,255,255,0.2);">📈 賽事勝率變化圖</h3>
+                <div style="display:flex; gap:15px;">
+                    <select id="chartLimit" onchange="renderHistory()" style="padding: 8px 15px; font-size: 21px; background: rgba(0,0,0,0.8); border: 2px solid #45a29e; color: #0ff; border-radius: 8px;">
+                        <option value="all">顯示全部賽事</option>
+                        <option value="5">顯示最近 5 場</option>
+                        <option value="10">顯示最近 10 場</option>
+                    </select>
+                    <select id="chartOrder" onchange="renderHistory()" style="padding: 8px 15px; font-size: 21px; background: rgba(0,0,0,0.8); border: 2px solid #45a29e; color: #0ff; border-radius: 8px;">
+                        <option value="asc">舊 ➔ 新</option>
+                        <option value="desc">新 ➔ 舊</option>
+                    </select>
+                </div>
+            </div>
+            <div style="width: 100%; overflow-x: auto; padding-bottom: 15px;">
+                <div style="min-width: 1200px; height: 750px;"><canvas id="careerChart"></canvas></div>
             </div>
         </div>
     </div>
 
+    <div id="radarTooltip" style="display:none; position:fixed; background:rgba(10,12,18,0.95); border:3px solid #0ff; border-radius:24px; padding:25px; box-shadow:0 0 35px rgba(0,255,255,0.6); z-index:2000; width: 420px; pointer-events: none;">
+        <h4 style="text-align:center; color:#fff; margin:0 0 15px 0; text-shadow: 0 0 10px #0ff; font-size:28px;">⚔️ 戰鬥風格分析 ⚔️</h4>
+        <div style="position: relative; height: 320px; width: 100%;">
+            <canvas id="radarCanvas"></canvas>
+        </div>
+        <div id="radarEval" style="text-align:center; margin-top:15px; color:#f1c40f; text-shadow: 0 0 15px #f1c40f; font-size:38px; font-weight:900; letter-spacing:6px; font-style:italic;"></div>
+    </div>
+
+    <div id="scoringModal" class="modal-overlay" style="z-index: 1005;">
+        <div class="modal-content" style="max-width: 1100px; padding: 25px 40px; background: rgba(15, 18, 25, 0.98); border-radius: 24px; border: 3px solid #0ff; box-shadow: 0 0 50px rgba(0,255,255,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px dashed rgba(0,255,255,0.3); padding-bottom:15px; margin-bottom:15px;">
+                <h2 style="color:#0ff; font-size:36px; border:none; margin:0; text-shadow: 0 0 20px #0ff;">⚔️ 賽局計分面板 ⚔️</h2>
+                <div id="roundIndicator" style="font-size:24px; font-weight:bold; color:#f1c40f; background:rgba(241,196,15,0.1); padding:8px 20px; border-radius:12px; border:1px solid #f1c40f;">第 1 回合 (Round 1)</div>
+            </div>
+            <p style="text-align:center; color:#aaa; font-size:18px; margin-top:0px; margin-bottom:10px;">*任一方達成 4 分即結束賽局，或點擊下方「完成此局」儲存</p>
+            
+            <div class="scoring-panel" id="scoringPanelBody"></div>
+            
+            <div style="display:flex; flex-direction:column; align-items:center; gap: 15px;">
+                <button class="btn-purple" onclick="undoScore()" style="width: 50%; padding: 15px; font-size: 24px; border-radius: 16px; box-shadow: 0 0 15px rgba(176,86,223,0.5); margin: 0;">↩️ 修正上一筆 (Undo)</button>
+                <div style="display:flex; gap: 20px; width: 100%; justify-content: center; margin-top: 5px;">
+                    <button class="btn-danger" onclick="clearCurrentMatch()" style="flex:1; padding: 15px; font-size: 24px; border-radius: 16px; margin: 0;">🗑️ 清空此局</button>
+                    <button class="btn-yellow" onclick="closeScoringModal()" style="flex:1; padding: 15px; font-size: 24px; border-radius: 16px; box-shadow: 0 0 15px rgba(241,196,15,0.5); margin: 0;">✅ 完成此局並關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reorderDeckModal" class="modal-overlay" style="z-index: 1010;">
+        <div class="edit-modal-content" style="max-width: 600px; padding: 30px;">
+            <h3 style="color:#0ff; text-align:center;">🔄 變更配置順序 (延長賽)</h3>
+            <p style="color:#aaa; font-size:18px; text-align:center;">請手動選擇下一回合要派出的陀螺 (1~3)</p>
+            <div style="display:flex; flex-direction:column; gap:20px; margin:20px 0;">
+                <div id="reorderP1Area"></div>
+                <div id="reorderP2Area"></div>
+            </div>
+            <button class="btn-green" onclick="applyReorderDeck()" style="width:100%;">確認變更</button>
+            <button class="btn-danger" onclick="closeReorderDeckModal()" style="width:100%; margin-top:10px;">取消</button>
+        </div>
+    </div>
+
+    <div id="podiumModal" class="modal-overlay" style="z-index: 1002;">
+        <div class="edit-modal-content" style="max-width: 700px; background: rgba(15, 18, 25, 0.95); padding: 45px;">
+            <h2 style="color:#f1c40f; text-align:center; text-shadow: 0 0 25px rgba(241,196,15,0.8); border-bottom: none; justify-content:center; font-size:48px;">🏆 賽事結算 🏆</h2>
+            <p style="color:#45a29e; margin-top:-15px; margin-bottom:30px; font-size: 24px;">本局前三名榮耀榜，已成功存入生涯紀錄！</p>
+            <div id="podiumResult" style="display:flex; flex-direction:column; gap:25px; margin: 30px 0;"></div>
+            <button class="btn-blue" style="width:100%; font-size:26px; padding:20px; margin-top:20px;" onclick="closePodiumAndClear()">✅ 關閉面板並開啟新賽局</button>
+        </div>
+    </div>
 
     <div id="rosterModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>👥 選手名單管理中心 <button class="btn-blue" style="float:right;" onclick="document.getElementById('rosterModal').style.display='none'; updateSetupUI();">✅ 完成並返回</button></h2>
+        <div class="modal-content" style="max-width: 1500px; background: rgba(10, 12, 18, 0.98);">
+            <h2 style="color:#b056df; border-bottom: 3px dashed rgba(176,86,223,0.3); padding-bottom:15px; text-shadow: 0 0 15px rgba(176,86,223,0.5);">
+                👤 選手陣容與裝備庫 
+                <button class="btn-danger" onclick="closeRosterModal()" style="float:right; margin:0;">❌ 關閉面板</button>
+            </h2>
+            <p style="text-align:center; color:#45a29e; font-size:22px; margin-bottom: 20px;">使用<b>滑鼠滾輪</b>可左右滑動切換卡片。點擊卡片下方的<b>「🛠️ 配置 3on3 牌組」</b>來編輯裝備。</p>
             
-            <div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap; align-items:center; background:rgba(0,0,0,0.5); padding:20px; border-radius:12px;">
-                <input type="text" id="newPlayerName" placeholder="輸入新選手名稱..." style="flex:1; min-width:200px;">
-                <input type="color" id="newPlayerColor" value="#3498db" title="選擇選手代表色">
-                <button class="btn-green" onclick="addRosterPlayer()">➕ 新增選手</button>
-            </div>
+            <div id="rosterListContainer"></div>
             
-            <div id="rosterListContainer" style="display: flex; gap: 30px; overflow-x: auto; padding: 30px 10px; scroll-snap-type: x mandatory;">
-                </div>
-        </div>
-    </div>
-
-    <div id="scoringModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 900px; text-align:center;">
-            <h2 style="justify-content:center;" id="scoringTitle">紀錄對局</h2>
-            
-            <div style="display:flex; justify-content:space-around; align-items:flex-start; margin-top:20px;">
-                <div style="width:40%; padding:20px; background:rgba(0,0,0,0.6); border-radius:15px; border:2px solid #555;" id="p1ScoreCol">
-                    <div id="p1PillHtml" style="margin-bottom:15px;"></div>
-                    <div style="font-size:60px; font-weight:bold; margin-bottom:10px; color:#0ff; font-family:monospace;" id="p1CurrentScore">0</div>
-                    <div style="background:rgba(255,255,255,0.05); border:1px dashed #aaa; border-radius:10px; padding:10px; cursor:pointer;" onclick="cycleBey(true)" title="點擊切換上陣陀螺">
-                        <div style="font-size:16px; color:#aaa; margin-bottom:5px;">🔄 點擊切換當前陀螺</div>
-                        <div id="p1ActiveBey"></div>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
-                        <button class="btn-blue" onclick="handleScoreAction(1, 'spin', 1)">轉速取勝 (+1)</button>
-                        <button class="btn-yellow" onclick="handleScoreAction(1, 'over', 2)">擊出取勝 (+2)</button>
-                        <button class="btn-danger" onclick="handleScoreAction(1, 'burst', 2)">擊碎取勝 (+2)</button>
-                        <button class="btn-green" onclick="handleScoreAction(1, 'xtreme', 3)">Xtreme 取勝 (+3)</button>
-                        <button class="btn-danger" style="background:transparent; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(1, 'penalty', 0)">⚠️ 犯規醜一</button>
-                    </div>
-                </div>
-                
-                <div style="font-size:50px; font-weight:bold; color:#e74c3c; font-style:italic; padding-top:100px;">VS</div>
-                
-                <div style="width:40%; padding:20px; background:rgba(0,0,0,0.6); border-radius:15px; border:2px solid #555;" id="p2ScoreCol">
-                    <div id="p2PillHtml" style="margin-bottom:15px;"></div>
-                    <div style="font-size:60px; font-weight:bold; margin-bottom:10px; color:#0ff; font-family:monospace;" id="p2CurrentScore">0</div>
-                    <div style="background:rgba(255,255,255,0.05); border:1px dashed #aaa; border-radius:10px; padding:10px; cursor:pointer;" onclick="cycleBey(false)" title="點擊切換上陣陀螺">
-                        <div style="font-size:16px; color:#aaa; margin-bottom:5px;">🔄 點擊切換當前陀螺</div>
-                        <div id="p2ActiveBey"></div>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
-                        <button class="btn-blue" onclick="handleScoreAction(2, 'spin', 1)">轉速取勝 (+1)</button>
-                        <button class="btn-yellow" onclick="handleScoreAction(2, 'over', 2)">擊出取勝 (+2)</button>
-                        <button class="btn-danger" onclick="handleScoreAction(2, 'burst', 2)">擊碎取勝 (+2)</button>
-                        <button class="btn-green" onclick="handleScoreAction(2, 'xtreme', 3)">Xtreme 取勝 (+3)</button>
-                        <button class="btn-danger" style="background:transparent; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(2, 'penalty', 0)">⚠️ 犯規醜一</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div style="margin-top:30px; display:flex; justify-content:center; gap:20px;">
-                <button class="btn-yellow" onclick="undoLastScore()">↩️ 復原上一筆紀錄</button>
-                <button class="btn-blue" onclick="closeScoringModal()">✅ 關閉計分板</button>
+            <div style="text-align:center; margin-top: 30px;">
+                <button class="btn-green" onclick="addNewRosterPlayer()" style="font-size: 26px; padding: 15px 40px; box-shadow: 0 0 20px rgba(46,204,113,0.5);">➕ 徵召新選手入陣</button>
             </div>
         </div>
     </div>
 
+<div id="builderModal" class="modal-overlay" style="background: #0a0b10; overflow-y: auto; z-index: 1040;">
+    <div style="padding: 20px; max-width: 1400px; margin: 0 auto;">
+        <div style="text-align:center; margin-bottom: 25px; background: rgba(0,0,0,0.6); padding: 25px; border-radius:20px; border:2px solid #45a29e; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+            <h2 style="color:#0ff; border:none; margin:0; justify-content:center;">目前編輯選手：<span id="builderPlayerName" style="font-size:36px; text-shadow: 0 0 15px currentColor;">尚未選擇</span></h2>
+            <p style="color:#aaa; margin:15px 0 25px 0; font-size: 20px;">所有的配置都會直接綁定儲存於此選手的專屬裝備庫中。</p>
+            <button class="btn-green" onclick="saveBuilderToPlayer()" style="font-size:24px; padding:12px 40px; box-shadow: 0 0 20px #2ecc71;">✅ 儲存並返回選手名單</button>
+            <button class="btn-danger" onclick="document.getElementById('builderModal').style.display='none'; document.getElementById('rosterModal').style.display='block';" style="font-size:24px; padding:12px 40px;">❌ 取消變更</button>
+        </div>
+        
+        <h2 style="color: #66fcf1; border-bottom: 2px dashed rgba(102, 252, 241, 0.3);">⚔️ 先發 3on3 牌組</h2>
+        <div class="deck-overview-container" id="mainDeckOverview"></div>
 
-    <div id="editorModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 800px;">
-            <h2>🛠️ 編輯配置 - <span id="currentEditingDeckNum"></span></h2>
-            <p style="color: #45a29e; text-align: center;">點擊插槽進入圖鑑挑選！一體式會自動防呆互斥。</p>
-            <div id="editorSlots" class="editor-container"></div>
-            <div style="text-align: center; margin-top: 30px;">
-                <button class="btn-blue" onclick="closeEditorModal()" style="font-size: 24px; padding: 15px 40px;">✅ 確定並返回總覽</button>
-            </div>
+        <h2 style="margin-top: 40px; border-bottom: 2px dashed rgba(241, 196, 15, 0.3); color: #f1c40f;">🛡️ 備戰區 (Reserve)</h2>
+        <div class="deck-overview-container" id="reserveDeckOverview"></div>
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn-yellow" onclick="addReserveDeck()">➕ 新增備戰陀螺</button>
         </div>
     </div>
+</div>
 
-    <div id="visualGridModal" class="modal-overlay grid-modal">
-        <div class="modal-content">
-            <h2 id="gridTitle" style="color: #f1c40f; margin-bottom: 15px;">選擇零件</h2>
-            <div class="filter-container" id="systemFilter"></div>
-            <div id="gridContainer" class="grid-container"></div>
-            <div style="text-align: center; margin-top: 20px;"><button class="btn-danger" onclick="closeVisualGrid()">❌ 取消</button></div>
+<div id="editorModal" class="modal-overlay" style="z-index: 1050;">
+    <div class="modal-content" style="max-width: 800px; background: rgba(15, 18, 25, 0.95);">
+        <h2>🛠️ 編輯配置 - <span id="currentEditingDeckNum"></span></h2>
+        <p style="color: #45a29e; text-align: center; font-size: 20px;">點擊插槽進入圖鑑挑選！一體式會自動防呆互斥。</p>
+        <div id="editorSlots" class="editor-container"></div>
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn-blue" onclick="closeEditorModal()" style="font-size: 24px; padding: 15px 40px;">✅ 確定並返回總覽</button>
         </div>
     </div>
+</div>
 
-    <div id="variantModal" class="modal-overlay grid-modal" style="z-index: 1060;">
-        <div class="modal-content" style="max-width: 1000px;">
-            <h2>選擇版本與顏色</h2>
-            <div id="variantContainer" class="grid-container grid-inner"></div>
-            <div style="text-align: center; margin-top: 20px;"><button class="btn-danger" onclick="closeVariantModal()">↩️ 返回圖鑑</button></div>
-        </div>
+<div id="visualGridModal" class="modal-overlay grid-modal">
+    <div class="modal-content" style="background: rgba(15, 18, 25, 0.95);">
+        <h2 id="gridTitle" style="color: #f1c40f; margin-bottom: 15px;">選擇零件</h2>
+        <div class="filter-container" id="systemFilter" style="text-align:center;"></div>
+        <div id="gridContainer" class="grid-container"></div>
+        <div style="text-align: center; margin-top: 20px;"><button class="btn-danger" onclick="closeVisualGrid()">❌ 取消</button></div>
     </div>
+</div>
 
-    <div id="swapModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 900px;">
-            <h2 id="swapTitle" style="color:#0ff; text-align:center;">請選擇要替換的牌組</h2>
-            <div class="deck-overview-container" id="swapContainer" style="margin-top:20px;"></div>
-            <div style="text-align: center; margin-top: 30px;"><button class="btn-danger" onclick="closeSwapModal()">❌ 取消</button></div>
+<div id="variantModal" class="modal-overlay grid-modal" style="z-index: 1070;">
+    <div class="modal-content" style="max-width: 1000px; background: rgba(15, 18, 25, 0.95);">
+        <h2>請選擇指定版本</h2>
+        <div id="variantContainer" class="grid-container grid-inner"></div>
+        <div style="text-align: center; margin-top: 20px;"><button class="btn-danger" onclick="closeVariantModal()">↩️ 返回圖鑑</button></div>
+    </div>
+</div>
+
+<div id="swapModal" class="modal-overlay" style="z-index: 1050;">
+    <div class="modal-content" style="max-width: 900px; background: rgba(15, 18, 25, 0.95);">
+        <h2 id="swapTitle" style="color:#0ff; text-align:center;">請選擇要替換的牌組</h2>
+        <div class="deck-overview-container" id="swapContainer" style="margin-top:20px;"></div>
+        <div style="text-align: center; margin-top: 30px;"><button class="btn-danger" onclick="closeSwapModal()">❌ 取消</button></div>
+    </div>
+</div>
+
+    <div id="avatarEditModal" class="modal-overlay" style="z-index: 1006;">
+        <div class="edit-modal-content" style="padding: 40px;">
+            <h3 style="margin-top:0; color:#0ff; text-shadow: 0 0 15px rgba(0,255,255,0.6);">調整選手頭像</h3>
+            <div id="avatarPreview" class="avatar" style="width: 180px; height: 180px; margin: 0 auto 30px auto; border: 4px solid #0ff; box-shadow: 0 0 30px rgba(0,255,255,0.4);"></div>
+            <div class="slider-group"><label>🌐 圖片網址 (URL):</label><input type="text" id="editAvatarUrl" placeholder="請貼上圖片網址" style="background: rgba(0,0,0,0.8);" onchange="updateAvatarPreview()" onkeyup="updateAvatarPreview()"></div>
+            <div class="slider-group"><label>🔍 縮放大小: <span id="valScale">100</span>%</label><input type="range" id="editScale" min="50" max="300" oninput="updateAvatarPreview()"></div>
+            <div class="slider-group"><label>↔️ 左右平移 (X軸): <span id="valX">50</span>%</label><input type="range" id="editX" min="0" max="100" oninput="updateAvatarPreview()"></div>
+            <div class="slider-group"><label>↕️ 上下平移 (Y軸): <span id="valY">50</span>%</label><input type="range" id="editY" min="0" max="100" oninput="updateAvatarPreview()"></div>
+            <div style="margin-top: 35px;"><button class="btn-blue" onclick="saveAvatarEdit()">確認儲存</button><button class="btn-danger" onclick="closeAvatarEditModal()">取消</button></div>
         </div>
     </div>
 
 <script>
-// ================== 雙系統共用變數與 SPA 控制 ==================
-let roster = JSON.parse(localStorage.getItem('beyblade_roster')) || [];
-let appState = JSON.parse(localStorage.getItem('beyblade_state')) || { tourName: "", matches: [], stats: {} };
-let allMatches = []; // 動態生成的對戰陣列
+// ================== 本地資料庫讀取引擎 ==================
+let fetchedBeybladeData = null;
 
-let partsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
-const BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
-let setStructureMap = {};
-
-// 兵工廠專用
-let allDecks = []; 
-let currentDeckEditIndex = -1; // 記錄正在編輯哪位選手的裝備庫
-let editingDeckIndex = -1; 
-let swappingIndex = -1;
-let selectingPartCategory = ""; 
-let currentSelectedPartGroup = null; 
-let currentFilterType = "ALL";
-let currentSortType = "NEW_TO_OLD"; 
-
-// 賽事專用
-let currentScoringMatchId = null;
-let careerChartInstance = null;
-
-// ================== 啟動程序 ==================
-window.onload = async function() {
-    await loadDatabase();
-    if(roster.length === 0) {
-        roster = [
-            { name: "選手 A", color: "#e74c3c", avatar: "", scale: 100, xPos: 50, yPos: 50, deck: [] },
-            { name: "選手 B", color: "#3498db", avatar: "", scale: 100, xPos: 50, yPos: 50, deck: [] }
-        ];
-        saveRoster();
+async function loadBeybladeData() {
+    const indicator = document.getElementById('dataStatusIndicator');
+    try {
+        const response = await fetch('beyblade_data.json');
+        if (!response.ok) throw new Error('找不到檔案或無權限');
+        fetchedBeybladeData = await response.json();
+        indicator.innerHTML = `✅ 成功讀取本地資料庫！(已連線至陀螺數據庫)`;
+        indicator.style.color = '#2ecc71';
+        populateDatalists();
+    } catch (error) {
+        console.warn("無法讀取 beyblade_data.json，系統將進入純文字手動輸入模式。", error);
+        indicator.innerHTML = `⚠️ 無法讀取本地資料庫。目前為「手動輸入模式」。(請確保 json 檔案放置於同資料夾)`;
+        indicator.style.color = '#e74c3c';
     }
-    document.getElementById('tourName').value = appState.tourName || "";
-    updateSetupUI();
-    renderHistory();
-};
+}
 
-function switchTab(tabId) {
-    if (tabId === 'builder' && currentDeckEditIndex === -1) {
-        alert("🔒 請先在【賽事系統】點擊「管理選手名單」，然後點選該選手專屬的【進入兵工廠】按鈕！");
-        return;
-    }
-    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('view-active'));
-    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+// 解析 JSON 並灌入 HTML <datalist> 供自動完成使用 (升級多語系解碼版)
+function populateDatalists() {
+    if (!fetchedBeybladeData) return;
     
-    document.getElementById(`view-${tabId}`).classList.add('view-active');
-    document.getElementById(`nav-${tabId}`).classList.add('active');
-}
-
-// ================== 圖片防斷機制 ==================
-const FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23555' stroke-width='4'/><text x='50' y='55' fill='%23888' font-size='16' text-anchor='middle'>無圖片</text></svg>";
-window.handleImgError = function(img) {
-    if (!img.dataset.triedApp) { img.dataset.triedApp = "true"; img.src = img.src.replace('/site/', '/app/'); } 
-    else if (!img.dataset.triedFallback) { img.dataset.triedFallback = "true"; img.src = FALLBACK_IMG; }
-};
-
-// ================== 賽事管理核心 ==================
-function saveRoster() { localStorage.setItem('beyblade_roster', JSON.stringify(roster)); }
-function saveState() { 
-    appState.tourName = document.getElementById('tourName').value;
-    localStorage.setItem('beyblade_state', JSON.stringify(appState)); 
-}
-
-function updateSetupUI() {
-    renderRosterList();
-    if(appState.matches && appState.matches.length > 0) {
-        allMatches = appState.matches;
-        renderMatches();
-        calculateRankings();
-    }
-}
-
-function getPlayerColor(name) { let p = roster.find(x => x.name === name); return p ? p.color : "#fff"; }
-function getPlayerPillHtml(name) {
-    let p = roster.find(x => x.name === name);
-    if(!p) return `<span class="player-pill" style="color:#fff; border-color:#fff;">${name}</span>`;
-    let avatarStyle = (p.avatar && p.avatar.trim()!=="") ? `background-image:url('${p.avatar}'); background-size:${p.scale}%; background-position:${p.xPos}% ${p.yPos}%; color:transparent;` : "";
-    let avatarContent = avatarStyle ? "" : `<span style="font-size:24px; color:#aaa;">圖</span>`;
-    return `<div class="player-pill" style="color:${p.color}; border-color:${p.color};">
-                <div class="avatar" style="border-color:${p.color}; ${avatarStyle}">${avatarContent}</div>
-                <span class="player-name-truncate">${p.name}</span>
-            </div>`;
-}
-
-// ✨ 名單管理 (Cover Flow) ✨
-function renderRosterList() {
-    let container = document.getElementById('rosterListContainer');
-    container.innerHTML = '';
-    roster.forEach((p, index) => {
-        let avatarStyle = (p.avatar && p.avatar.trim()!=="") ? `background-image:url('${p.avatar}'); background-size:${p.scale}%; background-position:${p.xPos}% ${p.yPos}%; color:transparent;` : "";
-        let avatarContent = avatarStyle ? "" : `<span style="font-size:32px; color:#aaa; line-height:120px;">圖</span>`;
-        
-        let deckDisplayHtml = `<div style="display:flex; gap:5px; justify-content:center; margin-top:20px; align-items:center; min-height:80px;">`;
-        if (p.deck && p.deck.length >= 3 && p.deck[0].parts && p.deck[0].parts.TopPart) {
-            for (let j = 0; j < 3; j++) {
-                deckDisplayHtml += `<div class="mini-icon-wrapper" style="transform: scale(0.65); transform-origin: top center; margin-bottom:-25px;" title="${getDeckFullName(p.deck[j])}">${getDeckCoverHtml(p.deck[j])}</div>`;
+    // 建立臨時的 Set 來過濾重複名稱
+    let sets = { blade: new Set(), ratchet: new Set(), bit: new Set(), lockchip: new Set(), mainblade: new Set(), overblade: new Set(), metalblade: new Set(), assistblade: new Set() };
+    
+    let items = Array.isArray(fetchedBeybladeData) ? fetchedBeybladeData : 
+                (fetchedBeybladeData.items || fetchedBeybladeData.data || Object.values(fetchedBeybladeData));
+    
+    if(Array.isArray(items)) {
+        items.forEach(item => {
+            // 抓取原始名稱資料
+            let rawName = item.name || item.Name || item.title || item.id;
+            if(!rawName) return;
+            
+            // 🌟 多國語系解碼核心邏輯 🌟
+            let finalName = rawName;
+            if (typeof rawName === 'object') {
+                // 優先順序：繁體中文 -> 日文 -> 英文 -> 第一個找到的語言
+                finalName = rawName['tw'] || rawName['zh-TW'] || rawName['zh_tw'] || rawName['ja'] || rawName['jp'] || rawName['en'] || Object.values(rawName)[0];
             }
-        } else {
-            deckDisplayHtml += `<span style="color:#777; font-size:18px;">尚未配置 3on3 先發牌組</span>`;
+            
+            // 確保最後拿到的是字串，否則跳過
+            if (!finalName || typeof finalName !== 'string') return;
+            
+            // 將整個 item 轉成字串，用來暴力但有效地判斷零件類型
+            let typeStr = JSON.stringify(item).toLowerCase(); 
+            
+            if (typeStr.includes('bit')) sets.bit.add(finalName);
+            else if (typeStr.includes('ratchet')) sets.ratchet.add(finalName);
+            else if (typeStr.includes('lock chip') || typeStr.includes('lockchip')) sets.lockchip.add(finalName);
+            else if (typeStr.includes('over blade') || typeStr.includes('overblade')) sets.overblade.add(finalName);
+            else if (typeStr.includes('metal blade') || typeStr.includes('metalblade')) sets.metalblade.add(finalName);
+            else if (typeStr.includes('assist blade') || typeStr.includes('assistblade')) sets.assistblade.add(finalName);
+            else if (typeStr.includes('main blade') || typeStr.includes('mainblade')) sets.mainblade.add(finalName);
+            else sets.blade.add(finalName); // 預設歸類為一般 Blade
+        });
+    }
+
+    // 將 Set 轉換為 <option> 塞入對應的 <datalist>
+    for (let key in sets) {
+        let datalist = document.getElementById(`list-${key}`);
+        if(datalist) {
+            datalist.innerHTML = Array.from(sets[key]).map(name => `<option value="${name}">`).join('');
         }
-        deckDisplayHtml += `</div>`;
+    }
+}
+
+// ================== 核心系統變數 ==================
+const defaultColors = ['#00f3ff', '#ff003c', '#00ff66', '#f1c40f', '#bc13fe', '#ff7700', '#00ffcc', '#ff00aa'];
+const schedulesConfig = {
+    2: [ {p1:0, p2:1} ],
+    3: [ {p1:0, p2:1}, {p1:1, p2:2}, {p1:2, p2:0} ], 
+    4: [ {p1:0, p2:1}, {p1:2, p2:3}, {p1:0, p2:2}, {p1:1, p2:3}, {p1:0, p2:3}, {p1:1, p2:2} ],
+    5: [ {p1:0, p2:1}, {p1:2, p2:3}, {p1:4, p2:0}, {p1:1, p2:2}, {p1:3, p2:4}, {p1:0, p2:2}, {p1:1, p2:4}, {p1:0, p2:3}, {p1:2, p2:4}, {p1:1, p2:3} ]
+};
+for(let n=6; n<=8; n++){ schedulesConfig[n] = []; for(let i=0; i<n; i++){ for(let j=i+1; j<n; j++){ schedulesConfig[n].push({p1:i, p2:j}); } } }
+
+let roster = [];
+let currentEditIndex = -1;
+let currentDeckEditIndex = -1;
+let appState = { id: null, tournamentName: "", timeString: "", players: [], matches: [], p1DeckOrderOverride: {}, p2DeckOrderOverride: {} };
+let careerChartInstance = null;
+let radarChartInstance = null;
+let currentScoringMatchId = null;
+
+Chart.defaults.color = '#c5c6c7'; 
+Chart.defaults.font.family = "'Courier New', Courier, monospace";
+Chart.defaults.font.size = 32;
+
+window.onload = function() { 
+    loadBeybladeData(); // 啟動時讀取 JSON
+    initRoster(); 
+    loadState(); 
+    if(!appState.matches || appState.matches.length === 0) { document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); }
+    renderHistory();
+
+    const rosterContainer = document.getElementById('rosterListContainer');
+    rosterContainer.addEventListener('wheel', function(e) { e.preventDefault(); this.scrollBy({ left: e.deltaY > 0 ? 320 : -320, behavior: 'smooth' }); }, { passive: false });
+};
+
+// ================== 工具與 UI 切換 ==================
+window.toggleExpand = function(id, btn, count) {
+    let el = document.getElementById(id);
+    if (el.style.display === 'none') { el.style.display = 'inline'; btn.innerText = '收起 🔼'; } 
+    else { el.style.display = 'none'; btn.innerText = `顯示更多 (+${count}) 🔽`; }
+};
+function hexToRgba(hex, alpha) {
+    let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+function getTransparentColor(colorStr, alpha) {
+    if (colorStr.startsWith('#')) return hexToRgba(colorStr, alpha);
+    if (colorStr.startsWith('hsl')) return colorStr.replace('hsl', 'hsla').replace(')', `, ${alpha})`).replace('hslaa', 'hsla');
+    return colorStr;
+}
+function getPlayerColor(name) {
+    let r = roster.find(x => x.name === name); if (r && r.color) return r.color;
+    let hash = 0; for (let i = 0; i < name.length; i++) { hash = name.charCodeAt(i) + ((hash << 5) - hash); }
+    return `hsl(${Math.abs(hash) % 360}, 80%, 65%)`;
+}
+
+// ================== Roster 與 Deck 模型初始化 ==================
+function createEmptyDeck() {
+    return [
+        { mode: 'standard', blade: '', ratchet: '', bit: '', lockChip: '', mainBlade: '', overBlade: '', metalBlade: '', assistBlade: '' },
+        { mode: 'standard', blade: '', ratchet: '', bit: '', lockChip: '', mainBlade: '', overBlade: '', metalBlade: '', assistBlade: '' },
+        { mode: 'standard', blade: '', ratchet: '', bit: '', lockChip: '', mainBlade: '', overBlade: '', metalBlade: '', assistBlade: '' }
+    ];
+}
+
+function initRoster() {
+    roster = JSON.parse(localStorage.getItem('beyblade_roster'));
+    if (!roster || roster.length === 0) {
+        roster = [
+            { id: 1, name: "選手A", avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[0], deck: createEmptyDeck() },
+            { id: 2, name: "選手B", avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[1], deck: createEmptyDeck() }
+        ];
+    } else {
+        roster.forEach((p, idx) => { 
+            if(p.xPos === undefined) p.xPos = 50; if(p.yPos === undefined) p.yPos = 50; 
+            if(p.scale === undefined) p.scale = 100; if(p.color === undefined) p.color = defaultColors[idx % defaultColors.length];
+            if(!p.deck) p.deck = createEmptyDeck(); // 確保舊資料擁有 deck 屬性
+        });
+    }
+    saveRoster();
+}
+function saveRoster() { localStorage.setItem('beyblade_roster', JSON.stringify(roster)); }
+
+// ================== 名單管理與 UI 渲染 ==================
+function openRosterModal() { renderRosterList(); document.getElementById('rosterModal').style.display = 'block'; }
+function closeRosterModal() { document.getElementById('rosterModal').style.display = 'none'; renderPlayerBoxes(); if(appState.matches.length > 0) renderMatches(); renderHistory(); }
+
+function renderRosterList() {
+    const container = document.getElementById('rosterListContainer'); container.innerHTML = '';
+    roster.forEach((p, index) => {
+        let avatarStyle = "";
+        if(p.avatar && p.avatar.trim() !== "") { avatarStyle = `background-image:url('${p.avatar}'); background-size:${p.scale}%; background-position:${p.xPos}% ${p.yPos}%; color:transparent;`; }
+        let avatarContent = avatarStyle ? "" : `<span style="font-size:32px; color:#aaa; line-height:120px;">圖</span>`;
+        let leftBtn = index === 0 ? `<button disabled title="已在最左側">◀</button>` : `<button onclick="moveRosterLeft(${index})" title="向左移動">◀</button>`;
+        let rightBtn = index === roster.length - 1 ? `<button disabled title="已在最右側">▶</button>` : `<button onclick="moveRosterRight(${index})" title="向右移動">▶</button>`;
+
+        // 檢查該選手是否有設定完整牌組
+        let isDeckReady = p.deck.every(d => (d.mode==='standard'&&d.blade&&d.ratchet&&d.bit) || (d.mode==='cx1'&&d.lockChip&&d.mainBlade&&d.assistBlade&&d.ratchet&&d.bit) || (d.mode==='cx2'&&d.lockChip&&d.overBlade&&d.metalBlade&&d.assistBlade&&d.ratchet&&d.bit));
+        let deckBtnColor = isDeckReady ? '#2ecc71' : '#e74c3c';
+        let deckBtnText = isDeckReady ? '✅ 牌組已準備就緒' : '⚠️ 配置 3on3 牌組';
 
         container.innerHTML += `
-            <div class="roster-card" style="border-color:${p.color}; box-shadow:0 0 15px ${p.color}60;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <button class="btn-blue" style="padding:5px 10px;" onclick="moveRosterLeft(${index})" ${index===0?'disabled':''}>◀</button>
-                    <button class="btn-danger" style="padding:5px 10px;" onclick="deleteRoster(${index})">❌ 刪除</button>
-                    <button class="btn-blue" style="padding:5px 10px;" onclick="moveRosterRight(${index})" ${index===roster.length-1?'disabled':''}>▶</button>
+            <div class="roster-card" style="border-color:${p.color}; box-shadow: inset 0 0 20px ${p.color}40, 0 15px 35px rgba(0,0,0,0.8);">
+                <button class="delete-card-btn" onclick="deleteRosterPlayer(${index})" title="刪除此選手">✕</button>
+                <div class="avatar" style="${avatarStyle} text-align:center; color:${p.color}; box-shadow: 0 0 20px ${p.color}80;" onclick="openAvatarEditModal(${index})" title="點擊變更頭像與圖片網址">${avatarContent}</div>
+                <div class="name-edit-wrapper">
+                    <input type="text" class="card-name" value="${p.name}" onchange="updateRosterName(${index}, this.value)" style="color:${p.color};" title="點擊即可修改名稱">
+                    <span class="pencil-icon" style="color:${p.color};">✎</span>
                 </div>
-                <div style="width:120px; height:120px; border-radius:50%; margin:0 auto 15px auto; border:4px solid ${p.color}; display:flex; align-items:center; justify-content:center; ${avatarStyle}">${avatarContent}</div>
-                <div style="font-size:28px; font-weight:bold; color:${p.color}; text-shadow:0 0 10px ${p.color}80;">${p.name}</div>
-                <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0;">
-                ${deckDisplayHtml}
-                <button class="btn-yellow" style="width:100%; margin-top:30px;" onclick="openDeckBuilderFromRoster(${index})">🛠️ 進入專屬兵工廠</button>
+                <div style="position: relative; display: inline-block; margin-top: -5px;">
+                    <input type="color" value="${p.color}" onchange="updateRosterAttr(${index}, 'color', this.value)" style="width: 50px; height: 50px; border-color: ${p.color};" title="變更代表色">
+                    <span style="position:absolute; right: -5px; bottom: -5px; font-size: 14px; color: #000; background: rgba(255,255,255,0.85); border: 2px solid #000; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; box-shadow: 0 0 5px rgba(0,0,0,0.5);">✎</span>
+                </div>
+                <button onclick="openDeckBuilder(${index})" style="width:100%; margin:0; padding:10px; font-size:18px; border:2px solid ${deckBtnColor}; background:rgba(0,0,0,0.8); color:${deckBtnColor}; border-radius:12px; transition:0.3s;" onmouseover="this.style.background='${deckBtnColor}'; this.style.color='#000';" onmouseout="this.style.background='rgba(0,0,0,0.8)'; this.style.color='${deckBtnColor}';">${deckBtnText}</button>
+                <div class="card-arrows">${leftBtn}${rightBtn}</div>
             </div>`;
     });
+    setTimeout(() => { updateCardStyles(); container.removeEventListener('scroll', updateCardStyles); container.addEventListener('scroll', updateCardStyles); }, 50);
 }
-
-function addRosterPlayer() {
-    let name = document.getElementById('newPlayerName').value.trim();
-    if(!name) return alert('請輸入選手名稱');
-    if(roster.some(p => p.name === name)) return alert('選手名稱已存在');
-    let color = document.getElementById('newPlayerColor').value;
-    roster.push({ name: name, color: color, avatar: "", scale: 100, xPos: 50, yPos: 50, deck: [] });
-    document.getElementById('newPlayerName').value = '';
-    saveRoster(); renderRosterList();
-}
-function deleteRoster(index) { if(confirm('確定刪除此選手？')) { roster.splice(index, 1); saveRoster(); renderRosterList(); } }
-function moveRosterLeft(index) { if(index > 0) { let t = roster[index-1]; roster[index-1]=roster[index]; roster[index]=t; saveRoster(); renderRosterList(); } }
-function moveRosterRight(index) { if(index < roster.length-1) { let t = roster[index+1]; roster[index+1]=roster[index]; roster[index]=t; saveRoster(); renderRosterList(); } }
-
-function generateSchedule() {
-    if(roster.length < 2) return alert("至少需要 2 名選手才能生成賽程！");
-    if(appState.matches && appState.matches.length > 0 && !confirm("警告：重新生成將清空目前的對戰紀錄，確定要繼續？")) return;
-    
-    appState.tourName = document.getElementById('tourName').value || `未命名賽事 ${new Date().toLocaleDateString()}`;
-    let matchId = 1;
-    allMatches = [];
-    
-    // 簡單單循環賽生成
-    for (let i = 0; i < roster.length; i++) {
-        for (let j = i + 1; j < roster.length; j++) {
-            allMatches.push({
-                id: matchId++, p1Idx: i, p2Idx: j, 
-                s1: 0, s2: 0, p1BeyIndex: 0, p2BeyIndex: 0,
-                p1Stats: { spin:0, burst:0, over:0, xtreme:0, penalty:0 },
-                p2Stats: { spin:0, burst:0, over:0, xtreme:0, penalty:0 },
-                logs: []
-            });
-        }
-    }
-    // 隨機打亂順序
-    allMatches.sort(() => Math.random() - 0.5);
-    appState.matches = allMatches;
-    saveState();
-    updateSetupUI();
-}
-
-function clearTournamentData() {
-    if(confirm("確定要清空所有賽事紀錄與排名嗎？(名單與裝備庫不會被刪除)")) {
-        appState.matches = []; appState.stats = {}; saveState(); updateSetupUI();
-    }
-}
-
-// ✨ 對戰表渲染 ✨
-function renderMatches() {
-    let container = document.getElementById('scheduleContainer');
-    container.innerHTML = '';
-    if(!allMatches || allMatches.length === 0) return;
-
-    allMatches.forEach((m, idx) => {
-        let n1 = roster[m.p1Idx].name; let n2 = roster[m.p2Idx].name;
-        let isFinished = (m.s1 >= 4 || m.s2 >= 4);
-        let cardClass = isFinished ? "match-card finished" : "match-card";
-        let statusHtml = isFinished ? `<span class="match-status" style="color:#2ecc71;">已結束</span>` : `<span class="match-status" style="color:#f1c40f;">進行中</span>`;
-        
-        container.innerHTML += `
-            <div class="${cardClass}">
-                <div class="match-header">
-                    <span class="match-number">Game ${idx + 1}</span>
-                    ${statusHtml}
-                </div>
-                <div class="match-body">
-                    <div class="player-side">
-                        ${getPlayerPillHtml(n1)}
-                        <div class="score-display" style="border-color:${getPlayerColor(n1)};" onclick="openScoringModal(${m.id})">${m.s1}</div>
-                        ${renderScoringActiveBey(roster[m.p1Idx], m, true)}
-                    </div>
-                    <div style="font-size:32px; font-weight:bold; color:#aaa; font-style:italic;">VS</div>
-                    <div class="player-side">
-                        ${getPlayerPillHtml(n2)}
-                        <div class="score-display" style="border-color:${getPlayerColor(n2)};" onclick="openScoringModal(${m.id})">${m.s2}</div>
-                        ${renderScoringActiveBey(roster[m.p2Idx], m, false)}
-                    </div>
-                </div>
-            </div>
-        `;
+function updateCardStyles() {
+    const container = document.getElementById('rosterListContainer'); if(!container) return;
+    const center = container.getBoundingClientRect().left + container.getBoundingClientRect().width / 2;
+    container.querySelectorAll('.roster-card').forEach(card => {
+        const dist = Math.abs(center - (card.getBoundingClientRect().left + card.getBoundingClientRect().width / 2));
+        if (dist < 450) { card.style.transform = 'scale(1.1)'; card.style.opacity = '1'; card.style.zIndex = '3'; card.style.filter = 'brightness(1.1)'; } 
+        else if (dist < 800) { card.style.transform = 'scale(0.8)'; card.style.opacity = '0.4'; card.style.zIndex = '2'; card.style.filter = 'brightness(0.6)'; } 
+        else { card.style.transform = 'scale(0.6)'; card.style.opacity = '0.1'; card.style.zIndex = '1'; card.style.filter = 'brightness(0.3)'; }
     });
 }
-
-function renderScoringActiveBey(p, m, isP1) {
-    let beyIndex = isP1 ? (m.p1BeyIndex || 0) : (m.p2BeyIndex || 0);
-    if (p.deck && p.deck[beyIndex] && p.deck[beyIndex].parts && p.deck[beyIndex].parts.TopPart) {
-         return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px; margin-top:-10px;">
-                   <div class="mini-icon-wrapper" style="transform:scale(0.8); height:70px;">${getDeckCoverHtml(p.deck[beyIndex])}</div>
-                   <div style="font-size:14px; color:#f1c40f; line-height:1.2; text-align:center;">${getDeckFullName(p.deck[beyIndex])}</div>
-                 </div>`;
-    }
-    return `<div style="font-size:14px; color:#777;">(無配置裝備)</div>`;
+function moveRosterLeft(index) { if (index > 0) { let temp = roster[index - 1]; roster[index - 1] = roster[index]; roster[index] = temp; saveRoster(); renderRosterList(); setTimeout(() => { document.getElementById('rosterListContainer').querySelectorAll('.roster-card')[index-1]?.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }, 100); } }
+function moveRosterRight(index) { if (index < roster.length - 1) { let temp = roster[index + 1]; roster[index + 1] = roster[index]; roster[index] = temp; saveRoster(); renderRosterList(); setTimeout(() => { document.getElementById('rosterListContainer').querySelectorAll('.roster-card')[index+1]?.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }, 100); } }
+function openAvatarEditModal(index) { currentEditIndex = index; let p = roster[index]; document.getElementById('editScale').value = p.scale; document.getElementById('editX').value = p.xPos; document.getElementById('editY').value = p.yPos; document.getElementById('editAvatarUrl').value = p.avatar || ""; updateAvatarPreview(); document.getElementById('avatarEditModal').style.display = 'block'; }
+function closeAvatarEditModal() { document.getElementById('avatarEditModal').style.display = 'none'; currentEditIndex = -1; }
+function updateAvatarPreview() {
+    if(currentEditIndex === -1) return; let p = roster[currentEditIndex];
+    let scale = document.getElementById('editScale').value, x = document.getElementById('editX').value, y = document.getElementById('editY').value, url = document.getElementById('editAvatarUrl').value.trim();
+    document.getElementById('valScale').innerText = scale; document.getElementById('valX').innerText = x; document.getElementById('valY').innerText = y;
+    let previewDiv = document.getElementById('avatarPreview'); previewDiv.style.color = p.color;
+    if(url !== "") { previewDiv.style.backgroundImage = `url('${url}')`; previewDiv.style.backgroundSize = `${scale}%`; previewDiv.style.backgroundPosition = `${x}% ${y}%`; previewDiv.innerText = ""; } else { previewDiv.style.backgroundImage = "none"; previewDiv.innerHTML = `<span style="line-height:170px; font-size:24px; color:#aaa;">無圖片</span>`; }
+}
+function saveAvatarEdit() { if(currentEditIndex === -1) return; roster[currentEditIndex].scale = document.getElementById('editScale').value; roster[currentEditIndex].xPos = document.getElementById('editX').value; roster[currentEditIndex].yPos = document.getElementById('editY').value; roster[currentEditIndex].avatar = document.getElementById('editAvatarUrl').value.trim(); saveRoster(); renderRosterList(); closeAvatarEditModal(); }
+function addNewRosterPlayer() { roster.push({ id: Date.now(), name: `新選手${roster.length+1}`, avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[roster.length % defaultColors.length], deck: createEmptyDeck() }); saveRoster(); renderRosterList(); setTimeout(() => { const c = document.getElementById('rosterListContainer').querySelectorAll('.roster-card'); if(c.length>0) c[c.length-1].scrollIntoView({ behavior: 'smooth', inline: 'center' }); }, 100); }
+function deleteRosterPlayer(index) { if(confirm("確定要刪除這名選手嗎？")) { roster.splice(index, 1); saveRoster(); renderRosterList(); } }
+function updateRosterAttr(index, attr, value) { roster[index][attr] = value; saveRoster(); renderRosterList(); }
+function updateRosterName(index, newName) {
+    let oldName = roster[index].name; newName = newName.trim();
+    if(newName === "" || newName === oldName) return renderRosterList();
+    if(roster.some(r => r.name === newName)) { alert("名稱重複！"); return renderRosterList(); }
+    roster[index].name = newName; saveRoster();
+    let history = JSON.parse(localStorage.getItem('beyblade_history') || '{}'); let historyChanged = false;
+    for (let tId in history) { if (history[tId].results[oldName]) { history[tId].results[newName] = history[tId].results[oldName]; delete history[tId].results[oldName]; historyChanged = true; } }
+    if(historyChanged) localStorage.setItem('beyblade_history', JSON.stringify(history));
+    let appChanged = false; appState.players = appState.players.map(p => { if(p === oldName) { appChanged = true; return newName; } return p; });
+    if(appChanged) saveState(); renderRosterList();
 }
 
-// ✨ 計分板 Modal 邏輯 ✨
-function openScoringModal(matchId) {
-    currentScoringMatchId = matchId;
-    let m = allMatches.find(x => x.id === matchId);
-    let n1 = roster[m.p1Idx].name; let n2 = roster[m.p2Idx].name;
-    
-    document.getElementById('scoringTitle').innerText = `🏆 Game ${matchId} 計分台`;
-    document.getElementById('p1ScoreCol').style.borderColor = getPlayerColor(n1);
-    document.getElementById('p2ScoreCol').style.borderColor = getPlayerColor(n2);
-    
-    document.getElementById('p1PillHtml').innerHTML = getPlayerPillHtml(n1);
-    document.getElementById('p2PillHtml').innerHTML = getPlayerPillHtml(n2);
-    
-    document.getElementById('p1CurrentScore').innerText = m.s1;
-    document.getElementById('p2CurrentScore').innerText = m.s2;
-
-    document.getElementById('p1ActiveBey').innerHTML = renderScoringActiveBey(roster[m.p1Idx], m, true);
-    document.getElementById('p2ActiveBey').innerHTML = renderScoringActiveBey(roster[m.p2Idx], m, false);
-    
-    document.getElementById('scoringModal').style.display = 'block';
-}
-
-function cycleBey(isP1) {
-    let m = allMatches.find(x => x.id === currentScoringMatchId);
-    if(isP1) m.p1BeyIndex = ((m.p1BeyIndex || 0) + 1) % 3;
-    else m.p2BeyIndex = ((m.p2BeyIndex || 0) + 1) % 3;
-    saveState();
-    openScoringModal(currentScoringMatchId); // 刷新
-}
-
-function handleScoreAction(playerNum, type, points) {
-    let m = allMatches.find(x => x.id === currentScoringMatchId);
-    if (m.s1 >= 4 || m.s2 >= 4) { alert("此對局已達 4 分結束標準！"); return; }
-    
-    m.logs.push(JSON.parse(JSON.stringify({ s1: m.s1, s2: m.s2, p1Stats: m.p1Stats, p2Stats: m.p2Stats })));
-    
-    if (playerNum === 1) {
-        if(type === 'penalty') m.p1Stats.penalty++;
-        else { m.s1 += points; m.p1Stats[type]++; }
-    } else {
-        if(type === 'penalty') m.p2Stats.penalty++;
-        else { m.s2 += points; m.p2Stats[type]++; }
-    }
-    
-    saveState(); updateSetupUI(); openScoringModal(currentScoringMatchId);
-}
-
-function undoLastScore() {
-    let m = allMatches.find(x => x.id === currentScoringMatchId);
-    if(m.logs.length === 0) return alert("無歷史紀錄可復原！");
-    let prev = m.logs.pop();
-    m.s1 = prev.s1; m.s2 = prev.s2; m.p1Stats = prev.p1Stats; m.p2Stats = prev.p2Stats;
-    saveState(); updateSetupUI(); openScoringModal(currentScoringMatchId);
-}
-
-function closeScoringModal() { document.getElementById('scoringModal').style.display = 'none'; }
-
-// ✨ 排名計算 ✨
-function calculateRankings() {
-    let stats = {};
-    roster.forEach(p => {
-        stats[p.name] = { name: p.name, color: p.color, wins: 0, losses: 0, points: 0, spin:0, burst:0, over:0, xtreme:0, penalty:0 };
-    });
-    
-    allMatches.forEach(m => {
-        let n1 = roster[m.p1Idx].name; let n2 = roster[m.p2Idx].name;
-        if (m.s1 >= 4) { stats[n1].wins++; stats[n2].losses++; }
-        else if (m.s2 >= 4) { stats[n2].wins++; stats[n1].losses++; }
-        
-        stats[n1].points += m.s1; stats[n2].points += m.s2;
-        ['spin', 'burst', 'over', 'xtreme', 'penalty'].forEach(type => {
-            stats[n1][type] += m.p1Stats[type]; stats[n2][type] += m.p2Stats[type];
-        });
-    });
-    
-    appState.stats = stats;
-    let rankArr = Object.values(stats).sort((a,b) => {
-        if(b.wins !== a.wins) return b.wins - a.wins;
-        if(b.points !== a.points) return b.points - a.points;
-        return (a.losses) - (b.losses);
-    });
-    
-    let tbody = document.getElementById('standingsBody');
-    tbody.innerHTML = '';
-    rankArr.forEach((p, idx) => {
-        let winRate = (p.wins + p.losses) > 0 ? Math.round((p.wins / (p.wins + p.losses)) * 100) : 0;
-        let rankStr = (idx===0) ? "🥇 1" : (idx===1) ? "🥈 2" : (idx===2) ? "🥉 3" : (idx+1);
-        tbody.innerHTML += `
-            <tr style="background:rgba(${hexToRgb(p.color)},0.1);">
-                <td style="font-size:28px; font-weight:bold;">${rankStr}</td>
-                <td>${getPlayerPillHtml(p.name)}</td>
-                <td style="font-size:24px;"><b><span style="color:#2ecc71">${p.wins}</span> - <span style="color:#e74c3c">${p.losses}</span></b></td>
-                <td style="font-size:24px; font-weight:bold; color:#0ff;">${p.points}</td>
-                <td style="color:#f1c40f;">${winRate}%</td>
-            </tr>`;
-    });
-}
-function hexToRgb(hex) {
-    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : `255,255,255`;
-}
-
-function finalizeTournament() {
-    if(!confirm("即將結束賽事並將最終名次寫入歷史圖表，確認結束？")) return;
-    let historyObj = JSON.parse(localStorage.getItem('beyblade_career_history')) || {};
-    let tn = appState.tourName || new Date().toLocaleDateString();
-    
-    Object.values(appState.stats).forEach(st => {
-        if(!historyObj[st.name]) historyObj[st.name] = { results: {} };
-        historyObj[st.name].results[tn] = { w: st.wins, l: st.losses };
-    });
-    localStorage.setItem('beyblade_career_history', JSON.stringify(historyObj));
-    alert("賽事已成功結算！即將刷新歷史圖表。");
-    renderHistory();
-}
-
-function renderHistory() {
-    let historyObj = JSON.parse(localStorage.getItem('beyblade_career_history')) || {};
-    let allTourneys = new Set();
-    Object.values(historyObj).forEach(p => Object.keys(p.results).forEach(t => allTourneys.add(t)));
-    
-    let xLabels = Array.from(allTourneys);
-    let datasets = roster.map(p => {
-        let data = xLabels.map(t => {
-            if(!historyObj[p.name] || !historyObj[p.name].results[t]) return null;
-            let r = historyObj[p.name].results[t];
-            return (r.w+r.l) > 0 ? Math.round((r.w/(r.w+r.l))*100) : null;
-        });
-        return { label: p.name, data: data, borderColor: p.color, backgroundColor: p.color, borderWidth: 3, spanGaps: true };
-    });
-
-    const ctx = document.getElementById('careerChart').getContext('2d'); 
-    if(careerChartInstance) careerChartInstance.destroy();
-    careerChartInstance = new Chart(ctx, { 
-        type: 'line', data: { labels: xLabels, datasets: datasets }, 
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
-    });
-}
-
-
-// ================== ✨ 雙系統橋樑 (Bridge) ✨ ==================
-
-function openDeckBuilderFromRoster(index) {
+// ================== Deck Builder (3on3 牌組編輯器) 邏輯 ==================
+function openDeckBuilder(index) {
     currentDeckEditIndex = index;
     let p = roster[index];
+    document.getElementById('deckPlayerName').innerText = p.name;
+    document.getElementById('deckPlayerName').style.color = p.color;
+    document.getElementById('deckValidationMsg').innerText = "";
     
-    // 讀取該選手專屬配置，若無則初始化
+    const container = document.getElementById('deckContainer');
+    container.innerHTML = '';
+    
+    // 渲染 3 個 Slot
+    for(let i=0; i<3; i++) {
+        let d = p.deck[i];
+        let selectHtml = `
+            <select class="mode-selector" id="deck_${i}_mode" onchange="renderDeckSlot(${i})">
+                <option value="standard" ${d.mode==='standard'?'selected':''}>⚔️ 一般系列 (Blade)</option>
+                <option value="cx1" ${d.mode==='cx1'?'selected':''}>🛡️ CX 標準組裝 (MainBlade)</option>
+                <option value="cx2" ${d.mode==='cx2'?'selected':''}>🔥 CX 進階組裝 (CX-13~17)</option>
+            </select>
+        `;
+        container.innerHTML += `
+            <div class="deck-slot" id="deckSlot_${i}">
+                <h4>陀螺 ${i+1}</h4>
+                ${selectHtml}
+                <div id="deck_${i}_fields"></div>
+            </div>
+        `;
+        setTimeout(() => renderDeckSlot(i), 0);
+    }
+    
+    document.getElementById('deckBuilderModal').style.display = 'block';
+}
+
+function renderDeckSlot(i) {
+    let mode = document.getElementById(`deck_${i}_mode`).value;
+    let fieldsDiv = document.getElementById(`deck_${i}_fields`);
+    let d = roster[currentDeckEditIndex].deck[i];
+    
+    // 清除舊的值
+    let html = '';
+    
+    if(mode === 'standard') {
+        html += `<div class="deck-part"><label>上蓋 (Blade)</label><input type="text" id="deck_${i}_blade" value="${d.blade||''}" list="list-blade" placeholder="輸入或選擇"></div>`;
+    } else if(mode === 'cx1') {
+        html += `<div class="deck-part"><label>紋章 (Lock Chip)</label><input type="text" id="deck_${i}_lockchip" value="${d.lockChip||''}" list="list-lockchip" placeholder="輸入或選擇"></div>`;
+        html += `<div class="deck-part"><label>主要戰刃 (Main Blade)</label><input type="text" id="deck_${i}_mainblade" value="${d.mainBlade||''}" list="list-mainblade" placeholder="輸入或選擇"></div>`;
+        html += `<div class="deck-part"><label>輔助戰刃 (Assist Blade)</label><input type="text" id="deck_${i}_assistblade" value="${d.assistBlade||''}" list="list-assistblade" placeholder="輸入或選擇"></div>`;
+    } else if(mode === 'cx2') {
+        html += `<div class="deck-part"><label>紋章 (Lock Chip)</label><input type="text" id="deck_${i}_lockchip" value="${d.lockChip||''}" list="list-lockchip" placeholder="輸入或選擇"></div>`;
+        html += `<div class="deck-part"><label>超越戰刃 (Over Blade)</label><input type="text" id="deck_${i}_overblade" value="${d.overBlade||''}" list="list-overblade" placeholder="輸入或選擇"></div>`;
+        html += `<div class="deck-part"><label>金屬戰刃 (Metal Blade)</label><input type="text" id="deck_${i}_metalblade" value="${d.metalBlade||''}" list="list-metalblade" placeholder="輸入或選擇"></div>`;
+        html += `<div class="deck-part"><label>輔助戰刃 (Assist Blade)</label><input type="text" id="deck_${i}_assistblade" value="${d.assistBlade||''}" list="list-assistblade" placeholder="輸入或選擇"></div>`;
+    }
+    
+    // Ratchet & Bit 是共同的
+    html += `<div class="deck-part" style="margin-top:10px;"><label>固鎖 (Ratchet)</label><input type="text" id="deck_${i}_ratchet" value="${d.ratchet||''}" list="list-ratchet" placeholder="輸入或選擇"></div>`;
+    html += `<div class="deck-part"><label>軸心 (Bit)</label><input type="text" id="deck_${i}_bit" value="${d.bit||''}" list="list-bit" placeholder="輸入或選擇"></div>`;
+    
+    fieldsDiv.innerHTML = html;
+}
+
+function saveDeck() {
+    let p = roster[currentDeckEditIndex];
+    let allParts = [];
+    let hasEmpty = false;
+    let deckData = [];
+    
+    for(let i=0; i<3; i++) {
+        let mode = document.getElementById(`deck_${i}_mode`).value;
+        let d = { mode: mode, blade:'', lockChip:'', mainBlade:'', overBlade:'', metalBlade:'', assistBlade:'', ratchet:'', bit:'' };
+        let partsInThisBey = [];
+        
+        let ratchet = document.getElementById(`deck_${i}_ratchet`).value.trim();
+        let bit = document.getElementById(`deck_${i}_bit`).value.trim();
+        d.ratchet = ratchet; d.bit = bit;
+        if(!ratchet || !bit) hasEmpty = true; else { partsInThisBey.push(ratchet, bit); }
+        
+        if(mode === 'standard') {
+            let blade = document.getElementById(`deck_${i}_blade`).value.trim();
+            d.blade = blade; if(!blade) hasEmpty = true; else partsInThisBey.push(blade);
+        } else if(mode === 'cx1') {
+            d.lockChip = document.getElementById(`deck_${i}_lockchip`).value.trim();
+            d.mainBlade = document.getElementById(`deck_${i}_mainblade`).value.trim();
+            d.assistBlade = document.getElementById(`deck_${i}_assistblade`).value.trim();
+            if(!d.lockChip||!d.mainBlade||!d.assistBlade) hasEmpty = true; else partsInThisBey.push(d.lockChip, d.mainBlade, d.assistBlade);
+        } else if(mode === 'cx2') {
+            d.lockChip = document.getElementById(`deck_${i}_lockchip`).value.trim();
+            d.overBlade = document.getElementById(`deck_${i}_overblade`).value.trim();
+            d.metalBlade = document.getElementById(`deck_${i}_metalblade`).value.trim();
+            d.assistBlade = document.getElementById(`deck_${i}_assistblade`).value.trim();
+            if(!d.lockChip||!d.overBlade||!d.metalBlade||!d.assistBlade) hasEmpty = true; else partsInThisBey.push(d.lockChip, d.overBlade, d.metalBlade, d.assistBlade);
+        }
+        
+        allParts.push(...partsInThisBey);
+        deckData.push(d);
+    }
+    
+    let msgDiv = document.getElementById('deckValidationMsg');
+    if(hasEmpty) {
+        msgDiv.innerText = "❌ 儲存失敗：有欄位空白！請為 3 顆陀螺填寫完整的零件。";
+        msgDiv.style.color = "#e74c3c";
+        return;
+    }
+    
+    // 驗證重複零件 (3on3 核心規則)
+    let uniqueParts = new Set(allParts);
+    if(uniqueParts.size !== allParts.length) {
+        msgDiv.innerText = "❌ 儲存失敗：牌組內有重複使用的零件！(違反 3on3 規則)";
+        msgDiv.style.color = "#e74c3c";
+        return;
+    }
+    
+    p.deck = deckData;
+    saveRoster();
+    msgDiv.innerText = "✅ 牌組驗證通過並儲存成功！";
+    msgDiv.style.color = "#2ecc71";
+    renderRosterList();
+    setTimeout(closeDeckBuilder, 1500);
+}
+
+function closeDeckBuilder() { document.getElementById('deckBuilderModal').style.display = 'none'; currentDeckEditIndex = -1; }
+
+// ================== 將 Deck 轉化為易讀字串的輔助函數 ==================
+function formatDeckString(d) {
+    if(!d) return "無配置";
+    if(d.mode === 'standard') return `[上]${d.blade} / [固]${d.ratchet} / [軸]${d.bit}`;
+    if(d.mode === 'cx1') return `[紋]${d.lockChip} / [主]${d.mainBlade} / [輔]${d.assistBlade} / [固]${d.ratchet} / [軸]${d.bit}`;
+    if(d.mode === 'cx2') return `[紋]${d.lockChip} / [超]${d.overBlade} / [金]${d.metalBlade} / [輔]${d.assistBlade} / [固]${d.ratchet} / [軸]${d.bit}`;
+    return "解析錯誤";
+}
+
+
+// ================== 原有系統 UI / 渲染邏輯 ==================
+function getPlayerPillHtml(name, size = "normal") {
+    let color = getPlayerColor(name); let r = roster.find(x => x.name === name);
+    let avatarSize = size === "small" ? "32px" : "54px"; let fontSizeText = size === "small" ? "14px" : "16px";
+    let avatarHtml = `<div class="avatar" style="width:${avatarSize}; height:${avatarSize}; display:flex; align-items:center; justify-content:center; font-size:${fontSizeText}; color:#aaa; border-color:${color};">圖</div>`;
+    if(r && r.avatar && r.avatar.trim() !== "") { avatarHtml = `<div class="avatar" style="width:${avatarSize}; height:${avatarSize}; background-image:url('${r.avatar}'); background-size:${r.scale}%; background-position:${r.xPos}% ${r.yPos}%; border-color:${color};"></div>`; }
+    let pillClass = size === "small" ? "player-pill small" : "player-pill";
+    return `<div class="${pillClass}" data-player="${name}" style="color:${color}; border-color:${color}; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 0 12px ${color}40;" onmouseover="hoverPlayer('${name}')" onmouseout="unhoverPlayer('${name}')">${avatarHtml} <span class="player-name-truncate" style="text-shadow: 0 0 8px ${color};">${name}</span></div>`;
+}
+function hoverPlayer(name) { let color = getPlayerColor(name); document.querySelectorAll('.player-pill').forEach(pill => { if(pill.getAttribute('data-player') === name) { pill.style.backgroundColor = color; pill.style.color = '#000'; pill.style.boxShadow = `0 0 25px ${color}`; } }); }
+function unhoverPlayer(name) { let color = getPlayerColor(name); document.querySelectorAll('.player-pill').forEach(pill => { if(pill.getAttribute('data-player') === name) { pill.style.backgroundColor = 'rgba(0,0,0,0.5)'; pill.style.color = color; pill.style.boxShadow = `inset 0 0 15px rgba(0,0,0,0.8), 0 0 12px ${color}40`; } }); }
+function getPureAvatarHtml(name) {
+    let color = getPlayerColor(name); let r = roster.find(x => x.name === name);
+    if(r && r.avatar && r.avatar.trim() !== "") { return `<div class="avatar" style="background-image:url('${r.avatar}'); background-size:${r.scale}%; background-position:${r.xPos}% ${r.yPos}%; border-color:${color}; width:45px; height:45px;"></div>`; }
+    return `<div class="avatar" style="display:flex; align-items:center; justify-content:center; font-size:15px; color:#aaa; border-color:${color}; width:45px; height:45px;">圖</div>`;
+}
+
+function renderPlayerBoxes() {
+    let currentCount = parseInt(document.getElementById('playerCount').value);
+    const container = document.getElementById('playerBoxesContainer'); container.innerHTML = ''; 
+    let optionsHtml = roster.map(r => `<option value="${r.name}">${r.name}</option>`).join('');
+    
+    for (let i = 0; i < currentCount; i++) {
+        let safeDefault = roster[i] ? roster[i].name : (roster[0] ? roster[0].name : "");
+        let selectedValue = appState.players[i] || safeDefault;
+        let color = getPlayerColor(selectedValue); let avatarHtml = getPureAvatarHtml(selectedValue);
+        
+        container.innerHTML += `
+            <div class="player-field" style="border-color:${color}40; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                <label style="color:${color}; text-shadow: 0 0 8px ${color};">第 ${i+1} 位</label>
+                <div style="display:flex; align-items:center; gap:12px;"><div id="selection-avatar-${i}">${avatarHtml}</div>
+                <select class="player-name-input player-name-truncate" style="color:${color}; border-color:${color}; box-shadow: inset 0 0 12px ${color}40; text-shadow: 0 0 8px ${color}; width: 180px;" onchange="updateBoxColor(this, ${i})">${optionsHtml}</select></div>
+            </div>`;
+        setTimeout(() => { document.querySelectorAll('.player-name-input')[i].value = selectedValue; }, 0);
+    }
+}
+function updateBoxColor(selectElem, idx) {
+    let name = selectElem.value; let color = getPlayerColor(name);
+    selectElem.style.color = color; selectElem.style.borderColor = color; selectElem.style.boxShadow = `inset 0 0 12px ${color}40`; selectElem.style.textShadow = `0 0 8px ${color}`;
+    selectElem.parentElement.previousElementSibling.style.color = color; selectElem.parentElement.previousElementSibling.style.textShadow = `0 0 8px ${color}`;
+    selectElem.parentElement.parentElement.style.borderColor = `${color}40`;
+    document.getElementById(`selection-avatar-${idx}`).innerHTML = getPureAvatarHtml(name);
+}
+
+function generateNewSchedule() {
+    const selects = document.querySelectorAll('.player-name-input');
+    let currentCount = parseInt(document.getElementById('playerCount').value);
+    
+    if(roster.length < currentCount) { return alert(`⚠ 選手名單人數不足！\n\n目前賽事設定為 ${currentCount} 人，但名單只有 ${roster.length} 人。\n請先點擊「👤 選手名單管理」新增選手。`); }
+
+    appState.players = Array.from(selects).map(sel => sel.value);
+    if(appState.players.some(p => !p || p.trim() === "")) return alert('有空白的選手選擇，請確認！');
+    if(new Set(appState.players).size !== appState.players.length) return alert('賽事名單內有重複的選手！請確認每位選手都是獨一無二的。');
+
+    // 檢查出賽選手是否都有牌組 (警告即可，不妨礙開賽，以防純體驗的用戶)
+    let missingDecks = appState.players.filter(pName => {
+        let r = roster.find(x => x.name === pName);
+        return !r.deck.every(d => (d.mode==='standard'&&d.blade&&d.ratchet&&d.bit) || (d.mode==='cx1'&&d.lockChip&&d.mainBlade&&d.assistBlade&&d.ratchet&&d.bit) || (d.mode==='cx2'&&d.lockChip&&d.overBlade&&d.metalBlade&&d.assistBlade&&d.ratchet&&d.bit));
+    });
+    if(missingDecks.length > 0) {
+        if(!confirm(`⚠️ 以下選手的 3on3 牌組尚未配置完成：\n${missingDecks.join(', ')}\n\n是否仍然要強制開賽？(計分面板的陀螺資訊將會留空)`)) return;
+    }
+
+    let inputName = document.getElementById('tournamentName').value.trim();
+    if (inputName === "") { if (!confirm("未填寫賽事名稱，確定直接建立嗎？")) return; inputName = "未命名賽事"; }
+    let history = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
+    let finalName = inputName; let counter = 1;
+    while (Object.values(history).some(h => h.name === finalName)) { counter++; finalName = `${inputName} (${counter})`; }
+    document.getElementById('tournamentName').value = finalName; appState.tournamentName = finalName;
+
+    appState.p1DeckOrderOverride = {}; // 清空 Override
+    appState.p2DeckOrderOverride = {};
+
+    let baseConfig = schedulesConfig[currentCount]; let rounds = parseInt(document.getElementById('roundCount').value);
+    let allMatches = []; let lastMatch = null;
+    for(let r = 0; r < rounds; r++) {
+        let mapping = Array.from({length: currentCount}, (_, i) => i); let valid = false; let attempt = 0;
+        while(!valid && attempt < 50) {
+            mapping.sort(() => Math.random() - 0.5);
+            let firstP1 = mapping[baseConfig[0].p1], firstP2 = mapping[baseConfig[0].p2];
+            if(lastMatch) { if(firstP1 !== lastMatch.p1Idx && firstP1 !== lastMatch.p2Idx && firstP2 !== lastMatch.p1Idx && firstP2 !== lastMatch.p2Idx) { valid = true; } } else { valid = true; }
+            attempt++;
+        }
+        baseConfig.forEach(m => { 
+            allMatches.push({ 
+                p1Idx: mapping[m.p1], p2Idx: mapping[m.p2], s1: 0, s2: 0, 
+                p1Stats: { spin:0, burst:0, over:0, xtreme:0, penalty:0 }, 
+                p2Stats: { spin:0, burst:0, over:0, xtreme:0, penalty:0 },
+                p1Penalties: 0, p2Penalties: 0, logs: [] 
+            }); 
+        });
+        lastMatch = allMatches[allMatches.length - 1];
+    }
+    
+    let refCounts = Array(currentCount).fill(0);
+    appState.matches = allMatches.map((m, index) => {
+        let possibleRefs = []; 
+        for(let i=0; i<currentCount; i++) { if(i !== m.p1Idx && i !== m.p2Idx) possibleRefs.push(i); }
+        let refIdx = null;
+        if(possibleRefs.length > 0) { possibleRefs.sort((a, b) => refCounts[a] - refCounts[b]); refIdx = possibleRefs[0]; refCounts[refIdx]++; }
+        return { id: index, ...m, refIdx: refIdx };
+    });
+    
+    let d = new Date(); appState.timeString = `${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    appState.id = `TRN_${Date.now()}`; saveState(); renderMatches();
+}
+
+function renderMatches() {
+    if(appState.matches.length === 0) return;
+    const container = document.getElementById('scheduleContainer'); container.innerHTML = '';
+    let encounterCountMap = {}; 
+    appState.matches.forEach((m, idx) => {
+        if(!m.logs) { m.logs = []; m.p1Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p2Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p1Penalties = 0; m.p2Penalties = 0; }
+        if(m.p1Stats.penalty === undefined) { m.p1Stats.penalty = 0; m.p2Stats.penalty = 0; }
+        let n1 = appState.players[m.p1Idx], n2 = appState.players[m.p2Idx];
+        let ref = (m.refIdx !== null && m.refIdx !== undefined) ? appState.players[m.refIdx] : null;
+        
+        let pairKey = [n1, n2].sort().join('|'); encounterCountMap[pairKey] = (encounterCountMap[pairKey] || 0) + 1; let encounterNum = encounterCountMap[pairKey];
+        let statusHtml = '<div class="match-status" style="color:#aaa; border-color:#aaa;">尚未開賽</div>'; let cardClass = "";
+        
+        if (m.s1 >= 4 && m.s2 >= 4) { statusHtml = `<div class="match-status" style="color:#e74c3c; border-color:#e74c3c; box-shadow:0 0 15px rgba(231,76,60,0.5);">⚠️ 分數異常</div>`; cardClass = "error";
+        } else if (m.s1 >= 4 || m.s2 >= 4) { let winner = m.s1 > m.s2 ? n1 : n2; let winColor = getPlayerColor(winner); statusHtml = `<div class="match-status" style="color:${winColor}; border-color:${winColor}; background:rgba(0,0,0,0.7); box-shadow:0 0 15px ${winColor}80;"><span class="player-name-truncate" style="max-width:8em;">${winner}</span> 獲勝 🏆</div>`; cardClass = "finished";
+        } else if (m.s1 > 0 || m.s2 > 0 || m.p1Penalties > 0 || m.p2Penalties > 0) { statusHtml = '<div class="match-status" style="color:#0ff; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.5);">🔥 比賽中</div>'; }
+
+        let refHtml = ""; if (ref) { refHtml = `<div style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.5); padding: 4px 15px 4px 12px; border-radius: 30px; border: 2px solid rgba(241,196,15,0.4);"><span style="font-size: 20px; color: #f1c40f; font-weight: bold; letter-spacing: 2px;">⚖️ 裁判</span>${getPlayerPillHtml(ref, "small")}</div>`; }
+
+        container.innerHTML += `
+            <div class="match-card ${cardClass}">
+                <div class="match-header"><div style="display:flex; align-items:center; gap: 15px; flex-wrap: wrap;"><span class="match-number">第 ${idx + 1} 場</span><span class="encounter-badge">遭遇 #${encounterNum}</span>${refHtml}</div>${statusHtml}</div>
+                <div class="match-body">
+                    <div class="player-side">${getPlayerPillHtml(n1)}<div class="score-display" style="color:${getPlayerColor(n1)}; border-color:${getPlayerColor(n1)};" onclick="openScoringModal(${m.id})">${m.s1}</div></div>
+                    <div class="vs-badge">V.S</div>
+                    <div class="player-side">${getPlayerPillHtml(n2)}<div class="score-display" style="color:${getPlayerColor(n2)}; border-color:${getPlayerColor(n2)};" onclick="openScoringModal(${m.id})">${m.s2}</div></div>
+                </div>
+            </div>`;
+    });
+    container.innerHTML += `<div style="display: flex; gap: 25px; margin-top: 20px;"><button class="btn-green" style="flex: 1; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(46,204,113,0.4);" onclick="exportToCSV()">📥 匯出 Excel (CSV)</button><button class="btn-yellow" style="flex: 2; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(241,196,15,0.4);" onclick="archiveTournament()">💾 完成賽局並儲存至生涯紀錄</button></div>`;
+    renderSummary();
+}
+
+// ================== 計分面板與 Deck 聯動邏輯 ==================
+function openScoringModal(matchId) {
+    currentScoringMatchId = matchId; let m = appState.matches.find(x => x.id === matchId);
+    if(!m.logs) { m.logs = []; m.p1Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p2Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p1Penalties = 0; m.p2Penalties = 0; }
+    if(m.p1Stats.penalty === undefined) { m.p1Stats.penalty = 0; m.p2Stats.penalty = 0; }
+    
+    // 初始化 Override
+    if(!appState.p1DeckOrderOverride) appState.p1DeckOrderOverride = {};
+    if(!appState.p2DeckOrderOverride) appState.p2DeckOrderOverride = {};
+
+    renderScoringModal(); document.getElementById('scoringModal').style.display = 'block';
+}
+
+function renderScoringModal() {
+    let m = appState.matches.find(x => x.id === currentScoringMatchId); 
+    let n1 = appState.players[m.p1Idx]; let n2 = appState.players[m.p2Idx]; 
+    let c1 = getPlayerColor(n1); let c2 = getPlayerColor(n2);
+    
+    // 計算當前 Round
+    let currentRound = m.logs.length + 1; // 0次紀錄 = Round 1
+    document.getElementById('roundIndicator').innerText = `第 ${currentRound} 回合 (Round ${currentRound})`;
+
+    // 取得選手牌組資料
+    let r1 = roster.find(x => x.name === n1);
+    let r2 = roster.find(x => x.name === n2);
+    
+    // 判斷上場的陀螺 (0, 1, 2)
+    let p1BeyIndex = (currentRound - 1) % 3;
+    let p2BeyIndex = (currentRound - 1) % 3;
+    
+    // 如果進入第 4 回合以上，檢查是否有自定義覆蓋順序
+    if (currentRound >= 4) {
+        if (appState.p1DeckOrderOverride[m.id] !== undefined) p1BeyIndex = appState.p1DeckOrderOverride[m.id];
+        if (appState.p2DeckOrderOverride[m.id] !== undefined) p2BeyIndex = appState.p2DeckOrderOverride[m.id];
+    }
+    
+    let p1DeckInfo = formatDeckString(r1.deck[p1BeyIndex]);
+    let p2DeckInfo = formatDeckString(r2.deck[p2BeyIndex]);
+    
+    // 變更順序按鈕 (第4回合才顯示)
+    let reorderBtnHtml = currentRound >= 4 ? `<button onclick="openReorderDeckModal()" style="position:absolute; top:15px; right:15px; background:transparent; border:1px solid #f1c40f; color:#f1c40f; border-radius:8px; padding:5px 10px; font-size:16px; cursor:pointer; font-weight:bold;">🔄 變陣</button>` : '';
+
+    document.getElementById('scoringPanelBody').innerHTML = `
+        <div class="player-score-col" style="border-color:${c1}80;">
+            ${reorderBtnHtml}
+            ${getPlayerPillHtml(n1)}
+            <div class="active-bey-info" style="cursor:pointer; padding: 15px; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.2);" onclick="cycleBey(true)" title="點擊切換上陣陀螺">
+    <div style="font-size:16px; color:#aaa; margin-bottom:8px;">🔄 點擊切換上陣陀螺 (#${(m.p1BeyIndex||0)+1})</div>
+    ${renderScoringActiveBey(roster[m.p1Idx], m, true)}
+</div>
+            <div class="score-huge" style="color:${c1};">${m.s1}</div><div class="penalty-text">${m.p1Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div>
+            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'spin', 1)"><span>轉停勝利 (Spin)</span><span class="win-pts">+1</span></button>
+            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'burst', 2)"><span>爆裂勝利 (Burst)</span><span class="win-pts">+2</span></button>
+            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'over', 2)"><span>擊飛勝利 (Over)</span><span class="win-pts">+2</span></button>
+            <button class="win-btn" style="color:${c1}; border-color:${c1}; font-weight:900;" onclick="handleScoreAction(1, 'xtreme', 3)"><span>極限勝利 (Xtreme)</span><span class="win-pts">+3</span></button>
+            <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(1, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
+        </div>
+        <div class="player-score-col" style="border-color:${c2}80;">
+            ${reorderBtnHtml}
+            ${getPlayerPillHtml(n2)}
+            <div class="active-bey-info" style="cursor:pointer; padding: 15px; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.2);" onclick="cycleBey(false)" title="點擊切換上陣陀螺">
+    <div style="font-size:16px; color:#aaa; margin-bottom:8px;">🔄 點擊切換上陣陀螺 (#${(m.p2BeyIndex||0)+1})</div>
+    ${renderScoringActiveBey(roster[m.p2Idx], m, false)}
+</div>
+            <div class="score-huge" style="color:${c2};">${m.s2}</div><div class="penalty-text">${m.p2Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div>
+            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'spin', 1)"><span>轉停勝利 (Spin)</span><span class="win-pts">+1</span></button>
+            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'burst', 2)"><span>爆裂勝利 (Burst)</span><span class="win-pts">+2</span></button>
+            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'over', 2)"><span>擊飛勝利 (Over)</span><span class="win-pts">+2</span></button>
+            <button class="win-btn" style="color:${c2}; border-color:${c2}; font-weight:900;" onclick="handleScoreAction(2, 'xtreme', 3)"><span>極限勝利 (Xtreme)</span><span class="win-pts">+3</span></button>
+            <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(2, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
+        </div>
+    `;
+}
+
+// ================== 變更陣容 (Reorder Deck) 面板邏輯 ==================
+function openReorderDeckModal() {
+    let m = appState.matches.find(x => x.id === currentScoringMatchId); 
+    let n1 = appState.players[m.p1Idx]; let n2 = appState.players[m.p2Idx];
+    let r1 = roster.find(x => x.name === n1); let r2 = roster.find(x => x.name === n2);
+
+    let currentP1 = appState.p1DeckOrderOverride[m.id] !== undefined ? appState.p1DeckOrderOverride[m.id] : (m.logs.length % 3);
+    let currentP2 = appState.p2DeckOrderOverride[m.id] !== undefined ? appState.p2DeckOrderOverride[m.id] : (m.logs.length % 3);
+
+    function buildOptions(deck, selectedIdx) {
+        return deck.map((d, i) => `<option value="${i}" ${i === selectedIdx ? 'selected' : ''}>陀螺 ${i+1}: ${formatDeckString(d)}</option>`).join('');
+    }
+
+    document.getElementById('reorderP1Area').innerHTML = `<h4 style="color:${getPlayerColor(n1)}; margin:0 0 10px 0;">${n1}</h4><select id="reorderP1Select" style="width:100%;">${buildOptions(r1.deck, currentP1)}</select>`;
+    document.getElementById('reorderP2Area').innerHTML = `<h4 style="color:${getPlayerColor(n2)}; margin:0 0 10px 0;">${n2}</h4><select id="reorderP2Select" style="width:100%;">${buildOptions(r2.deck, currentP2)}</select>`;
+    
+    document.getElementById('reorderDeckModal').style.display = 'block';
+}
+
+function applyReorderDeck() {
+    let p1Select = parseInt(document.getElementById('reorderP1Select').value);
+    let p2Select = parseInt(document.getElementById('reorderP2Select').value);
+    appState.p1DeckOrderOverride[currentScoringMatchId] = p1Select;
+    appState.p2DeckOrderOverride[currentScoringMatchId] = p2Select;
+    saveState();
+    closeReorderDeckModal();
+    renderScoringModal();
+}
+
+function closeReorderDeckModal() { document.getElementById('reorderDeckModal').style.display = 'none'; }
+
+
+function handleScoreAction(playerNum, actionType, points) {
+    let m = appState.matches.find(x => x.id === currentScoringMatchId);
+    m.logs.push({ s1: m.s1, s2: m.s2, p1Stats: {...m.p1Stats}, p2Stats: {...m.p2Stats}, p1Penalties: m.p1Penalties, p2Penalties: m.p2Penalties, p1Override: appState.p1DeckOrderOverride[m.id], p2Override: appState.p2DeckOrderOverride[m.id] });
+    
+    // 如果過回合，重置 override 以便下一回合正常輪替，除非想要保留
+    delete appState.p1DeckOrderOverride[m.id];
+    delete appState.p2DeckOrderOverride[m.id];
+
+    if (actionType === 'penalty') {
+        if (playerNum === 1) { m.p1Stats.penalty = (m.p1Stats.penalty || 0) + 1; m.p1Penalties++; if (m.p1Penalties >= 2) { m.s2 += 1; m.p1Penalties = 0; m.p2Penalties = 0; } } 
+        else { m.p2Stats.penalty = (m.p2Stats.penalty || 0) + 1; m.p2Penalties++; if (m.p2Penalties >= 2) { m.s1 += 1; m.p1Penalties = 0; m.p2Penalties = 0; } }
+    } else {
+        if (playerNum === 1) { m.s1 += points; m.p1Stats[actionType]++; } else { m.s2 += points; m.p2Stats[actionType]++; }
+        m.p1Penalties = 0; m.p2Penalties = 0;
+    }
+    saveState(); renderScoringModal();
+}
+
+function undoScore() {
+    let m = appState.matches.find(x => x.id === currentScoringMatchId); if(m.logs.length === 0) return alert("目前沒有可以修正的紀錄！");
+    let prev = m.logs.pop(); 
+    m.s1 = prev.s1; m.s2 = prev.s2; m.p1Stats = prev.p1Stats; m.p2Stats = prev.p2Stats; m.p1Penalties = prev.p1Penalties; m.p2Penalties = prev.p2Penalties; 
+    
+    if (prev.p1Override !== undefined) appState.p1DeckOrderOverride[m.id] = prev.p1Override;
+    if (prev.p2Override !== undefined) appState.p2DeckOrderOverride[m.id] = prev.p2Override;
+
+    saveState(); renderScoringModal();
+}
+
+function clearCurrentMatch() {
+    if(!confirm("確定要清空此局所有的得分與犯規紀錄嗎？")) return;
+    let m = appState.matches.find(x => x.id === currentScoringMatchId); m.s1 = 0; m.s2 = 0; m.logs = []; m.p1Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p2Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p1Penalties = 0; m.p2Penalties = 0; 
+    delete appState.p1DeckOrderOverride[m.id]; delete appState.p2DeckOrderOverride[m.id];
+    saveState(); renderScoringModal();
+}
+
+function closeScoringModal() { document.getElementById('scoringModal').style.display = 'none'; currentScoringMatchId = null; renderMatches(); }
+
+// ================== 對局紀錄與歷史大數據 (無更動，保留前版優化) ==================
+function renderSummary() {
+    if(appState.players.length === 0) return;
+    let stats = {}; appState.players.forEach(p => { stats[p] = { win:0, loss:0, get:0, lose:0, details:[] }; });
+    appState.matches.forEach((m) => {
+        if(m.s1 === 0 && m.s2 === 0) return;
+        let n1 = appState.players[m.p1Idx], n2 = appState.players[m.p2Idx];
+        stats[n1].get += m.s1; stats[n1].lose += m.s2; stats[n2].get += m.s2; stats[n2].lose += m.s1;
+        if (!(m.s1 >= 4 && m.s2 >= 4)) {
+            let p1W = (m.s1 >= 4 || m.s2 >= 4) && m.s1 > m.s2 ? 1 : 0; let p2W = (m.s1 >= 4 || m.s2 >= 4) && m.s2 > m.s1 ? 1 : 0;
+            if(p1W) { stats[n1].win++; stats[n2].loss++; } else if(p2W) { stats[n2].win++; stats[n1].loss++; }
+        }
+        let mark1 = (m.s1 > m.s2 && m.s1 >= 4 && m.s2 < 4) ? "🏆" : ""; let mark2 = (m.s2 > m.s1 && m.s2 >= 4 && m.s1 < 4) ? "🏆" : ""; let errorMark = (m.s1 >= 4 && m.s2 >= 4) ? " ⚠️" : "";
+        stats[n1].details.push(`<span class="match-box" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), ${getPlayerColor(n2)}; margin: 4px;"><span class="player-name-truncate" style="max-width:8em;">${n2}</span>(${m.s1}:${m.s2}) ${mark1}${errorMark}</span>`);
+        stats[n2].details.push(`<span class="match-box" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), ${getPlayerColor(n1)}; margin: 4px;"><span class="player-name-truncate" style="max-width:8em;">${n1}</span>(${m.s2}:${m.s1}) ${mark2}${errorMark}</span>`);
+    });
+
+    const tbody = document.getElementById('summaryBody'); tbody.innerHTML = '';
+    const sortedPlayers = [...appState.players].sort((a, b) => { let netA = stats[a].get - stats[a].lose, netB = stats[b].get - stats[b].lose; if(stats[b].win !== stats[a].win) return stats[b].win - stats[a].win; return netB - netA; });
+    
+    sortedPlayers.forEach((p, idx) => {
+        let played = stats[p].win + stats[p].loss; let winRate = played > 0 ? Math.round((stats[p].win / played) * 100) : 0; let rankHtml = '';
+        if(idx === 0) rankHtml = `<span class="rank-number" style="color: #f1c40f; text-shadow: 0 0 20px rgba(241,196,15,0.8);">🥇 1</span>`; else if(idx === 1) rankHtml = `<span class="rank-number" style="color: #bdc3c7; text-shadow: 0 0 20px rgba(189,195,199,0.8);">🥈 2</span>`; else if(idx === 2) rankHtml = `<span class="rank-number" style="color: #cd7f32; text-shadow: 0 0 20px rgba(205,127,50,0.8);">🥉 3</span>`; else rankHtml = `<span class="rank-number" style="color: #777;">${idx + 1}</span>`;
+        
+        let detailsArr = stats[p].details;
+        let detailsHtml = "";
+        if (detailsArr.length === 0) {
+            detailsHtml = '<span style="color:#777;">尚未出賽</span>';
+        } else if (detailsArr.length <= 2) {
+            detailsHtml = detailsArr.join('');
+        } else {
+            let visible = detailsArr.slice(0, 2).join('');
+            let hidden = detailsArr.slice(2).join('');
+            let hiddenId = `hist_${idx}`;
+            detailsHtml = `
+                ${visible}
+                <span id="${hiddenId}" style="display: none;">${hidden}</span>
+                <button class="btn-blue" style="padding: 6px 12px; font-size: 16px; margin-left: 5px; border-radius: 8px; vertical-align: top; border-width: 1px;" onclick="toggleExpand('${hiddenId}', this, ${detailsArr.length - 2})">顯示更多 (+${detailsArr.length - 2}) 🔽</button>
+            `;
+        }
+
+        tbody.innerHTML += `<tr>
+            <td>${rankHtml}</td>
+            <td>${getPlayerPillHtml(p)}</td>
+            <td class="big-wl win-color">${stats[p].win}</td>
+            <td class="big-wl loss-color">${stats[p].loss}</td>
+            <td style="color:#0ff; font-weight:bold; font-size:32px; text-shadow: 0 0 15px rgba(0,255,255,0.5);">${winRate}%</td>
+            <td style="text-align:left; white-space: normal; max-width: 550px;">${detailsHtml}</td>
+        </tr>`;
+    });
+}
+
+function saveState() { localStorage.setItem('beyblade_app_state', JSON.stringify(appState)); }
+function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { appState = JSON.parse(saved); if(!appState.p1DeckOrderOverride) appState.p1DeckOrderOverride = {}; if(!appState.p2DeckOrderOverride) appState.p2DeckOrderOverride = {}; if(appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); } } }
+function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.players = []; appState.p1DeckOrderOverride = {}; appState.p2DeckOrderOverride = {}; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
+function escapeCSV(str) { if (str === null || str === undefined) return '""'; return `"${String(str).replace(/"/g, '""')}"`; }
+function exportToCSV() {
+    if(appState.matches.length === 0) return alert("目前沒有賽事資料可匯出！");
+    let name = appState.tournamentName || "未命名賽事"; let csv = "\uFEFF"; 
+    csv += `賽事名稱：,${escapeCSV(name)}\n賽事時間：,${escapeCSV(appState.timeString)}\n\n`; 
+    csv += "排名,選手名稱,勝場,敗場,得分,失分,淨分,勝率,犯規頻率,轉停次數,爆裂次數,擊飛次數,極限次數\n";
+    let stats = {}; appState.players.forEach(p => stats[p] = { w:0, l:0, g:0, ls:0, spin:0, burst:0, over:0, xtreme:0, penalty:0 });
+    appState.matches.forEach(m => {
+        let n1 = appState.players[m.p1Idx], n2 = appState.players[m.p2Idx];
+        stats[n1].g += m.s1; stats[n1].ls += m.s2; stats[n2].g += m.s2; stats[n2].ls += m.s1;
+        if(m.p1Stats) { stats[n1].spin += m.p1Stats.spin; stats[n1].burst += m.p1Stats.burst; stats[n1].over += m.p1Stats.over; stats[n1].xtreme += m.p1Stats.xtreme; stats[n1].penalty += (m.p1Stats.penalty || 0); }
+        if(m.p2Stats) { stats[n2].spin += m.p2Stats.spin; stats[n2].burst += m.p2Stats.burst; stats[n2].over += m.p2Stats.over; stats[n2].xtreme += m.p2Stats.xtreme; stats[n2].penalty += (m.p2Stats.penalty || 0); }
+        if (!(m.s1 >= 4 && m.s2 >= 4)) { if(m.s1>=4||m.s2>=4) { if(m.s1>m.s2){stats[n1].w++; stats[n2].l++;} else {stats[n2].w++; stats[n1].l++;} } }
+    });
+    let sortedPlayers = [...appState.players].sort((a,b) => (stats[b].w - stats[a].w) || ((stats[b].g - stats[b].ls) - (stats[a].g - stats[a].ls)));
+    sortedPlayers.forEach((p, idx) => {
+        let net = stats[p].g - stats[p].ls; let played = stats[p].w + stats[p].l; let rate = played > 0 ? Math.round((stats[p].w/played)*100) : 0; let freq = played > 0 ? ((stats[p].penalty/played)*100).toFixed(1) : 0;
+        csv += `${idx+1},${escapeCSV(p)},${stats[p].w},${stats[p].l},${stats[p].g},${stats[p].ls},${net},${rate}%,${freq}%,${stats[p].spin},${stats[p].burst},${stats[p].over},${stats[p].xtreme}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `賽事紀錄_${name}.csv`; link.click();
+}
+
+function archiveTournament() {
+    if(!appState.id || appState.matches.length === 0) return alert("沒有可結算的賽事！");
+    if(appState.matches.some(m => (m.s1 < 4 && m.s2 < 4) || (m.s1 >= 4 && m.s2 >= 4))) return alert("⚠ 無法儲存！有比賽尚未結束或出現「分數異常」。");
+    let history = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
+    if(history[appState.id]) return alert("這場賽事已經歸檔過了喔！");
+    let stats = {}; appState.players.forEach(p => stats[p] = { w:0, l:0, g:0, ls:0, spin:0, burst:0, over:0, xtreme:0, penalty:0 });
+    appState.matches.forEach(m => {
+        let n1 = appState.players[m.p1Idx], n2 = appState.players[m.p2Idx];
+        stats[n1].g += m.s1; stats[n1].ls += m.s2; stats[n2].g += m.s2; stats[n2].ls += m.s1;
+        if(m.p1Stats) { stats[n1].spin += m.p1Stats.spin; stats[n1].burst += m.p1Stats.burst; stats[n1].over += m.p1Stats.over; stats[n1].xtreme += m.p1Stats.xtreme; stats[n1].penalty += (m.p1Stats.penalty || 0); }
+        if(m.p2Stats) { stats[n2].spin += m.p2Stats.spin; stats[n2].burst += m.p2Stats.burst; stats[n2].over += m.p2Stats.over; stats[n2].xtreme += m.p2Stats.xtreme; stats[n2].penalty += (m.p2Stats.penalty || 0); }
+        if(m.s1>=4||m.s2>=4) { if(m.s1>m.s2){stats[n1].w++; stats[n2].l++;} else {stats[n2].w++; stats[n1].l++;} }
+    });
+    history[appState.id] = { name: document.getElementById('tournamentName').value.trim() || "未命名賽事", time: appState.timeString, results: stats };
+    localStorage.setItem('beyblade_history', JSON.stringify(history)); renderHistory();
+    const sortedPlayers = [...appState.players].sort((a, b) => { let netA = stats[a].g - stats[a].ls, netB = stats[b].g - stats[b].ls; if(stats[b].w !== stats[a].w) return stats[b].w - stats[a].w; return netB - netA; });
+    showPodium(sortedPlayers.slice(0, 3));
+}
+
+function showPodium(top3) {
+    let podiumHtml = ''; const medals = ['🥇 冠軍', '🥈 亞軍', '🥉 季軍']; const colors = ['#f1c40f', '#bdc3c7', '#cd7f32'];
+    for(let i=0; i<3; i++) {
+        if(top3[i]) {
+            let p = top3[i];
+            podiumHtml += `<div style="display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.6); padding: 25px 35px; border-radius: 16px; border: 2px solid ${colors[i]}; box-shadow: inset 0 0 25px ${colors[i]}40;"><span style="font-size:36px; font-weight:bold; color:${colors[i]}; text-shadow: 0 0 15px ${colors[i]}; font-style:italic;">${medals[i]}</span><div style="transform: scale(1.1); transform-origin: right center;">${getPlayerPillHtml(p)}</div></div>`;
+        }
+    }
+    document.getElementById('podiumResult').innerHTML = podiumHtml; document.getElementById('podiumModal').style.display = 'block';
+}
+function closePodiumAndClear() { document.getElementById('podiumModal').style.display = 'none'; clearTournament(); }
+
+function showRadar(e, pName, spin, burst, over, xtreme) {
+    let tooltip = document.getElementById('radarTooltip');
+    tooltip.style.display = 'block';
+    
+    let x = e.clientX + 20; let y = e.clientY + 20;
+    if (x + 450 > window.innerWidth) x = e.clientX - 450;
+    if (y + 450 > window.innerHeight) y = e.clientY - 450;
+    tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
+
+    let maxVal = Math.max(spin, burst, over, xtreme);
+    let l1 = (spin === maxVal && spin > 0) ? '👑 轉停(1)' : '轉停(1)';
+    let l2 = (burst === maxVal && burst > 0) ? '👑 爆裂(2)' : '爆裂(2)';
+    let l3 = (over === maxVal && over > 0) ? '👑 擊飛(2)' : '擊飛(2)';
+    let l4 = (xtreme === maxVal && xtreme > 0) ? '👑 極限(3)' : '極限(3)';
+
+    let evalText = "深藏不露！";
+    if (maxVal > 0) {
+        let tops = [];
+        if(spin === maxVal) tops.push('s');
+        if(burst === maxVal) tops.push('b');
+        if(over === maxVal) tops.push('o');
+        if(xtreme === maxVal) tops.push('x');
+
+        if(tops.length === 1) {
+            if(tops[0]==='s') evalText = "頂級持久！";
+            if(tops[0]==='b') evalText = "粉碎之力！";
+            if(tops[0]==='o') evalText = "剛猛直擊！";
+            if(tops[0]==='x') evalText = "極限突擊！";
+        } else if(tops.length === 2) {
+            let combo = tops.join('');
+            if(combo === 'sb') evalText = "剛柔並濟！";
+            else if(combo === 'so') evalText = "無死角防！";
+            else if(combo === 'sx') evalText = "瞬息萬變！";
+            else if(combo === 'bo') evalText = "絕對破壞！";
+            else if(combo === 'bx') evalText = "暴風斬擊！";
+            else if(combo === 'ox') evalText = "超速猛攻！";
+        } else {
+            evalText = "全能大師！";
+        }
+    }
+    document.getElementById('radarEval').innerText = evalText;
+
+    let ctx = document.getElementById('radarCanvas').getContext('2d');
+    let color = getPlayerColor(pName);
+    let bgColor = getTransparentColor(color, 0.2); 
+    let bdColor = getTransparentColor(color, 0.8);
+    
+    if(radarChartInstance) radarChartInstance.destroy();
+    radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: [l1, l2, l3, l4],
+            datasets: [{
+                label: pName, data: [spin, burst, over, xtreme],
+                backgroundColor: bgColor, borderColor: bdColor, pointBackgroundColor: color,
+                borderWidth: 3, pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { r: { beginAtZero: true, ticks: { display: false, stepSize: 1 }, grid: { color: 'rgba(0,255,255,0.25)' }, angleLines: { color: 'rgba(0,255,255,0.25)' }, pointLabels: { color: '#0ff', font: { size: 18, family: "'微軟正黑體', sans-serif", weight: 'bold' } } } },
+            plugins: { legend: { display: false } }, animation: { duration: 0 } 
+        }
+    });
+}
+function hideRadar() { document.getElementById('radarTooltip').style.display = 'none'; }
+
+function renderHistory() {
+    let historyObj = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
+    let fullHistoryArray = Object.values(historyObj).sort((a,b) => new Date(a.time) - new Date(b.time));
+    
+    let aggregate = {};
+    fullHistoryArray.forEach((tour) => {
+        Object.keys(tour.results).forEach(p => {
+            if(!aggregate[p]) aggregate[p] = { played:0, w:0, l:0, g:0, ls:0, spin:0, burst:0, over:0, xtreme:0, penalty:0 };
+            let r = tour.results[p]; aggregate[p].played += (r.w + r.l); aggregate[p].w += r.w; aggregate[p].l += r.l; aggregate[p].g += r.g; aggregate[p].ls += r.ls;
+            aggregate[p].spin += (r.spin || 0); aggregate[p].burst += (r.burst || 0); aggregate[p].over += (r.over || 0); aggregate[p].xtreme += (r.xtreme || 0); aggregate[p].penalty += (r.penalty || 0);
+        });
+    });
+
+    const tbody = document.getElementById('historyBody'); tbody.innerHTML = ''; let players = Object.keys(aggregate);
+    if(players.length === 0) { tbody.innerHTML = '<tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">尚無歷史歸檔紀錄</td></tr>'; if(careerChartInstance) careerChartInstance.destroy(); return; }
+    players.sort((a, b) => aggregate[b].w - aggregate[a].w); 
+    players.forEach((p) => {
+        let d = aggregate[p]; let net = d.g - d.ls; let rate = d.played > 0 ? Math.round((d.w / d.played) * 100) : 0; let penaltyFreq = d.played > 0 ? ((d.penalty / d.played) * 100).toFixed(1) : 0; 
+        tbody.innerHTML += `<tr>
+            <td onmousemove="showRadar(event, '${p}', ${d.spin}, ${d.burst}, ${d.over}, ${d.xtreme})" onmouseleave="hideRadar()">${getPlayerPillHtml(p)}</td>
+            <td style="font-weight:bold;">${d.played}</td><td class="win-color" style="font-weight:bold;">${d.w}</td><td class="loss-color" style="font-weight:bold;">${d.l}</td>
+            <td style="color:#0ff; font-weight:bold; font-size:28px;">${rate}%</td><td>${d.g}</td><td>${d.ls}</td><td style="color:${net>0?'#2ecc71':(net<0?'#e74c3c':'#c5c6c7')}; font-weight:bold;">${net}</td>
+            <td style="color:#e74c3c; font-weight:bold; font-size:24px;">${penaltyFreq}%</td>
+            <td style="color:#0ff; font-weight:bold;">${d.spin}</td><td style="color:#f1c40f; font-weight:bold;">${d.burst}</td><td style="color:#e74c3c; font-weight:bold;">${d.over}</td><td style="color:#b056df; font-weight:900;">${d.xtreme}</td>
+        </tr>`;
+    });
+
+    let chartLimitSelect = document.getElementById('chartLimit'); let chartOrderSelect = document.getElementById('chartOrder');
+    let chartLimit = chartLimitSelect ? chartLimitSelect.value : 'all'; let chartOrder = chartOrderSelect ? chartOrderSelect.value : 'asc';
+    let chartTours = [...fullHistoryArray]; if (chartLimit !== 'all') { chartTours = chartTours.slice(-parseInt(chartLimit)); } if (chartOrder === 'desc') { chartTours.reverse(); }
+    let xLabels = chartTours.map((tour, idx) => tour.name !== "未命名賽事" ? tour.name : `賽事 ${idx+1}`);
+    let datasets = players.map(p => {
+        let color = getPlayerColor(p); let rates = chartTours.map(tour => { let r = tour.results[p]; if (!r) return null; let tourPlayed = r.w + r.l; return tourPlayed > 0 ? Math.round((r.w / tourPlayed) * 100) : null; });
+        return { label: p, data: rates, borderColor: color, backgroundColor: color, borderWidth: 4, pointRadius: 8, tension: 0.2, spanGaps: true };
+    });
+
+    const ctx = document.getElementById('careerChart').getContext('2d'); if(careerChartInstance) careerChartInstance.destroy();
+    careerChartInstance = new Chart(ctx, { 
+        type: 'line', data: { labels: xLabels, datasets: datasets }, 
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { font: { size: 24 } }, title: { display: true, text: '賽事名稱', color: '#45a29e', font: { size: 28, weight: 'bold' } }, grid: { color: 'rgba(0,255,255,0.1)' } }, y: { max: 100, min: 0, ticks: { font: { size: 24 } }, title: { display: true, text: '單場賽事勝率 (%)', color: '#45a29e', font: { size: 28, weight: 'bold' } }, grid: { color: 'rgba(0,255,255,0.1)' } } }, plugins: { legend: { labels: { color: '#c5c6c7', font: { family: "'微軟正黑體', sans-serif", weight: 'bold', size: 28 }, padding: 25 } } } } 
+    });
+}
+function clearHistory() { if(confirm('⚠ 警告：確定要刪除所有的生涯紀錄嗎？這無法復原！')) { localStorage.removeItem('beyblade_history'); document.getElementById('historyBody').innerHTML = '<tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">尚無歷史歸檔紀錄</td></tr>'; if(careerChartInstance) careerChartInstance.destroy(); } }
+
+    // ================== 兵工廠專屬核心 JS ==================
+let arsenalPartsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
+const ARSENAL_BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
+let arsenalSetStructureMap = {};
+let allDecks = []; 
+let currentDeckEditIndex = -1; let editingDeckIndex = -1; let swappingIndex = -1;
+let selectingPartCategory = ""; let currentSelectedPartGroup = null; 
+let currentFilterType = "ALL"; let currentSortType = "NEW_TO_OLD"; 
+
+const ARSENAL_FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23555' stroke-width='4'/><text x='50' y='55' fill='%23888' font-size='16' text-anchor='middle'>無圖片</text></svg>";
+window.handleArsenalImgError = function(img) {
+    if (!img.dataset.triedApp) { img.dataset.triedApp = "true"; img.src = img.src.replace('/site/', '/app/'); } 
+    else if (!img.dataset.triedFallback) { img.dataset.triedFallback = "true"; img.src = ARSENAL_FALLBACK_IMG; }
+};
+
+// 確保與原有的 onload 融合並載入圖鑑資料庫
+const originalOnload = window.onload;
+window.onload = async function() {
+    if (originalOnload) await originalOnload();
+    await loadArsenalDatabase();
+};
+
+// ================== 兵工廠攔截器 (Override 原本按鈕功能) ==================
+window.openDeckBuilderModal = function(index) {
+    currentDeckEditIndex = index;
+    let p = roster[index];
     if (p.deck && p.deck.length > 0 && p.deck[0].parts) {
         allDecks = JSON.parse(JSON.stringify(p.deck));
     } else {
         allDecks = [ { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} } ];
     }
-    
-    // 關閉清單 Modal，切換到兵工廠
     document.getElementById('rosterModal').style.display = 'none';
-    
     let nameTitle = document.getElementById('builderPlayerName');
-    nameTitle.innerText = p.name;
-    nameTitle.style.color = p.color;
-    
-    // 標記允許進入
-    switchTab('builder');
+    nameTitle.innerText = p.name; nameTitle.style.color = p.color;
+    document.getElementById('builderModal').style.display = 'block';
     renderDeckOverview();
-}
+};
 
-function saveBuilderToPlayer() {
+window.saveBuilderToPlayer = function() {
     if (currentDeckEditIndex === -1) return;
-    
     let starters = allDecks.slice(0, 3);
-    let validCount = starters.filter(d => d.parts.TopPart && d.parts.Bit).length;
+    let validCount = starters.filter(d => d.parts && d.parts.TopPart && d.parts.Bit).length;
     if (validCount < 3) {
         if(!confirm("⚠️ 您的【先發 3 顆陀螺】尚未配置完成（核心上蓋與軸心為最低要求）！\n確定要強制儲存嗎？")) return;
     }
     
-    let usedParts = [];
-    let hasDuplicate = false;
+    let usedParts = []; let hasDuplicate = false;
     for (let i = 0; i < 3; i++) {
-        let deck = allDecks[i];
-        if (!deck || !deck.parts) continue;
+        let deck = allDecks[i]; if (!deck || !deck.parts) continue;
         ['TopPart', 'LockChip', 'OverBlade', 'MainBlade', 'MetalBlade', 'AssistBlade', 'Ratchet', 'Bit'].forEach(cat => {
             if (deck.parts[cat]) {
                 let partName = deck.parts[cat].clean_name;
@@ -687,41 +1410,52 @@ function saveBuilderToPlayer() {
             }
         });
     }
-    if (hasDuplicate) {
-         if (!confirm("⚠️ 警告：您的【先發 3 顆陀螺】中有重複使用的零件，違反官方 3on3 賽制規則！\n\n確定仍要強制儲存嗎？")) return;
-    }
+    if (hasDuplicate) if (!confirm("⚠️ 警告：您的【先發 3 顆陀螺】中有重複使用的零件，違反官方賽制！\n確定仍要強制儲存嗎？")) return;
     
-    // 寫入 Roster 並切換回賽事系統
     roster[currentDeckEditIndex].deck = JSON.parse(JSON.stringify(allDecks));
-    saveRoster();
-    updateSetupUI(); // 更新賽程表上的圖標
-    
-    switchTab('tournament');
+    saveRoster(); if(typeof updateSetupUI === 'function') updateSetupUI(); 
+    document.getElementById('builderModal').style.display = 'none';
     document.getElementById('rosterModal').style.display = 'block';
-    renderRosterList();
-}
+    if(typeof renderRosterList === 'function') renderRosterList();
+};
 
+// ================== 計分板 3D 視覺渲染 ==================
+window.renderScoringActiveBey = function(p, m, isP1) {
+    let beyIndex = isP1 ? (m.p1BeyIndex || 0) : (m.p2BeyIndex || 0);
+    if (p.deck && p.deck[beyIndex] && p.deck[beyIndex].parts && p.deck[beyIndex].parts.TopPart) {
+         return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                   <div class="mini-icon-wrapper">${getDeckCoverHtml(p.deck[beyIndex])}</div>
+                   <div style="font-size:18px; color:#f1c40f; line-height:1.2; text-align:center; font-weight:bold; margin-top:5px; text-shadow: 0 0 5px rgba(241,196,15,0.5);">${getDeckFullName(p.deck[beyIndex])}</div>
+                 </div>`;
+    }
+    return `<div style="font-size:18px; color:#777; margin-top:15px;">(尚未配置 3on3)</div>`;
+};
 
-// ================== 兵工廠裝備庫核心程式 ==================
+window.cycleBey = function(isP1) {
+    if(typeof currentScoringMatchId === 'undefined' || !currentScoringMatchId) return;
+    let m = allMatches.find(x => x.id === currentScoringMatchId); if(!m) return;
+    if(isP1) m.p1BeyIndex = ((m.p1BeyIndex || 0) + 1) % 3;
+    else m.p2BeyIndex = ((m.p2BeyIndex || 0) + 1) % 3;
+    if(typeof saveState === 'function') saveState();
+    if(typeof openScoringModal === 'function') openScoringModal(currentScoringMatchId);
+};
 
-async function loadDatabase() {
-    const statusDiv = document.getElementById('dataStatus');
+// ================== 圖鑑引擎運算邏輯 ==================
+async function loadArsenalDatabase() {
     let mainDataObj = {}; let hardcodedDataObj = {};
     try { const resMain = await fetch('main_db.json'); const mainData = await resMain.json(); if(mainData && mainData.data) mainDataObj = mainData.data; } catch(e) {}
     try { const resHard = await fetch('hardcoded.json'); const hardcodedData = await resHard.json(); if(hardcodedData && hardcodedData.data) hardcodedDataObj = hardcodedData.data; } catch(e) {}
-
     const datasets = [mainDataObj, hardcodedDataObj];
     const categoryMap = { 'BeybladePartsBlade': 'Blade', 'BeybladePartsMainBlade': 'MainBlade', 'BeybladePartsOverBlade': 'OverBlade', 'BeybladePartsMetalBlade': 'MetalBlade', 'BeybladePartsAssistBlade': 'AssistBlade', 'BeybladePartsLockChip': 'LockChip', 'BeybladePartsRatchet': 'Ratchet', 'BeybladePartsBit': 'Bit' };
-
+    
     for (const dataset of datasets) {
         if (!dataset) continue;
         for (const [rawCat, obj] of Object.entries(dataset)) {
             let defaultCat = categoryMap[rawCat]; if (!defaultCat) continue;
             for (const [id, item] of Object.entries(obj)) {
-                let trueCat = getTrueCategoryFromId(id, defaultCat);
-                let instId = getInstId(id, item);
-                if (!setStructureMap[instId]) setStructureMap[instId] = {};
-                setStructureMap[instId][trueCat] = true; 
+                let trueCat = getArsenalCatFromId(id, defaultCat); let instId = getArsenalInstId(id, item);
+                if (!arsenalSetStructureMap[instId]) arsenalSetStructureMap[instId] = {};
+                arsenalSetStructureMap[instId][trueCat] = true; 
             }
         }
     }
@@ -733,54 +1467,50 @@ async function loadDatabase() {
             for (const [id, item] of Object.entries(obj)) {
                 let rawNameTW = ((item.name || item.catalog_title) && ((item.name || item.catalog_title)['zh-TW'] || (item.name || item.catalog_title)['ja-JP'] || (item.name || item.catalog_title).en_name)) || "";
                 if (rawNameTW.includes("蒼龍勇氣") && rawNameTW.includes("闇黑") && !rawNameTW.includes("蒼龍勇氣S")) rawNameTW = rawNameTW.replace("蒼龍勇氣", "蒼龍勇氣S");
-                let shortCat = getTrueCategoryFromId(id, defaultCat);
+                let shortCat = getArsenalCatFromId(id, defaultCat);
                 if (/軸心套組|軸心組|加贈活動|限定軸心|rental|PRD-939542-04/i.test(rawNameTW) || /rental|PRD-939542-04/i.test(id)) continue; 
                 if (shortCat === 'Ratchet' && /一體/i.test(rawNameTW)) continue;
                 if (/-\d{2}R{1,2}$/i.test(id)) continue; 
-                let instId = getInstId(id, item);
-                if (shortCat === 'MainBlade' && setStructureMap[instId]['MetalBlade']) continue; 
+                let instId = getArsenalInstId(id, item);
+                if (shortCat === 'MainBlade' && arsenalSetStructureMap[instId]['MetalBlade']) continue; 
                 
-                let cleanName = cleanPartName(rawNameTW, instId, shortCat);
+                let cleanName = cleanArsenalPartName(rawNameTW, instId, shortCat);
                 if (cleanName === "機密/特殊聯名") continue; 
 
                 let jsonTags = (item.tags && Array.isArray(item.tags)) ? item.tags.map(t => String(t).toUpperCase()) : [];
-                let isExplicitUX = jsonTags.includes('UX'); let isExplicitBX = jsonTags.includes('BX'); let isExplicitCX = jsonTags.includes('CX');
+                let isExplicitUX = jsonTags.includes('UX'); let isExplicitCX = jsonTags.includes('CX');
                 let isUX = isExplicitUX || /UX|936542|942062/i.test(id) || /UX/i.test(rawNameTW) || item.series === 'UX';
                 if (['DRAN BUSTER', 'HELLS HAMMER', 'WIZARD ROD', 'LEON CREST', 'SHINOBI SHADOW', 'AERO PEGASUS', 'SAMURAI SABER', '巨劍飛龍', '戰鎚地獄', '魔杖巫師', '飛龍懸浮', '隱密忍者', '空力天馬', '武士軍刀', '武士聖劍'].some(n => String(rawNameTW).toUpperCase().includes(n))) isUX = true;
-                if (isExplicitBX && !isExplicitUX) isUX = false; 
-
                 let sysType = 'BX';
-                if (setStructureMap[instId]['MetalBlade']) sysType = 'CX2';
-                else if (setStructureMap[instId]['MainBlade']) sysType = 'CX1';
-                else if (isExplicitCX) sysType = 'CX1'; 
+                if (arsenalSetStructureMap[instId]['MetalBlade']) sysType = 'CX2';
+                else if (arsenalSetStructureMap[instId]['MainBlade'] || isExplicitCX) sysType = 'CX1';
                 else if (isUX) sysType = 'UX';
 
                 let parsedBitType = 'Balance';
                 if (shortCat === 'Bit' && item.type) {
-                    let typeStr = String(item.type).toLowerCase();
-                    if (typeStr.includes('attack') || typeStr.includes('攻擊')) parsedBitType = 'Attack';
-                    else if (typeStr.includes('defense') || typeStr.includes('防禦')) parsedBitType = 'Defense';
-                    else if (typeStr.includes('stamina') || typeStr.includes('持久')) parsedBitType = 'Stamina';
+                    let ts = String(item.type).toLowerCase();
+                    if (ts.includes('attack') || ts.includes('攻擊')) parsedBitType = 'Attack';
+                    else if (ts.includes('defense') || ts.includes('防禦')) parsedBitType = 'Defense';
+                    else if (ts.includes('stamina') || ts.includes('持久')) parsedBitType = 'Stamina';
                 }
 
-                let tags = new Set(); jsonTags.forEach(t => tags.add(t));
-                tags.add(sysType.includes('CX') ? 'CX' : (sysType==='UX'?'UX':'BX'));
+                let tags = new Set(jsonTags); tags.add(sysType.includes('CX') ? 'CX' : (sysType==='UX'?'UX':'BX'));
                 let fullText = String(rawNameTW).toUpperCase() + " " + instId.toUpperCase();
                 if (fullText.includes('BXG') || fullText.includes('CROSSOVER') || item.series === 'BXG') tags.add('BXG');
                 if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('CUP')) tags.add('EVE');
 
                 let releaseAt = item.release_at ? String(item.release_at) : '9999-12-31';
-                let variantObj = { id: id, rawName: rawNameTW, image: `${BASE_IMG_URL}${shortCat}/${id}.png`, category: shortCat, set_id: item.base_set_id || item.set_id || id, tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType, releaseAt: releaseAt };
+                let vObj = { id: id, rawName: rawNameTW, image: `${ARSENAL_BASE_IMG_URL}${shortCat}/${id}.png`, category: shortCat, set_id: item.base_set_id || item.set_id || id, tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType, releaseAt: releaseAt };
 
-                let existingPart = partsDb[shortCat].find(p => p.clean_name === cleanName);
-                if (existingPart) {
-                    if (!existingPart.variants.find(v => v.id === id)) { existingPart.variants.push(variantObj); variantObj.tags.forEach(t => { if(!existingPart.tags.includes(t)) existingPart.tags.push(t); }); }
-                } else { partsDb[shortCat].push({ clean_name: cleanName, category: shortCat, tags: [...variantObj.tags], variants: [variantObj] }); }
+                let ex = arsenalPartsDb[shortCat].find(p => p.clean_name === cleanName);
+                if (ex) {
+                    if (!ex.variants.find(v => v.id === id)) { ex.variants.push(vObj); vObj.tags.forEach(t => { if(!ex.tags.includes(t)) ex.tags.push(t); }); }
+                } else { arsenalPartsDb[shortCat].push({ clean_name: cleanName, category: shortCat, tags: [...vObj.tags], variants: [vObj] }); }
             }
         }
     }
     
-    Object.values(partsDb).forEach(catList => {
+    Object.values(arsenalPartsDb).forEach(catList => {
         catList.forEach(group => { 
             group.variants.sort((a, b) => a.releaseAt.localeCompare(b.releaseAt)); 
             group.earliestRelease = group.variants[0].releaseAt; 
@@ -789,73 +1519,37 @@ async function loadDatabase() {
         });
     });
 
-    ['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].forEach(cat => { if(partsDb[cat]) partsDb[cat].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' })); });
-    if (partsDb['Ratchet']) {
-        partsDb['Ratchet'].sort((a, b) => {
+    ['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].forEach(cat => { if(arsenalPartsDb[cat]) arsenalPartsDb[cat].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' })); });
+    if (arsenalPartsDb['Ratchet']) {
+        arsenalPartsDb['Ratchet'].sort((a, b) => {
             let parse = (n) => { let m = String(n).match(/(\d+)-(50|60|70|80|X5|85)/i); return m ? {p: parseInt(m[1]), h: (m[2].toUpperCase()==='X5'?85:parseInt(m[2]))} : {p:99, h:999}; };
-            let pA = parse(a.clean_name); let pB = parse(b.clean_name);
-            return pA.h !== pB.h ? pA.h - pB.h : pA.p - pB.p; 
+            let pA = parse(a.clean_name); let pB = parse(b.clean_name); return pA.h !== pB.h ? pA.h - pB.h : pA.p - pB.p; 
         });
     }
-    partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
-    statusDiv.style.display = 'none';
+    arsenalPartsDb.TopPart = [...arsenalPartsDb.Blade, ...arsenalPartsDb.MainBlade, ...arsenalPartsDb.MetalBlade].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
 }
 
-function getTrueCategoryFromId(id, defaultCat) {
-    let prefix = id.split('-')[0].toUpperCase();
-    return { 'BL':'Blade', 'MB':'MainBlade', 'ME':'MetalBlade', 'OV':'OverBlade', 'AB':'AssistBlade', 'LC':'LockChip', 'RC':'Ratchet', 'RT':'Ratchet', 'BT':'Bit' }[prefix] || defaultCat;
-}
-
-function getInstId(id, item) {
-    let parts = id.split('-'); if (parts.length >= 2 && ['BL','MB','ME','OV','AB','LC','RC','RT','BT'].includes(parts[0].toUpperCase())) return parts.slice(1).join('-');
-    let base = item.base_set_id || item.set_id || "UNKNOWN"; let suffixMatch = id.match(/-\d{2}$/); return (suffixMatch && !base.endsWith(suffixMatch[0])) ? base + suffixMatch[0] : base;
-}
-
-function cleanPartName(rawName, instId, shortCat) {
-    if (!rawName) return instId;
-    let name = String(rawName).trim(); if (name === "■" || name === "(機密/特殊聯名)") return `機密/特殊聯名`;
+function getArsenalCatFromId(id, defaultCat) { let p = id.split('-')[0].toUpperCase(); return { 'BL':'Blade', 'MB':'MainBlade', 'ME':'MetalBlade', 'OV':'OverBlade', 'AB':'AssistBlade', 'LC':'LockChip', 'RC':'Ratchet', 'RT':'Ratchet', 'BT':'Bit' }[p] || defaultCat; }
+function getArsenalInstId(id, item) { let p = id.split('-'); if (p.length >= 2 && ['BL','MB','ME','OV','AB','LC','RC','RT','BT'].includes(p[0].toUpperCase())) return p.slice(1).join('-'); let base = item.base_set_id || item.set_id || "UNKNOWN"; let m = id.match(/-\d{2}$/); return (m && !base.endsWith(m[0])) ? base + m[0] : base; }
+function cleanArsenalPartName(rawName, instId, shortCat) {
+    if (!rawName) return instId; let name = String(rawName).trim(); if (name === "■" || name === "(機密/特殊聯名)") return `機密/特殊聯名`;
     let cleaned = name.replace(/(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[A-Za-z0-9\-]+\s*/ig, ''); 
     if (['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'LockChip', 'TopPart'].includes(shortCat)) cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
     cleaned = cleaned.replace(/DMM\s*(抽獎|スクラッチ).*?[賞獎]\s*/ig, '').replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '').replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版本?)?/ig, '').replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版本?)/ig, '').replace(/\s+[A-Za-z0-9\u4e00-\u9fa5\uFF10-\uFF19]+(Ver\.|バージョン|版本?)/ig, '').replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '').replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|連擊型|上升攻擊型)[\)）]/ig, '').replace(/中收錄.*$/ig, '').replace(/ランダムブースター.*$/ig, '').replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig, '').replace(/\s*(紋章|ロックチップ)/ig, '').replace(/\s*(メタル|メイン|オーバー|アシスト)ブレード/ig, '');
-    if (cleaned.includes('福音戰士')) cleaned = cleaned.replace(/\s+([A-Z])$/i, '$1');
-    return cleaned.trim() || `機密/特殊聯名`; 
+    if (cleaned.includes('福音戰士')) cleaned = cleaned.replace(/\s+([A-Z])$/i, '$1'); return cleaned.trim() || `機密/特殊聯名`; 
 }
 
 function getDeckCoverHtml(deck) {
-    if (!deck || !deck.parts || !deck.parts.TopPart) return `<img src="${FALLBACK_IMG}" class="deck-img">`;
+    if (!deck || !deck.parts || !deck.parts.TopPart) return `<img src="${ARSENAL_FALLBACK_IMG}" class="deck-img">`;
     if (deck.mode === 'cx2') {
-        let metal = deck.parts.TopPart ? deck.parts.TopPart.image : FALLBACK_IMG;
-        let over = deck.parts.OverBlade ? deck.parts.OverBlade.image : FALLBACK_IMG;
-        let lock = deck.parts.LockChip ? deck.parts.LockChip.image : FALLBACK_IMG;
-        return `<div class="stack-container"><img src="${metal}" class="stack-base" onerror="handleImgError(this)">${deck.parts.OverBlade ? `<img src="${over}" class="stack-mid" onerror="handleImgError(this)">` : ''}${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx2" onerror="handleImgError(this)">` : ''}</div>`;
+        let metal = deck.parts.TopPart ? deck.parts.TopPart.image : ARSENAL_FALLBACK_IMG; let over = deck.parts.OverBlade ? deck.parts.OverBlade.image : ARSENAL_FALLBACK_IMG; let lock = deck.parts.LockChip ? deck.parts.LockChip.image : ARSENAL_FALLBACK_IMG;
+        return `<div class="stack-container"><img src="${metal}" class="stack-base" onerror="handleArsenalImgError(this)">${deck.parts.OverBlade ? `<img src="${over}" class="stack-mid" onerror="handleArsenalImgError(this)">` : ''}${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx2" onerror="handleArsenalImgError(this)">` : ''}</div>`;
     } 
     else if (deck.mode === 'cx1') {
-        let main = deck.parts.TopPart ? deck.parts.TopPart.image : FALLBACK_IMG;
-        let lock = deck.parts.LockChip ? deck.parts.LockChip.image : FALLBACK_IMG;
-        return `<div class="stack-container"><img src="${main}" class="stack-base" onerror="handleImgError(this)">${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx1" onerror="handleImgError(this)">` : ''}</div>`;
+        let main = deck.parts.TopPart ? deck.parts.TopPart.image : ARSENAL_FALLBACK_IMG; let lock = deck.parts.LockChip ? deck.parts.LockChip.image : ARSENAL_FALLBACK_IMG;
+        return `<div class="stack-container"><img src="${main}" class="stack-base" onerror="handleArsenalImgError(this)">${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx1" onerror="handleArsenalImgError(this)">` : ''}</div>`;
     } 
-    return `<img src="${deck.parts.TopPart.image}" class="deck-img" onerror="handleImgError(this)">`;
-}
-
-function renderDeckOverview() {
-    const mainContainer = document.getElementById('mainDeckOverview'); const reserveContainer = document.getElementById('reserveDeckOverview');
-    mainContainer.innerHTML = ''; reserveContainer.innerHTML = '';
-
-    allDecks.forEach((deck, index) => {
-        let fullName = getDeckFullName(deck);
-        let badgeColor = index < 3 ? '#45a29e' : '#f1c40f';
-        let cardHtml = `
-            <div class="deck-card" onclick="openEditor(${index})">
-                <div class="deck-badge" style="background:${badgeColor}; color:#000;">${index < 3 ? `先發 ${index + 1}` : `備戰 ${index - 2}`}</div>
-                ${getDeckCoverHtml(deck)}
-                <div class="deck-name">${fullName}</div>
-                <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
-                    <button class="btn-blue" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); openSwapModal(${index})">🔄 替換</button>
-                    ${index >= 3 ? `<button class="btn-danger" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); deleteReserveDeck(${index})">❌ 刪除</button>` : ''}
-                </div>
-            </div>`;
-        if (index < 3) mainContainer.innerHTML += cardHtml; else reserveContainer.innerHTML += cardHtml;
-    });
+    return `<img src="${deck.parts.TopPart.image}" class="deck-img" onerror="handleArsenalImgError(this)">`;
 }
 
 function getDeckFullName(deck) {
@@ -866,87 +1560,94 @@ function getDeckFullName(deck) {
     else if (deck.mode === 'cx2') return `${deck.parts.LockChip?.clean_name||""}${deck.parts.TopPart.clean_name}${deck.parts.OverBlade?.clean_name||""}${deck.parts.AssistBlade?.clean_name||""} ${rb}`.trim();
 }
 
-function openEditor(index) {
+window.renderDeckOverview = function() {
+    const mainContainer = document.getElementById('mainDeckOverview'); const reserveContainer = document.getElementById('reserveDeckOverview');
+    mainContainer.innerHTML = ''; reserveContainer.innerHTML = '';
+    allDecks.forEach((deck, index) => {
+        let fullName = getDeckFullName(deck); let badgeColor = index < 3 ? '#45a29e' : '#f1c40f';
+        let cardHtml = `<div class="deck-card" onclick="openEditor(${index})">
+                <div class="deck-badge" style="background:${badgeColor}; color:#000;">${index < 3 ? `先發 ${index + 1}` : `備戰 ${index - 2}`}</div>
+                ${getDeckCoverHtml(deck)}<div class="deck-name">${fullName}</div>
+                <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
+                    <button class="btn-blue" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); openSwapModal(${index})">🔄 替換</button>
+                    ${index >= 3 ? `<button class="btn-danger" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); deleteReserveDeck(${index})">❌ 刪除</button>` : ''}
+                </div></div>`;
+        if (index < 3) mainContainer.innerHTML += cardHtml; else reserveContainer.innerHTML += cardHtml;
+    });
+};
+
+window.openEditor = function(index) {
     editingDeckIndex = index;
     document.getElementById('currentEditingDeckNum').innerText = index < 3 ? `先發陀螺 ${index + 1}` : `備戰陀螺 ${index - 2}`;
     renderEditorSlots(); document.getElementById('editorModal').style.display = 'block';
-}
-function closeEditorModal() { document.getElementById('editorModal').style.display = 'none'; renderDeckOverview(); }
+};
+window.closeEditorModal = function() { document.getElementById('editorModal').style.display = 'none'; renderDeckOverview(); };
 
-function renderEditorSlots() {
+window.renderEditorSlots = function() {
     let deck = allDecks[editingDeckIndex]; let topPart = deck.parts.TopPart;
     deck.mode = 'standard';
     if (topPart) { if (topPart.sysType === 'CX1' || topPart.category === 'MainBlade') deck.mode = 'cx1'; else if (topPart.sysType === 'CX2' || topPart.category === 'MetalBlade') deck.mode = 'cx2'; }
-
     let slotsHtml = "";
-    const createSlot = (cat, label) => {
-        let p = deck.parts[cat];
-        return `<div class="part-slot" onclick="openVisualGrid('${cat}', '${label}')"><div class="part-label">${label}</div><div class="part-preview"><div class="part-val" style="color: ${p?"#fff":"#aaa"};">${p?p.clean_name:"請選擇配件"}</div><img src="${p?p.image:FALLBACK_IMG}" class="part-thumb" onerror="handleImgError(this)"></div></div>`;
-    };
-    slotsHtml += createSlot('TopPart', '🎯 核心上蓋 (BX/UX/CX)');
+    const createSlot = (cat, label) => { let p = deck.parts[cat]; return `<div class="part-slot" onclick="openVisualGrid('${cat}', '${label}')"><div class="part-label">${label}</div><div class="part-preview"><div class="part-val" style="color: ${p?"#fff":"#aaa"};">${p?p.clean_name:"請選擇配件"}</div><img src="${p?p.image:ARSENAL_FALLBACK_IMG}" class="part-thumb" onerror="handleArsenalImgError(this)"></div></div>`; };
+    slotsHtml += createSlot('TopPart', '🎯 核心上蓋');
     if (deck.mode === 'cx1') { slotsHtml += createSlot('LockChip', '紋章'); slotsHtml += createSlot('AssistBlade', '輔助戰刃'); } 
     else if (deck.mode === 'cx2') { slotsHtml += createSlot('LockChip', '紋章'); slotsHtml += createSlot('OverBlade', '超越戰刃'); slotsHtml += createSlot('AssistBlade', '輔助戰刃'); }
-
-    if (topPart && /彈丸獅鷲|Aero Pegasus|UX-19/i.test(topPart.clean_name)) slotsHtml += `<div class="part-slot" style="opacity:0.8; cursor:not-allowed;"><div class="part-label" style="color:#f1c40f;">🔒 固鎖 (Ratchet)</div><div class="part-preview"><div class="part-val" style="color:#f1c40f;">[上蓋佔用]</div><img src="${FALLBACK_IMG}" class="part-thumb"></div></div>`;
-    else if (deck.parts.Bit && /^(Op|Tr|Elevate|Trick)/i.test(deck.parts.Bit.clean_name)) slotsHtml += `<div class="part-slot" style="opacity:0.8; cursor:not-allowed;"><div class="part-label" style="color:#f1c40f;">🔒 固鎖 (Ratchet)</div><div class="part-preview"><div class="part-val" style="color:#f1c40f;">[軸心佔用]</div><img src="${FALLBACK_IMG}" class="part-thumb"></div></div>`;
+    if (topPart && /彈丸獅鷲|Aero Pegasus|UX-19/i.test(topPart.clean_name)) slotsHtml += `<div class="part-slot" style="opacity:0.8; cursor:not-allowed;"><div class="part-label" style="color:#f1c40f;">🔒 固鎖</div><div class="part-preview"><div class="part-val" style="color:#f1c40f;">[上蓋佔用]</div><img src="${ARSENAL_FALLBACK_IMG}" class="part-thumb"></div></div>`;
+    else if (deck.parts.Bit && /^(Op|Tr|Elevate|Trick)/i.test(deck.parts.Bit.clean_name)) slotsHtml += `<div class="part-slot" style="opacity:0.8; cursor:not-allowed;"><div class="part-label" style="color:#f1c40f;">🔒 固鎖</div><div class="part-preview"><div class="part-val" style="color:#f1c40f;">[軸心佔用]</div><img src="${ARSENAL_FALLBACK_IMG}" class="part-thumb"></div></div>`;
     else slotsHtml += createSlot('Ratchet', '固鎖 (Ratchet)');
     slotsHtml += createSlot('Bit', '軸心 (Bit)');
     document.getElementById('editorSlots').innerHTML = slotsHtml;
-}
+};
 
-function addReserveDeck() { allDecks.push({ mode: 'standard', parts: {} }); renderDeckOverview(); }
-function deleteReserveDeck(index) { if(confirm('刪除此備戰牌組？')) { allDecks.splice(index, 1); renderDeckOverview(); } }
-
-function openSwapModal(index) {
-    swappingIndex = index;
-    document.getElementById('swapTitle').innerText = index < 3 ? '選擇替換上場的備戰' : '選擇替換下場的先發';
+window.addReserveDeck = function() { allDecks.push({ mode: 'standard', parts: {} }); renderDeckOverview(); };
+window.deleteReserveDeck = function(index) { if(confirm('刪除此備戰牌組？')) { allDecks.splice(index, 1); renderDeckOverview(); } };
+window.openSwapModal = function(index) {
+    swappingIndex = index; document.getElementById('swapTitle').innerText = index < 3 ? '選擇替換上場的備戰' : '選擇替換下場的先發';
     let targetIndices = index < 3 ? allDecks.map((_, i) => i).filter(i => i >= 3) : [0, 1, 2];
-    document.getElementById('swapContainer').innerHTML = targetIndices.length===0 ? '<h3 style="color:#e74c3c;">無牌組可替換</h3>' : targetIndices.map(i => `<div class="deck-card" onclick="executeSwap(${i})"><div class="deck-badge" style="background:${i<3?'#45a29e':'#f1c40f'}; color:#000;">${i<3?`先發 ${i+1}`:`備戰 ${i-2}`}</div>${getDeckCoverHtml(allDecks[i])}<div class="deck-name">${getDeckFullName(allDecks[i])}</div></div>`).join('');
+    document.getElementById('swapContainer').innerHTML = targetIndices.length===0 ? '<h3 style="color:#e74c3c; width:100%;">無牌組可替換</h3>' : targetIndices.map(i => `<div class="deck-card" onclick="executeSwap(${i})"><div class="deck-badge" style="background:${i<3?'#45a29e':'#f1c40f'}; color:#000;">${i<3?`先發 ${i+1}`:`備戰 ${i-2}`}</div>${getDeckCoverHtml(allDecks[i])}<div class="deck-name">${getDeckFullName(allDecks[i])}</div></div>`).join('');
     document.getElementById('swapModal').style.display = 'block';
-}
-function executeSwap(targetIndex) { let t = allDecks[swappingIndex]; allDecks[swappingIndex] = allDecks[targetIndex]; allDecks[targetIndex] = t; closeSwapModal(); renderDeckOverview(); }
-function closeSwapModal() { document.getElementById('swapModal').style.display = 'none'; }
+};
+window.executeSwap = function(targetIndex) { let t = allDecks[swappingIndex]; allDecks[swappingIndex] = allDecks[targetIndex]; allDecks[targetIndex] = t; closeSwapModal(); renderDeckOverview(); };
+window.closeSwapModal = function() { document.getElementById('swapModal').style.display = 'none'; };
 
-function openVisualGrid(cat, label) {
+window.openVisualGrid = function(cat, label) {
     selectingPartCategory = cat; document.getElementById('gridTitle').innerText = `選擇 ${label}`;
-    let filterHtml = (cat === 'Ratchet') ? '' : (cat === 'Bit') ? `<button class="filter-btn active" onclick="applyFilter('ALL')">全部</button><button class="filter-btn" onclick="applyFilter('Attack')">攻擊型</button><button class="filter-btn" onclick="applyFilter('Defense')">防禦型</button><button class="filter-btn" onclick="applyFilter('Stamina')">持久型</button><button class="filter-btn" onclick="applyFilter('Balance')">平衡型</button>` : `<button class="filter-btn active" onclick="applyFilter('ALL')">全部</button><button class="filter-btn" onclick="applyFilter('BX')">BX</button><button class="filter-btn" onclick="applyFilter('UX')">UX</button><button class="filter-btn" onclick="applyFilter('CX')">CX</button><button class="filter-btn" onclick="applyFilter('BXG')">復刻/BXG</button><button class="filter-btn" onclick="applyFilter('EVE')">比賽/EVE</button><select onchange="currentSortType=this.value;applyFilter();" style="margin-left:15px;"><option value="NEW_TO_OLD">新到舊</option><option value="DEFAULT">A-Z</option></select>`;
+    let filterHtml = (cat === 'Ratchet') ? '' : (cat === 'Bit') ? `<button class="filter-btn active" onclick="applyArsenalFilter('ALL')">全部</button><button class="filter-btn" onclick="applyArsenalFilter('Attack')">攻擊型</button><button class="filter-btn" onclick="applyArsenalFilter('Defense')">防禦型</button><button class="filter-btn" onclick="applyArsenalFilter('Stamina')">持久型</button><button class="filter-btn" onclick="applyArsenalFilter('Balance')">平衡型</button>` : `<button class="filter-btn active" onclick="applyArsenalFilter('ALL')">全部</button><button class="filter-btn" onclick="applyArsenalFilter('BX')">BX</button><button class="filter-btn" onclick="applyArsenalFilter('UX')">UX</button><button class="filter-btn" onclick="applyArsenalFilter('CX')">CX</button><button class="filter-btn" onclick="applyArsenalFilter('BXG')">復刻/BXG</button><button class="filter-btn" onclick="applyArsenalFilter('EVE')">比賽/EVE</button><select onchange="currentSortType=this.value;applyArsenalFilter();" style="margin-left:15px; padding:6px; border-radius:8px; background:#111; color:#0ff; border:2px solid #555;"><option value="NEW_TO_OLD">新到舊</option><option value="DEFAULT">A-Z</option></select>`;
     if(cat==='Ratchet' || cat==='Bit') currentSortType = 'DEFAULT'; else currentSortType = 'NEW_TO_OLD';
     document.getElementById('systemFilter').innerHTML = filterHtml;
-    applyFilter('ALL'); document.getElementById('visualGridModal').style.display = 'block';
-}
-function applyFilter(f = currentFilterType) {
-    currentFilterType = f; document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active'); if(b.getAttribute('onclick').includes(`'${f}'`)) b.classList.add('active'); });
-    let list = [...(partsDb[selectingPartCategory] || [])];
+    applyArsenalFilter('ALL'); document.getElementById('visualGridModal').style.display = 'block';
+};
+window.applyArsenalFilter = function(f = currentFilterType) {
+    currentFilterType = f; document.querySelectorAll('#visualGridModal .filter-btn').forEach(b => { b.classList.remove('active'); if(b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${f}'`)) b.classList.add('active'); });
+    let list = [...(arsenalPartsDb[selectingPartCategory] || [])];
     if(f !== 'ALL') list = list.filter(g => (selectingPartCategory==='Bit') ? g.variants.some(v=>v.bitType===f) : g.tags.includes(f));
     if(['TopPart','Blade','MainBlade','MetalBlade','OverBlade','AssistBlade','Bit'].includes(selectingPartCategory)) { if(currentSortType==='NEW_TO_OLD') list.sort((a,b)=>b.earliestRelease.localeCompare(a.earliestRelease)); else if(currentSortType==='DEFAULT') list.sort((a,b)=>a.clean_name.localeCompare(b.clean_name,'en',{numeric:true,sensitivity:'base'})); }
-    
     let html = "";
     if (selectingPartCategory === 'Ratchet') {
         let g={}; list.forEach(p => { let m=p.clean_name.match(/^(\d+)-/); let b = m?parseInt(m[1]):99; if(!g[b]) g[b]=[]; g[b].push(p); });
         Object.keys(g).sort((a,b)=>a-b).forEach(b => {
-            html += `<div style="width:100%; border-bottom:1px solid #45a29e; margin:15px 0 5px; color:#66fcf1; font-weight:bold; font-size:22px;">${b==99?"特殊":`${b} 刃`}固鎖</div><div class="grid-inner">`;
-            g[b].forEach(p => { let idx=partsDb['Ratchet'].indexOf(p); html += `<div class="grid-item" onclick="handleGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
+            html += `<div style="width:100%; border-bottom:1px solid #45a29e; margin:15px 0 5px; color:#66fcf1; font-weight:bold; font-size:22px; text-align:left;">${b==99?"特殊":`${b} 刃`}固鎖</div><div class="grid-inner">`;
+            g[b].forEach(p => { let idx=arsenalPartsDb['Ratchet'].indexOf(p); html += `<div class="grid-item" onclick="handleArsenalGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleArsenalImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
             html += `</div>`;
         });
     } else {
         html += `<div class="grid-inner">`;
-        list.forEach(p => { let idx=partsDb[selectingPartCategory].indexOf(p); html += `<div class="grid-item" onclick="handleGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
+        list.forEach(p => { let idx=arsenalPartsDb[selectingPartCategory].indexOf(p); html += `<div class="grid-item" onclick="handleArsenalGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleArsenalImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
         html += `</div>`;
     }
     document.getElementById('gridContainer').innerHTML = html;
-}
-function closeVisualGrid() { document.getElementById('visualGridModal').style.display = 'none'; }
-function handleGroupClick(idx) { let g = partsDb[selectingPartCategory][idx]; if(g.variants.length===1) applyVariant(g.variants[0], g.clean_name); else { currentSelectedPartGroup=g; document.getElementById('variantContainer').innerHTML=g.variants.map((v,i)=>`<div class="grid-item" onclick="applyVariant(currentSelectedPartGroup.variants[${i}], currentSelectedPartGroup.clean_name)"><img src="${v.image}" class="grid-img" onerror="handleImgError(this)"><div class="grid-title" style="font-size:14px;color:#aaa;">[來源: ${v.set_id}]</div><div class="grid-title">${v.rawName.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃|(紋章)|(ロックチップ|メタル|メイン|オーバー|アシスト)ブレード/ig, '').trim()}</div></div>`).join(''); document.getElementById('variantModal').style.display='block'; } }
-function closeVariantModal() { document.getElementById('variantModal').style.display = 'none'; }
-function findPartByInstanceId(cat, instId) { for(let g of (partsDb[cat]||[])) for(let v of g.variants) if(v.instId===instId) return {id:v.id, clean_name:g.clean_name, image:v.image, rawName:v.rawName, category:v.category, sysType:v.sysType}; return null; }
+};
+window.closeVisualGrid = function() { document.getElementById('visualGridModal').style.display = 'none'; };
+window.handleArsenalGroupClick = function(idx) { let g = arsenalPartsDb[selectingPartCategory][idx]; if(g.variants.length===1) applyArsenalVariant(g.variants[0], g.clean_name); else { currentSelectedPartGroup=g; document.getElementById('variantContainer').innerHTML=g.variants.map((v,i)=>`<div class="grid-item" onclick="applyArsenalVariant(currentSelectedPartGroup.variants[${i}], currentSelectedPartGroup.clean_name)"><img src="${v.image}" class="grid-img" onerror="handleArsenalImgError(this)"><div class="grid-title" style="font-size:14px;color:#aaa;">[來源: ${v.set_id}]</div><div class="grid-title">${v.rawName.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃|(紋章)|(ロックチップ|メタル|メイン|オーバー|アシスト)ブレード/ig, '').trim()}</div></div>`).join(''); document.getElementById('variantModal').style.display='block'; } };
+window.closeVariantModal = function() { document.getElementById('variantModal').style.display = 'none'; };
 
-function applyVariant(v, cn) {
-    let fp = { id: v.id, clean_name: cn, image: v.image, rawName: v.rawName, category: v.category, sysType: v.sysType };
-    let d = allDecks[editingDeckIndex];
+function findArsenalInst(cat, instId) { for(let g of (arsenalPartsDb[cat]||[])) for(let v of g.variants) if(v.instId===instId) return {id:v.id, clean_name:g.clean_name, image:v.image, rawName:v.rawName, category:v.category, sysType:v.sysType}; return null; }
+window.applyArsenalVariant = function(v, cn) {
+    let fp = { id: v.id, clean_name: cn, image: v.image, rawName: v.rawName, category: v.category, sysType: v.sysType }; let d = allDecks[editingDeckIndex];
     if (selectingPartCategory === 'TopPart') {
         if (/彈丸獅鷲|Aero Pegasus|UX-19/i.test(fp.clean_name) && d.parts.Bit && /^(Op|Tr|Elevate|Trick)/i.test(d.parts.Bit.clean_name)) return alert("⚠️ 固鎖槽衝突：已經裝備一體式軸心！請先卸除。");
         if (v.category === 'Blade' && (v.tags.includes('CX') || v.sysType.includes('CX'))) {
-            let l = findPartByInstanceId('LockChip', v.instId), m = findPartByInstanceId('MetalBlade', v.instId), o = findPartByInstanceId('OverBlade', v.instId), mb = findPartByInstanceId('MainBlade', v.instId), a = findPartByInstanceId('AssistBlade', v.instId);
+            let l = findArsenalInst('LockChip', v.instId), m = findArsenalInst('MetalBlade', v.instId), o = findArsenalInst('OverBlade', v.instId), mb = findArsenalInst('MainBlade', v.instId), a = findArsenalInst('AssistBlade', v.instId);
             if (v.sysType === 'CX2' || m) { d.parts['TopPart']=m||fp; d.parts['LockChip']=l||null; d.parts['OverBlade']=o||null; d.parts['AssistBlade']=a||null; }
             else if (v.sysType === 'CX1' || mb) { d.parts['TopPart']=mb||fp; d.parts['LockChip']=l||null; d.parts['AssistBlade']=a||null; d.parts['OverBlade']=null; }
             else d.parts['TopPart']=fp;
@@ -959,7 +1660,7 @@ function applyVariant(v, cn) {
         d.parts[selectingPartCategory] = fp; if (/^(Op|Tr|Elevate|Trick)/i.test(fp.clean_name)) d.parts.Ratchet = null;
     } else d.parts[selectingPartCategory] = fp;
     closeVariantModal(); closeVisualGrid(); renderEditorSlots();
-}
+};
 
 </script>
 </body>
