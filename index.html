@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極時間軸版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極備戰與血統校正版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -34,7 +34,7 @@
         .deck-name { font-size: 22px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; }
         .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
 
-        /* ✨ CX 立體疊加圖層視覺 CSS ✨ */
+        /* CX 立體疊加圖層視覺 CSS */
         .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
         .stack-base { position: absolute; width: 140px; height: 140px; bottom: 0; left: 20px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
@@ -73,7 +73,16 @@
     <div class="box">
         <h1>🏆 選手 3on3 牌組兵工廠</h1>
         <div id="dataStatus" style="text-align:center; color:#aaa; margin-top:-20px; margin-bottom:20px;">📡 正在連線讀取資料庫 (main_db.json & hardcoded.json)...</div>
-        <div class="deck-overview-container" id="deckOverview"></div>
+        
+        <h2>⚔️ 先發 3on3 牌組</h2>
+        <div class="deck-overview-container" id="mainDeckOverview"></div>
+
+        <h2 style="margin-top: 40px; border-bottom: 2px dashed rgba(241, 196, 15, 0.3); color: #f1c40f;">🛡️ 備戰區 (Reserve)</h2>
+        <div class="deck-overview-container" id="reserveDeckOverview"></div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn-blue" style="background:#f1c40f; color:#000; border-color:#f1c40f; box-shadow: 0 0 15px rgba(241,196,15,0.5);" onclick="addReserveDeck()">➕ 新增備戰陀螺</button>
+        </div>
     </div>
 
     <div id="editorModal" class="modal-overlay">
@@ -108,6 +117,16 @@
         </div>
     </div>
 
+    <div id="swapModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 900px;">
+            <h2 id="swapTitle" style="color:#0ff; text-align:center;">請選擇要替換的牌組</h2>
+            <div class="deck-overview-container" id="swapContainer" style="margin-top:20px;"></div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn-danger" onclick="closeSwapModal()">❌ 取消</button>
+            </div>
+        </div>
+    </div>
+
 <script>
 // ================== 防斷圖機制 ==================
 const FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23555' stroke-width='4'/><text x='50' y='55' fill='%23888' font-size='16' text-anchor='middle'>無圖片</text></svg>";
@@ -124,12 +143,19 @@ window.handleImgError = function(img) {
 // ================== 核心資料庫 ==================
 let partsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
 const BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
-let currentDecks = [ { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} } ];
+
+// ✨ 牌組陣列擴充：前 3 個為先發，第 4 個起為備戰 ✨
+let allDecks = [ 
+    { mode: 'standard', parts: {} }, 
+    { mode: 'standard', parts: {} }, 
+    { mode: 'standard', parts: {} } 
+];
 let editingDeckIndex = -1; 
+let swappingIndex = -1;
 let selectingPartCategory = ""; 
 let currentSelectedPartGroup = null; 
 let currentFilterType = "ALL";
-let currentSortType = "NEW_TO_OLD"; // ✨ 預設改為最新到最舊 ✨
+let currentSortType = "NEW_TO_OLD"; 
 
 let setStructureMap = {};
 
@@ -242,6 +268,12 @@ async function loadDatabase() {
             for (const [id, item] of Object.entries(obj)) {
                 let nameObj = item.name || item.catalog_title;
                 let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
+                
+                // ✨ 官方誤植強力修正：將蒼龍勇氣 金屬塗層:闇黑 強制加上 S ✨
+                if (rawNameTW.includes("蒼龍勇氣") && rawNameTW.includes("闇黑") && !rawNameTW.includes("蒼龍勇氣S")) {
+                    rawNameTW = rawNameTW.replace("蒼龍勇氣", "蒼龍勇氣S");
+                }
+
                 let shortCat = getTrueCategoryFromId(id, defaultCat);
                 
                 if (/軸心套組|軸心組|加贈活動|活動加贈|限定軸心|活動軸心|加贈軸心活動|加贈軸心|rental|PRD-939542-04/i.test(rawNameTW) || /rental|PRD-939542-04/i.test(id)) {
@@ -268,10 +300,15 @@ async function loadDatabase() {
                     continue; 
                 }
 
+                // ✨ UX 血統強力認證：透過 ID 與特定字眼抓取 UX 歸屬 ✨
+                let isUX = /UX|936542|942062/i.test(id) || /UX/i.test(rawNameTW) || item.series === 'UX' || /UX/i.test(item.base_set_id) || /UX/i.test(item.set_id);
+                let uxNames = ['DRAN BUSTER', 'HELLS HAMMER', 'WIZARD ROD', 'LEON CREST', 'SHINOBI SHADOW', 'AERO PEGASUS', 'SAMURAI SABER', '巨劍飛龍', '戰鎚地獄', '魔杖巫師', '飛龍懸浮', '隱密忍者', '空力天馬', '武士軍刀', '武士聖劍'];
+                if (uxNames.some(n => String(rawNameTW).toUpperCase().includes(n))) isUX = true;
+
                 let sysType = 'BX';
                 if (struct['MetalBlade']) sysType = 'CX2';
                 else if (struct['MainBlade']) sysType = 'CX1'; 
-                else if (rawNameTW.includes('UX') || item.series === 'UX' || instId.includes('UX')) sysType = 'UX';
+                else if (isUX) sysType = 'UX';
 
                 let parsedBitType = 'Balance';
                 if (shortCat === 'Bit' && item.type) {
@@ -316,18 +353,17 @@ async function loadDatabase() {
         }
     }
     
-    // ✨ 核心升級：血統校正與時間軸鎖定 ✨
+    // ✨ 核心升級：血統校正與時間軸鎖定 (以最舊發行為主) ✨
     Object.values(partsDb).forEach(catList => {
         catList.forEach(group => { 
             // 變體依發行時間早到晚排列 (variants[0] 為最舊初代)
             group.variants.sort((a, b) => a.releaseAt.localeCompare(b.releaseAt)); 
             group.earliestRelease = group.variants[0].releaseAt; // 鎖定群組最早時間
             
-            // 校正群組血統：BX / UX / CX 標籤以最舊版本為主
+            // 校正群組血統：BX / UX / CX 標籤強制以「最舊版本」為主
             let sysTags = ['BX', 'UX', 'CX'];
             let oldestSys = group.variants[0].tags.find(t => sysTags.includes(t));
             if (oldestSys) {
-                // 清除混雜的系統標籤，只賦予最舊版本的標籤
                 group.tags = group.tags.filter(t => !sysTags.includes(t));
                 group.tags.push(oldestSys);
             }
@@ -362,7 +398,7 @@ async function loadDatabase() {
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
     partsDb.TopPart.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
 
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(闇黑版收合、預設新到舊、BX血統依最舊校正完成)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(備戰區上線、BX血統依最舊校正完成)</span>`;
 }
 
 // ================== 牌組總覽與立體圖層生成 ==================
@@ -399,18 +435,36 @@ function getDeckCoverHtml(deck) {
 }
 
 function renderDeckOverview() {
-    const container = document.getElementById('deckOverview');
-    container.innerHTML = '';
-    currentDecks.forEach((deck, index) => {
+    const mainContainer = document.getElementById('mainDeckOverview');
+    const reserveContainer = document.getElementById('reserveDeckOverview');
+    mainContainer.innerHTML = '';
+    reserveContainer.innerHTML = '';
+
+    allDecks.forEach((deck, index) => {
         let fullName = getDeckFullName(deck);
         let coverHtml = getDeckCoverHtml(deck);
+        let isMain = index < 3;
+        let badgeText = isMain ? `先發 ${index + 1}` : `備戰 ${index - 2}`;
+        let badgeColor = isMain ? '#45a29e' : '#f1c40f';
         
-        container.innerHTML += `
+        // 替換與刪除按鈕 (停止事件冒泡，避免觸發編輯器)
+        let actionBtns = `
+            <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
+                <button class="btn-blue" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); openSwapModal(${index})">🔄 替換</button>
+                ${!isMain ? `<button class="btn-danger" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); deleteReserveDeck(${index})">❌ 刪除</button>` : ''}
+            </div>
+        `;
+
+        let cardHtml = `
             <div class="deck-card" onclick="openEditor(${index})">
-                <div class="deck-badge">陀螺 ${index + 1}</div>
+                <div class="deck-badge" style="background:${badgeColor}; color:#000;">${badgeText}</div>
                 ${coverHtml}
                 <div class="deck-name">${fullName}</div>
+                ${actionBtns}
             </div>`;
+
+        if (isMain) mainContainer.innerHTML += cardHtml;
+        else reserveContainer.innerHTML += cardHtml;
     });
 }
 
@@ -443,13 +497,15 @@ function getDeckFullName(deck) {
 // ================== 動態插槽編輯器 ==================
 function openEditor(index) {
     editingDeckIndex = index;
-    document.getElementById('currentEditingDeckNum').innerText = `陀螺 ${index + 1}`;
+    let isMain = index < 3;
+    let titleStr = isMain ? `先發陀螺 ${index + 1}` : `備戰陀螺 ${index - 2}`;
+    document.getElementById('currentEditingDeckNum').innerText = titleStr;
     renderEditorSlots();
     document.getElementById('editorModal').style.display = 'block';
 }
 
 function renderEditorSlots() {
-    let deck = currentDecks[editingDeckIndex];
+    let deck = allDecks[editingDeckIndex];
     let topPart = deck.parts.TopPart;
     
     deck.mode = 'standard';
@@ -520,6 +576,66 @@ function saveCurrentDeck() {
     renderDeckOverview();
 }
 
+// ================== 備戰區陣容調度系統 ==================
+function addReserveDeck() {
+    allDecks.push({ mode: 'standard', parts: {} });
+    renderDeckOverview();
+}
+
+function deleteReserveDeck(index) {
+    if(confirm('確定要刪除這個備戰牌組嗎？')) {
+        allDecks.splice(index, 1);
+        renderDeckOverview();
+    }
+}
+
+function openSwapModal(index) {
+    swappingIndex = index;
+    const isMain = index < 3;
+    document.getElementById('swapTitle').innerText = isMain ? '請選擇要替換上場的備戰牌組' : '請選擇要替換下場的先發牌組';
+    
+    const container = document.getElementById('swapContainer');
+    container.innerHTML = '';
+    
+    let targetIndices = isMain ? 
+        allDecks.map((_, i) => i).filter(i => i >= 3) : 
+        [0, 1, 2];
+        
+    if (targetIndices.length === 0) {
+        container.innerHTML = '<h3 style="color:#e74c3c; text-align:center; width:100%;">目前沒有可替換的牌組。</h3>';
+    } else {
+        targetIndices.forEach(i => {
+            let deck = allDecks[i];
+            let fullName = getDeckFullName(deck);
+            let coverHtml = getDeckCoverHtml(deck);
+            let badgeText = i < 3 ? `先發 ${i + 1}` : `備戰 ${i - 2}`;
+            let badgeColor = i < 3 ? '#45a29e' : '#f1c40f';
+            
+            container.innerHTML += `
+                <div class="deck-card" onclick="executeSwap(${i})">
+                    <div class="deck-badge" style="background:${badgeColor}; color:#000;">${badgeText}</div>
+                    ${coverHtml}
+                    <div class="deck-name" style="font-size:18px;">${fullName}</div>
+                </div>`;
+        });
+    }
+    
+    document.getElementById('swapModal').style.display = 'block';
+}
+
+function executeSwap(targetIndex) {
+    let temp = allDecks[swappingIndex];
+    allDecks[swappingIndex] = allDecks[targetIndex];
+    allDecks[targetIndex] = temp;
+    closeSwapModal();
+    renderDeckOverview();
+}
+
+function closeSwapModal() {
+    document.getElementById('swapModal').style.display = 'none';
+}
+
+
 // ================== 視覺化主圖鑑與智慧篩選器 ==================
 function changeSort(val) {
     currentSortType = val;
@@ -535,7 +651,7 @@ function openVisualGrid(category, label) {
 
     if (category === 'Ratchet') {
         filterHtml = ''; 
-        currentSortType = "DEFAULT"; // 固鎖維持固定排序
+        currentSortType = "DEFAULT"; 
     } else if (category === 'Bit') {
         filterHtml = `
             <button class="filter-btn active" onclick="applyFilter('ALL')">全部</button>
@@ -594,16 +710,13 @@ function applyFilter(filterType = currentFilterType) {
         }
     }
 
-    // ✨ 執行時間軸排序 (避開固鎖區塊以免破壞其特有排版) ✨
+    // ✨ 執行時間軸排序 (避開固鎖區塊以免破壞其特有排版，並以最舊初代比較) ✨
     if (['TopPart', 'Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].includes(selectingPartCategory)) {
         if (currentSortType === 'NEW_TO_OLD') {
-            // 新到舊：不論群組內有多少新異色版，強制以「最舊的發行時間」作為排序依據
             displayList.sort((a, b) => b.earliestRelease.localeCompare(a.earliestRelease));
         } else if (currentSortType === 'OLD_TO_NEW') {
-            // 舊到新
             displayList.sort((a, b) => a.earliestRelease.localeCompare(b.earliestRelease));
         } else if (currentSortType === 'DEFAULT') {
-            // A-Z
             displayList.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
         }
     }
@@ -709,7 +822,7 @@ function findPartByInstanceId(category, instId) {
 // ✨ 一體式互斥防禦與組合核心 ✨
 function applyVariant(variant, cleanName) {
     let finalPart = { id: variant.id, clean_name: cleanName, image: variant.image, rawName: variant.rawName, category: variant.category, sysType: variant.sysType };
-    let deck = currentDecks[editingDeckIndex];
+    let deck = allDecks[editingDeckIndex];
 
     let isIntegratedBlade = /彈丸獅鷲|Aero Pegasus|UX-19/i.test(finalPart.clean_name);
     let isIntegratedBit = /^(Op|Tr|Elevate|Trick)/i.test(finalPart.clean_name);
