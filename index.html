@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極標籤解析版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極CX錯位修正版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -34,13 +34,14 @@
         .deck-name { font-size: 22px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; }
         .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
 
-        /* ✨ CX 立體疊加圖層視覺 CSS (修正超越戰刃與金屬戰刃完美重合) ✨ */
+        /* ✨ CX 立體疊加圖層視覺 CSS (修正超越戰刃偏右下) ✨ */
         .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
-        .stack-base { position: absolute; width: 140px; height: 140px; top: 15px; left: 20px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-        .stack-mid { position: absolute; width: 140px; height: 140px; top: 15px; left: 20px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-        .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: -5px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
-        .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: -5px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
+        .stack-base { position: absolute; width: 140px; height: 140px; top: 10px; left: 10px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        /* 超越戰刃往右下角偏移 */
+        .stack-mid { position: absolute; width: 140px; height: 140px; top: 30px; left: 30px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
+        .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
 
         /* 配置編輯器 */
         .editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
@@ -297,7 +298,6 @@ async function loadDatabase() {
                     continue; 
                 }
 
-                // ✨ 讀取官方 JSON 內建 tags ✨
                 let jsonTags = (item.tags && Array.isArray(item.tags)) ? item.tags.map(t => String(t).toUpperCase()) : [];
                 let isExplicitUX = jsonTags.includes('UX');
                 let isExplicitBX = jsonTags.includes('BX');
@@ -307,7 +307,6 @@ async function loadDatabase() {
                 let uxNames = ['DRAN BUSTER', 'HELLS HAMMER', 'WIZARD ROD', 'LEON CREST', 'SHINOBI SHADOW', 'AERO PEGASUS', 'SAMURAI SABER', '巨劍飛龍', '戰鎚地獄', '魔杖巫師', '飛龍懸浮', '隱密忍者', '空力天馬', '武士軍刀', '武士聖劍'];
                 if (uxNames.some(n => String(rawNameTW).toUpperCase().includes(n))) isUX = true;
 
-                // 若 JSON 官方明確標示 BX，壓制 UX 誤判 (完美解決 暴龍咆哮 982432-02 問題)
                 if (isExplicitBX && !isExplicitUX) isUX = false; 
 
                 let sysType = 'BX';
@@ -327,8 +326,6 @@ async function loadDatabase() {
                 }
 
                 let tags = new Set();
-                
-                // 完全繼承 JSON 官方所有標籤
                 jsonTags.forEach(t => tags.add(t));
 
                 if (sysType === 'CX1' || sysType === 'CX2') tags.add('CX');
@@ -405,7 +402,7 @@ async function loadDatabase() {
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
     partsDb.TopPart.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
 
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(疊加偏移修復、官方 JSON Tags 完全掛載成功)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(CX1 自動換裝修復、超越戰刃錯位偏移修復)</span>`;
 }
 
 // ================== 牌組總覽與立體圖層生成 ==================
@@ -516,8 +513,9 @@ function renderEditorSlots() {
     
     deck.mode = 'standard';
     if (topPart) {
-        if (topPart.category === 'MainBlade') deck.mode = 'cx1';
-        else if (topPart.category === 'MetalBlade') deck.mode = 'cx2';
+        // ✨ 精準依照 sysType 與 category 確認是否切換至 CX 編輯器模式 ✨
+        if (topPart.sysType === 'CX1' || topPart.category === 'MainBlade') deck.mode = 'cx1';
+        else if (topPart.sysType === 'CX2' || topPart.category === 'MetalBlade') deck.mode = 'cx2';
     }
 
     let slotsHtml = "";
@@ -840,8 +838,11 @@ function applyVariant(variant, cleanName) {
         }
 
         let instId = variant.instId; 
+        
+        // ✨ CX 血統強制繼承：只要點選的類別或是標籤屬於CX，就啟用一鍵換裝 ✨
+        let isCX = variant.tags.includes('CX') || variant.sysType === 'CX1' || variant.sysType === 'CX2';
 
-        if (variant.category === 'Blade' && variant.tags.includes('CX')) {
+        if ((variant.category === 'Blade' || variant.category === 'MainBlade' || variant.category === 'MetalBlade') && isCX) {
             let lock = findPartByInstanceId('LockChip', instId);
             let metal = findPartByInstanceId('MetalBlade', instId);
             let over = findPartByInstanceId('OverBlade', instId);
@@ -849,15 +850,17 @@ function applyVariant(variant, cleanName) {
             let assist = findPartByInstanceId('AssistBlade', instId);
 
             if (variant.sysType === 'CX2' || metal) { 
-                deck.parts['TopPart'] = metal || finalPart; 
+                deck.parts['TopPart'] = metal || (variant.category === 'MetalBlade' ? finalPart : null) || finalPart; 
                 deck.parts['LockChip'] = lock || null; 
                 deck.parts['OverBlade'] = over || null; 
                 deck.parts['AssistBlade'] = assist || null;
             } else if (variant.sysType === 'CX1' || main) { 
-                deck.parts['TopPart'] = main || finalPart; 
+                deck.parts['TopPart'] = main || (variant.category === 'MainBlade' ? finalPart : null) || finalPart; 
                 deck.parts['LockChip'] = lock || null; 
                 deck.parts['AssistBlade'] = assist || null;
                 deck.parts['OverBlade'] = null; 
+            } else {
+                deck.parts['TopPart'] = finalPart;
             }
         } 
         else {
