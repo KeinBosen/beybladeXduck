@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極手術刀修復版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極精確分類版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -93,7 +93,7 @@
 
     <div id="variantModal" class="modal-overlay grid-modal" style="z-index: 1060;">
         <div class="modal-content" style="max-width: 1000px;">
-            <h2 id="variantTitle" style="color: #0ff;">請選擇指定版本</h2>
+            <h2>請選擇指定版本</h2>
             <div id="variantContainer" class="grid-container"></div>
             <div style="text-align: center; margin-top: 20px;">
                 <button class="btn-danger" onclick="closeVariantModal()">↩️ 返回上一頁</button>
@@ -157,37 +157,24 @@ function getInstId(id, item) {
     return base;
 }
 
-// ✨ 終極手術刀修復版：完美保護基底名稱、精準切除塗裝後綴 ✨
 function cleanPartName(rawName, instId, shortCat) {
     if (!rawName) return instId;
     let name = String(rawName).trim();
     
     if (name === "■" || name === "(機密/特殊聯名)") return `機密/特殊聯名`;
 
-    // 1. 無情清除所有產品代碼前綴 (BX-XX 等)
     let cleaned = name.replace(/(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[A-Za-z0-9\-]+\s*/ig, ''); 
 
-    // 2. 移除上蓋夾帶的 1-80GB, 3-70A 等固鎖與軸心後綴 (僅限上蓋類別)
     if (['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'LockChip', 'TopPart'].includes(shortCat)) {
         cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
     }
 
-    // 3. 切除「金屬塗層/金屬塗裝」 (現在支援 '/' 符號，完美消滅藍/綠，並加入塗裝關鍵字)
     cleaned = cleaned.replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '');
-
-    // 4. 切除與「版 / Ver」黏在一起的顏色字眼 (這樣就不會誤殺銀狼跟紅鐮！)
     cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|透明)(Ver\.|バージョン|版)/ig, '');
-
-    // 5. 切除前面帶有空格的獨立版本詞 (例如 " 紀念版", " 2024Ver.")
     cleaned = cleaned.replace(/\s+[A-Za-z0-9\u4e00-\u9fa5]+(Ver\.|バージョン|版)/ig, '');
-
-    // 6. 移除獨立的顏色/狀態單字 (前面一定要有空格才切除，例如 " Black")
     cleaned = cleaned.replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '');
-
-    // 7. 移除括號內的顏色/狀態 (例如 "(限定)", "(紅)")
     cleaned = cleaned.replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet)[\)）]/ig, '');
 
-    // 8. 其他雜項移除
     cleaned = cleaned.replace(/中收錄.*$/ig, '');
     cleaned = cleaned.replace(/ランダムブースター.*$/ig, '');
     cleaned = cleaned.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig, '');
@@ -245,8 +232,8 @@ async function loadDatabase() {
                 let nameObj = item.name || item.catalog_title;
                 let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
                 
-                // 全域垃圾過濾網
-                if (/軸心套組|軸心組|加贈活動|活動加贈|限定軸心|活動軸心|加贈軸心活動|加贈軸心/i.test(rawNameTW)) {
+                // 🛑 核心修復 1：全域垃圾字眼與【rental】測試帳號無效資料清洗 🛑
+                if (/軸心套組|軸心組|加贈活動|活動加贈|限定軸心|活動軸心|加贈軸心活動|加贈軸心|rental/i.test(rawNameTW) || /rental/i.test(id)) {
                     continue; 
                 }
 
@@ -254,14 +241,11 @@ async function loadDatabase() {
                 let instId = getInstId(id, item);
                 let struct = setStructureMap[instId];
 
-                // CX2 互斥防禦：如果此陀螺具備鋼鐵戰刃(CX2)，則堅決拒絕它的「主要戰刃(CX1)」
                 if (shortCat === 'MainBlade' && struct['MetalBlade']) {
                     continue; 
                 }
                 
                 let cleanName = cleanPartName(rawNameTW, instId, shortCat);
-                
-                // 剔除幽靈機密欄位
                 if (cleanName === "機密/特殊聯名") {
                     continue; 
                 }
@@ -273,6 +257,16 @@ async function loadDatabase() {
 
                 let hasColorWord = /(Metallic Coat|メタルコート|Ver\.|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定)/i.test(rawNameTW);
                 
+                // 🛑 核心修復 2：精確解碼 Bit 的 JSON 內部 Type 屬性 🛑
+                let parsedBitType = 'Balance';
+                if (shortCat === 'Bit' && item.type) {
+                    let typeStr = String(item.type).toLowerCase();
+                    if (typeStr.includes('attack') || typeStr.includes('攻擊')) parsedBitType = 'Attack';
+                    else if (typeStr.includes('defense') || typeStr.includes('防禦')) parsedBitType = 'Defense';
+                    else if (typeStr.includes('stamina') || typeStr.includes('持久')) parsedBitType = 'Stamina';
+                    else if (typeStr.includes('balance') || typeStr.includes('平衡')) parsedBitType = 'Balance';
+                }
+
                 let tags = new Set();
                 let upperName = String(rawNameTW).toUpperCase();
                 let fullText = upperName + " " + instId.toUpperCase();
@@ -289,7 +283,7 @@ async function loadDatabase() {
                 let variantObj = {
                     id: id, rawName: rawNameTW, image: `${BASE_IMG_URL}${shortCat}/${id}.png`,
                     category: shortCat, hasColorWord: hasColorWord, set_id: item.base_set_id || item.set_id || id, 
-                    tags: Array.from(tags), instId: instId, sysType: sysType
+                    tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType // 寫入標準化類型
                 };
 
                 let existingPart = partsDb[shortCat].find(p => p.clean_name === cleanName);
@@ -329,7 +323,7 @@ async function loadDatabase() {
     }
 
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(完美保護原名，空力天馬與天蠍長矛已大團圓！)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(軸心四型動態分類、Rental髒數據已全數蒸發)</span>`;
 }
 
 // ================== 牌組總覽 ==================
@@ -437,12 +431,13 @@ function openVisualGrid(category, label) {
     if (category === 'Ratchet') {
         filterHtml = ''; 
     } else if (category === 'Bit') {
+        // 四大核心 JSON 類型分類按鈕
         filterHtml = `
             <button class="filter-btn active" onclick="applyFilter('ALL')">全部</button>
-            <button class="filter-btn" onclick="applyFilter('Attack')">攻擊型</button>
-            <button class="filter-btn" onclick="applyFilter('Defense')">防禦型</button>
-            <button class="filter-btn" onclick="applyFilter('Stamina')">持久型</button>
-            <button class="filter-btn" onclick="applyFilter('Balance')">平衡型</button>`;
+            <button class="filter-btn" onclick="applyFilter('Attack')">攻擊型 (Attack)</button>
+            <button class="filter-btn" onclick="applyFilter('Defense')">防禦型 (Defense)</button>
+            <button class="filter-btn" onclick="applyFilter('Stamina')">持久型 (Stamina)</button>
+            <button class="filter-btn" onclick="applyFilter('Balance')">平衡型 (Balance)</button>`;
     } else {
         filterHtml = `
             <button class="filter-btn active" onclick="applyFilter('ALL')">全部</button>
@@ -476,6 +471,7 @@ function applyFilter(filterType = currentFilterType) {
 
     if (currentFilterType !== 'ALL') {
         if (selectingPartCategory === 'Bit') {
+            // 精準過濾由 JSON type 欄位解碼出的四大賽事屬性
             partsList = partsList.filter(g => g.variants.some(v => v.bitType === currentFilterType));
         } else if (selectingPartCategory !== 'Ratchet') {
             partsList = partsList.filter(g => g.tags.includes(currentFilterType));
@@ -485,7 +481,7 @@ function applyFilter(filterType = currentFilterType) {
     if (partsList.length === 0) {
         container.innerHTML = `<h3 style="color:#e74c3c; width:100%;">此篩選條件下無零件資料。</h3>`;
     } else {
-        partsList.forEach((partGroup, index) => {
+        partsList.forEach((partGroup) => {
             let thumb = partGroup.variants[0].image;
             let variantBadge = partGroup.variants.length > 1 ? `<div class="variant-badge">${partGroup.variants.length} 種版本</div>` : "";
             
@@ -524,7 +520,6 @@ function openVariantModal(partGroup) {
     let titleSuffix = "";
     if (partGroup.category === 'MetalBlade') titleSuffix = ' [鋼鐵戰刃]';
     if (partGroup.category === 'MainBlade') titleSuffix = ' [主要戰刃]';
-    document.getElementById('variantTitle').innerText = `請選擇你要的「${partGroup.clean_name}${titleSuffix}」`;
     
     const container = document.getElementById('variantContainer');
     container.innerHTML = '';
