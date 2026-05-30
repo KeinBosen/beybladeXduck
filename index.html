@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極時間軸與立體疊層版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極時間軸版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -34,12 +34,11 @@
         .deck-name { font-size: 22px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; }
         .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
 
-        /* ✨ CX 立體疊加圖層視覺 CSS (更新紋章於偏左下) ✨ */
+        /* ✨ CX 立體疊加圖層視覺 CSS ✨ */
         .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
         .stack-base { position: absolute; width: 140px; height: 140px; bottom: 0; left: 20px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-mid { position: absolute; width: 120px; height: 120px; top: 10px; right: 5px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-        /* 紋章改為偏左下 */
         .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: -5px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
         .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: -5px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
 
@@ -130,7 +129,7 @@ let editingDeckIndex = -1;
 let selectingPartCategory = ""; 
 let currentSelectedPartGroup = null; 
 let currentFilterType = "ALL";
-let currentSortType = "DEFAULT"; // 用於發行時間排序
+let currentSortType = "NEW_TO_OLD"; // ✨ 預設改為最新到最舊 ✨
 
 let setStructureMap = {};
 
@@ -180,11 +179,11 @@ function cleanPartName(rawName, instId, shortCat) {
     cleaned = cleaned.replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '');
     cleaned = cleaned.replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版)?/ig, '');
     
-    // ✨ 擴增「水藍」與剝除「連擊型」、「上升攻擊型」✨
-    cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|透明)(Ver\.|バージョン|版)/ig, '');
+    // ✨ 擴增「闇黑」與剝除「連擊型」、「上升攻擊型」 ✨
+    cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版)/ig, '');
     cleaned = cleaned.replace(/\s+[A-Za-z0-9\u4e00-\u9fa5]+(Ver\.|バージョン|版)/ig, '');
     cleaned = cleaned.replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '');
-    cleaned = cleaned.replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet)[\)）]/ig, '');
+    cleaned = cleaned.replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet)[\)）]/ig, '');
     
     cleaned = cleaned.replace(/\s*[\(（](連擊型|上升攻擊型)[\)）]/ig, '');
 
@@ -294,7 +293,6 @@ async function loadDatabase() {
                 if (fullText.includes('BXG') || upperName.includes('復刻') || upperName.includes('聯名') || fullText.includes('CROSSOVER') || item.series === 'BXG') tags.add('BXG');
                 if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('BXH') || upperName.includes('G1') || upperName.includes('G2') || upperName.includes('G3') || upperName.includes('大賽') || upperName.includes('CUP')) tags.add('EVE');
 
-                // 擷取 release_at 作為排序依據
                 let releaseAt = item.release_at ? String(item.release_at) : '9999-12-31';
 
                 let variantObj = {
@@ -318,23 +316,31 @@ async function loadDatabase() {
         }
     }
     
-    // ✨ 版本內排序改以「發行時間 (releaseAt)」由早到晚為主，確保 variants[0] 必定是初代圖片 ✨
+    // ✨ 核心升級：血統校正與時間軸鎖定 ✨
     Object.values(partsDb).forEach(catList => {
         catList.forEach(group => { 
+            // 變體依發行時間早到晚排列 (variants[0] 為最舊初代)
             group.variants.sort((a, b) => a.releaseAt.localeCompare(b.releaseAt)); 
-            group.earliestRelease = group.variants[0].releaseAt;
-            group.latestRelease = [...group.variants].sort((a,b) => b.releaseAt.localeCompare(a.releaseAt))[0].releaseAt;
+            group.earliestRelease = group.variants[0].releaseAt; // 鎖定群組最早時間
+            
+            // 校正群組血統：BX / UX / CX 標籤以最舊版本為主
+            let sysTags = ['BX', 'UX', 'CX'];
+            let oldestSys = group.variants[0].tags.find(t => sysTags.includes(t));
+            if (oldestSys) {
+                // 清除混雜的系統標籤，只賦予最舊版本的標籤
+                group.tags = group.tags.filter(t => !sysTags.includes(t));
+                group.tags.push(oldestSys);
+            }
         });
     });
 
-    // ✨ A-Z 字典級預設排序 (超越戰刃, 輔助戰刃, 軸心，及 TopPart 等) ✨
+    // A-Z 字典級預設排序
     ['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].forEach(cat => {
         if(partsDb[cat]) {
             partsDb[cat].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
         }
     });
 
-    // 固鎖高度排序
     if (partsDb['Ratchet']) {
         let parseRatchet = (name) => {
             if (!name) return { points: 99, height: 999 };
@@ -354,10 +360,9 @@ async function loadDatabase() {
     }
 
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
-    // TopPart 也預設 A-Z
     partsDb.TopPart.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
 
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(初代圖片引擎、A-Z排序、左下角紋章更新完成)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(闇黑版收合、預設新到舊、BX血統依最舊校正完成)</span>`;
 }
 
 // ================== 牌組總覽與立體圖層生成 ==================
@@ -530,6 +535,7 @@ function openVisualGrid(category, label) {
 
     if (category === 'Ratchet') {
         filterHtml = ''; 
+        currentSortType = "DEFAULT"; // 固鎖維持固定排序
     } else if (category === 'Bit') {
         filterHtml = `
             <button class="filter-btn active" onclick="applyFilter('ALL')">全部</button>
@@ -537,6 +543,7 @@ function openVisualGrid(category, label) {
             <button class="filter-btn" onclick="applyFilter('Defense')">防禦型 (Defense)</button>
             <button class="filter-btn" onclick="applyFilter('Stamina')">持久型 (Stamina)</button>
             <button class="filter-btn" onclick="applyFilter('Balance')">平衡型 (Balance)</button>`;
+        currentSortType = "DEFAULT"; 
     } else {
         filterHtml = `
             <button class="filter-btn active" onclick="applyFilter('ALL')">全部</button>
@@ -546,21 +553,19 @@ function openVisualGrid(category, label) {
             <button class="filter-btn" onclick="applyFilter('BXG')">復刻/BXG</button>
             <button class="filter-btn" onclick="applyFilter('EVE')">比賽/EVE</button>`;
         
-        // ✨ 新增發行時間排序選單 ✨
         sortHtml = `
             <select id="sortSelect" onchange="changeSort(this.value)" style="margin-left: 15px; padding: 6px 12px; border-radius: 10px; background: #111; color: #f1c40f; border: 2px solid #555; font-size:16px; font-weight:bold; cursor:pointer; outline:none;">
-                <option value="DEFAULT">預設 A-Z 排序</option>
                 <option value="NEW_TO_OLD">發行時間 (新到舊)</option>
                 <option value="OLD_TO_NEW">發行時間 (舊到新)</option>
+                <option value="DEFAULT">預設 A-Z 排序</option>
             </select>`;
+        currentSortType = "NEW_TO_OLD"; 
     }
     
     document.getElementById('systemFilter').innerHTML = filterHtml + sortHtml;
-    currentSortType = "DEFAULT"; 
     
-    // 若開啟的已有下拉選單，強制綁定值
     let selectEl = document.getElementById('sortSelect');
-    if(selectEl) selectEl.value = "DEFAULT";
+    if(selectEl) selectEl.value = currentSortType;
 
     applyFilter('ALL'); 
     document.getElementById('visualGridModal').style.display = 'block';
@@ -589,11 +594,18 @@ function applyFilter(filterType = currentFilterType) {
         }
     }
 
-    // ✨ 執行時間軸排序 (針對上蓋及其他支援部位) ✨
-    if (currentSortType === 'NEW_TO_OLD') {
-        displayList.sort((a, b) => b.latestRelease.localeCompare(a.latestRelease));
-    } else if (currentSortType === 'OLD_TO_NEW') {
-        displayList.sort((a, b) => a.earliestRelease.localeCompare(b.earliestRelease));
+    // ✨ 執行時間軸排序 (避開固鎖區塊以免破壞其特有排版) ✨
+    if (['TopPart', 'Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].includes(selectingPartCategory)) {
+        if (currentSortType === 'NEW_TO_OLD') {
+            // 新到舊：不論群組內有多少新異色版，強制以「最舊的發行時間」作為排序依據
+            displayList.sort((a, b) => b.earliestRelease.localeCompare(a.earliestRelease));
+        } else if (currentSortType === 'OLD_TO_NEW') {
+            // 舊到新
+            displayList.sort((a, b) => a.earliestRelease.localeCompare(b.earliestRelease));
+        } else if (currentSortType === 'DEFAULT') {
+            // A-Z
+            displayList.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
+        }
     }
     
     if (displayList.length === 0) {
@@ -621,7 +633,7 @@ function applyFilter(filterType = currentFilterType) {
                     let variantBadge = partGroup.variants.length > 1 ? `<div class="variant-badge">${partGroup.variants.length} 種版本</div>` : "";
                     let realIndex = partsDb['Ratchet'].indexOf(partGroup);
                     finalHtml += `
-                        <div class="grid-item" onclick="handleGroupClick(${realIndex}, 'Ratchet')">
+                        <div class="grid-item" onclick="handleGroupClick(${realIndex})">
                             ${variantBadge}
                             <img src="${thumb}" class="grid-img" loading="lazy" onerror="handleImgError(this)">
                             <div class="grid-title">${partGroup.clean_name}</div>
@@ -634,11 +646,8 @@ function applyFilter(filterType = currentFilterType) {
         else {
             let normalGridHtml = `<div class="grid-inner">`;
             displayList.forEach((partGroup) => {
-                // variants[0] 現在必定是依據 releaseAt 排列出的初代最早圖片
-                let thumb = partGroup.variants[0].image;
+                let thumb = partGroup.variants[0].image; // 必定是最舊初代圖
                 let variantBadge = partGroup.variants.length > 1 ? `<div class="variant-badge">${partGroup.variants.length} 種版本</div>` : "";
-                
-                // 從 baseList 尋找真實 Index，以供 handleGroupClick 使用
                 let realIndex = partsDb[selectingPartCategory].indexOf(partGroup);
 
                 normalGridHtml += `
