@@ -287,7 +287,7 @@
         <button class="btn-blue" onclick="generateNewSchedule()">🔀 生成賽程表 (智能防連戰)</button>
         <button class="btn-danger" onclick="clearTournament()">🔄 清空並重置當前賽局</button>
         <div style="float: right;">
-            <button class="btn-green" onclick="exportToCSV()">📥 匯出 Excel (CSV)</button>
+            <button class="btn-green" onclick="exportToCSV()">📥 匯出單局對戰明細 (CSV)</button>
             <button class="btn-yellow" onclick="archiveTournament()">💾 結算並儲存至生涯紀錄</button>
         </div>
     </div>
@@ -325,10 +325,16 @@
                 </thead>
                 <tbody id="historyBody"><tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">尚無歷史歸檔紀錄</td></tr></tbody>
             </table>
-            <div style="margin-top: 20px; display:flex; gap: 15px;">
-                <button class="btn-danger" onclick="clearHistory()" style="font-size:22px; margin:0;">🗑️ 刪除所有生涯紀錄</button>
-                <button class="btn-purple" onclick="openPartStatsModal()" style="font-size:22px; margin:0; box-shadow: 0 0 15px rgba(176,86,223,0.5);">🔍 查閱配件勝率大數據 (Part Stats)</button>
+            
+            <div style="margin-top: 20px; display:flex; gap: 15px; flex-wrap: wrap;">
+                <button class="btn-danger" onclick="clearHistory()" style="font-size:22px; margin:0;">🗑️ 刪除所有紀錄</button>
+                <button class="btn-purple" onclick="openPartStatsModal()" style="font-size:22px; margin:0; box-shadow: 0 0 15px rgba(176,86,223,0.5);">🔍 查閱配件勝率</button>
+                <button class="btn-green" onclick="exportHistoryCSV()" style="font-size:22px; margin:0;">📊 匯出總表 (Excel/CSV)</button>
+                <button class="btn-yellow" onclick="exportHistoryBackup()" style="font-size:22px; margin:0;">📥 下載資料備份檔 (.json)</button>
+                <button class="btn-blue" onclick="document.getElementById('importHistoryInput').click()" style="font-size:22px; margin:0;">📤 匯入資料備份檔</button>
+                <input type="file" id="importHistoryInput" style="display:none;" accept=".json" onchange="importHistoryBackup(event)">
             </div>
+            
         </div>
         
         <div style="background: rgba(0,0,0,0.5); border: 2px solid rgba(241,196,15,0.3); border-radius: 24px; padding: 30px;">
@@ -822,7 +828,7 @@ function renderMatches() {
                 </div>
             </div>`;
     });
-    container.innerHTML += `<div style="display: flex; gap: 25px; margin-top: 20px;"><button class="btn-green" style="flex: 1; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(46,204,113,0.4);" onclick="exportToCSV()">📥 匯出 Excel (CSV)</button><button class="btn-yellow" style="flex: 2; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(241,196,15,0.4);" onclick="archiveTournament()">💾 完成賽局並儲存至生涯紀錄</button></div>`;
+    container.innerHTML += `<div style="display: flex; gap: 25px; margin-top: 20px;"><button class="btn-green" style="flex: 1; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(46,204,113,0.4);" onclick="exportToCSV()">📥 匯出單局對戰明細 (CSV)</button><button class="btn-yellow" style="flex: 2; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(241,196,15,0.4);" onclick="archiveTournament()">💾 完成賽局並儲存至生涯紀錄</button></div>`;
     renderSummary();
 }
 
@@ -852,7 +858,8 @@ function renderScoringModal() {
     let p1BeyIndex = m.p1DeckOrder[(currentRound - 1) % 3];
     let p2BeyIndex = m.p2DeckOrder[(currentRound - 1) % 3];
     
-    let canReorder = (currentRound === 1 || currentRound >= 4);
+    // 每 3 回合的開頭可變陣 (Round 1, Round 4, Round 7...)
+    let canReorder = ((currentRound - 1) % 3 === 0);
     let reorderHint = canReorder ? `<div style="font-size:16px; color:#f1c40f; margin-bottom:8px;">🔄 點擊變更出戰順序 (包含備戰庫)</div>` : `<div style="font-size:16px; color:#aaa; margin-bottom:8px;">🔒 第 ${currentRound} 回合鎖定上陣</div>`;
     let activeBeyStyle = canReorder ? "cursor:pointer; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.4);" : "cursor:not-allowed; border-color:#555; opacity:0.8;";
     
@@ -894,7 +901,8 @@ window.handleActiveBeyClick = function() {
     let m = appState.matches.find(x => x.id === currentScoringMatchId);
     let validLogs = m.logs.filter(l => l.action !== 'penalty');
     let currentRound = validLogs.length + 1;
-    if (currentRound === 1 || currentRound >= 4) { openReorderDeckModal(); }
+    // 判斷是否為 3 的倍數回合開始前
+    if ((currentRound - 1) % 3 === 0) { openReorderDeckModal(); }
 };
 
 // ================== 全新 3on3 變陣 (Reorder Deck) 卡片拖曳/互換引擎 ==================
@@ -1119,7 +1127,7 @@ function exportToCSV() {
         let net = stats[p].g - stats[p].ls; let played = stats[p].w + stats[p].l; let rate = played > 0 ? Math.round((stats[p].w/played)*100) : 0; let freq = played > 0 ? ((stats[p].penalty/played)*100).toFixed(1) : 0;
         csv += `${idx+1},${escapeCSV(p)},${stats[p].w},${stats[p].l},${stats[p].g},${stats[p].ls},${net},${rate}%,${freq}%,${stats[p].spin},${stats[p].burst},${stats[p].over},${stats[p].xtreme}\n`;
     });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `賽事紀錄_${name}.csv`; link.click();
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `賽程戰績_${name}.csv`; link.click();
 }
 
 function archiveTournament() {
@@ -1181,7 +1189,7 @@ function showPodium(top3) {
 }
 function closePodiumAndClear() { document.getElementById('podiumModal').style.display = 'none'; clearTournament(); }
 
-// ================== 配件勝率面板 (新增功能) ==================
+// ================== 配件勝率面板 ==================
 window.openPartStatsModal = function() {
     let historyObj = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
     let playersSet = new Set();
@@ -1322,6 +1330,65 @@ function renderHistory() {
 }
 function clearHistory() { if(confirm('⚠ 警告：確定要刪除所有的生涯紀錄嗎？這無法復原！')) { localStorage.removeItem('beyblade_history'); document.getElementById('historyBody').innerHTML = '<tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">尚無歷史歸檔紀錄</td></tr>'; if(careerChartInstance) careerChartInstance.destroy(); } }
 
+// ================== 匯出與匯入系統 (Excel / JSON 備份) ==================
+window.exportHistoryCSV = function() {
+    let historyObj = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
+    let aggregate = {};
+    Object.values(historyObj).forEach((tour) => {
+        Object.keys(tour.results).forEach(p => {
+            if(!aggregate[p]) aggregate[p] = { played:0, w:0, l:0, g:0, ls:0, spin:0, burst:0, over:0, xtreme:0, penalty:0 };
+            let r = tour.results[p]; aggregate[p].played += (r.w + r.l); aggregate[p].w += r.w; aggregate[p].l += r.l; aggregate[p].g += r.g; aggregate[p].ls += r.ls;
+            aggregate[p].spin += (r.spin || 0); aggregate[p].burst += (r.burst || 0); aggregate[p].over += (r.over || 0); aggregate[p].xtreme += (r.xtreme || 0); aggregate[p].penalty += (r.penalty || 0);
+        });
+    });
+    let players = Object.keys(aggregate).sort((a, b) => aggregate[b].w - aggregate[a].w);
+    if(players.length === 0) return alert("目前沒有歷史紀錄可以匯出！");
+    
+    let csv = "\uFEFF選手名稱,參賽,勝,敗,生涯勝率,總得分,總失分,總淨分,犯規頻率,轉停(1分),爆裂(2分),擊飛(2分),極限(3分)\n";
+    players.forEach(p => {
+        let d = aggregate[p]; let net = d.g - d.ls; let rate = d.played > 0 ? Math.round((d.w / d.played) * 100) : 0; let penaltyFreq = d.played > 0 ? ((d.penalty / d.played) * 100).toFixed(1) : 0; 
+        csv += `"${p}",${d.played},${d.w},${d.l},${rate}%,${d.g},${d.ls},${net},${penaltyFreq}%,${d.spin},${d.burst},${d.over},${d.xtreme}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
+    const link = document.createElement("a"); 
+    link.href = URL.createObjectURL(blob); 
+    link.download = `歷史生涯戰績表_${new Date().getTime()}.csv`; 
+    link.click();
+};
+
+window.exportHistoryBackup = function() {
+    let historyObj = localStorage.getItem('beyblade_history') || '{}';
+    if(historyObj === '{}') return alert("目前沒有紀錄可備份！");
+    const blob = new Blob([historyObj], { type: 'application/json' });
+    const link = document.createElement("a"); 
+    link.href = URL.createObjectURL(blob); 
+    link.download = `極限戰情室_生涯備份_${new Date().getTime()}.json`; 
+    link.click();
+};
+
+window.importHistoryBackup = function(event) {
+    let file = event.target.files[0];
+    if (!file) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            let importedData = JSON.parse(e.target.result);
+            if(typeof importedData === 'object') {
+                if(confirm("即將匯入生涯紀錄檔 (.json)。\n這將會與您目前的紀錄合併（若有相同ID賽事則會覆蓋更新）。確定要繼續嗎？")) {
+                    let currentHistory = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
+                    let newHistory = { ...currentHistory, ...importedData };
+                    localStorage.setItem('beyblade_history', JSON.stringify(newHistory));
+                    renderHistory();
+                    if(typeof renderPartStatsTable === 'function' && document.getElementById('partStatsModal').style.display === 'block') { renderPartStatsTable(); }
+                    alert("✅ 生涯大數據紀錄匯入成功！");
+                }
+            } else { alert("❌ 檔案格式錯誤，請選擇系統專用的 .json 備份檔。"); }
+        } catch(err) { alert("❌ 檔案解析失敗，這可能不是系統生成的有效 JSON 備份檔。"); }
+        event.target.value = ''; 
+    };
+    reader.readAsText(file);
+};
+
 // ================== 兵工廠專屬核心 JS ==================
 let arsenalPartsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
 const ARSENAL_BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
@@ -1350,9 +1417,10 @@ window.saveBuilderToPlayer = function() {
         let deck = allDecks[i]; if (!deck || !deck.parts) continue;
         ['TopPart', 'LockChip', 'OverBlade', 'MainBlade', 'MetalBlade', 'AssistBlade', 'Ratchet', 'Bit'].forEach(cat => {
             if (deck.parts[cat]) {
-                let partName = deck.parts[cat].clean_name;
-                if (usedParts.includes(partName)) hasDuplicate = true;
-                usedParts.push(partName);
+                // 優化1：加入部位前綴，避免同名不同部位（如 H輔助戰刃 與 H軸心）衝突
+                let partKey = cat + '_' + deck.parts[cat].clean_name;
+                if (usedParts.includes(partKey)) hasDuplicate = true;
+                usedParts.push(partKey);
             }
         });
     }
