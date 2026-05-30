@@ -213,69 +213,51 @@
         }
         .delete-card-btn:hover { color: #e74c3c; transform: scale(1.3) rotate(90deg); text-shadow: 0 0 10px rgba(231,76,60,0.8); }
 
-        /* ====== Deck Builder (牌組配置) 專屬樣式 ====== */
-        .deck-container { display: flex; gap: 20px; margin-top: 20px; overflow-x: auto; padding-bottom: 10px; }
-        .deck-slot { flex: 1; min-width: 300px; background: rgba(0,0,0,0.6); border: 2px solid #45a29e; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .deck-slot h4 { margin: 0; color: #66fcf1; font-size: 24px; text-align: center; border-bottom: 2px dashed rgba(102, 252, 241, 0.3); padding-bottom: 10px; }
-        .deck-part { display: flex; flex-direction: column; gap: 5px; }
-        .deck-part label { font-size: 18px; color: #c5c6c7; font-weight: bold; }
-        .deck-part input { font-size: 18px; padding: 10px; border-radius: 8px; border: 1px solid #45a29e; background: #1f2833; color: #fff; width: 100%; }
-        .mode-selector { margin-bottom: 10px; padding: 8px; font-size: 18px; background: #0b0c10; color: #f1c40f; border: 2px solid #f1c40f; border-radius: 8px; width: 100%; font-weight: bold; }
-
         /* ================= 兵工廠專屬 CSS & 3D 疊加引擎 ================= */
-.deck-overview-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-.deck-card { width: 340px; background: rgba(0,0,0,0.6); border: 2px solid #45a29e; border-radius: 16px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; }
-.deck-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,255,255,0.3); border-color: #0ff; }
-.deck-name { font-size: 20px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; line-height: 1.3; }
-.deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
+        .deck-overview-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .deck-card { width: 340px; background: rgba(0,0,0,0.6); border: 2px solid #45a29e; border-radius: 16px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; }
+        .deck-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,255,255,0.3); border-color: #0ff; }
+        .deck-name { font-size: 20px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; line-height: 1.3; }
+        .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
 
-.deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-.stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
-.stack-base { position: absolute; width: 140px; height: 140px; top: 10px; left: 10px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-.stack-mid { position: absolute; width: 140px; height: 140px; top: 30px; left: 30px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-.stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
-.stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
+        .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
+        .stack-base { position: absolute; width: 140px; height: 140px; top: 10px; left: 10px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-mid { position: absolute; width: 140px; height: 140px; top: 30px; left: 30px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
+        .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
 
-.mini-icon-wrapper { width: 80px; height: 80px; position: relative; display: inline-block; margin-top: 5px; }
-.mini-icon-wrapper .deck-img { width: 80px; height: 80px; margin: 0; }
-.mini-icon-wrapper .stack-container { transform: scale(0.44); transform-origin: top left; margin: 0; position: absolute; top: 0; left: 0; }
+        .mini-icon-wrapper { width: 80px; height: 80px; position: relative; display: inline-block; margin-top: 5px; }
+        .mini-icon-wrapper .deck-img { width: 80px; height: 80px; margin: 0; }
+        .mini-icon-wrapper .stack-container { transform: scale(0.44); transform-origin: top left; margin: 0; position: absolute; top: 0; left: 0; }
 
-.editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
-.part-slot { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); border: 2px dashed #45a29e; padding: 10px 20px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
-.part-slot:hover { border-color: #0ff; background: rgba(0,255,255,0.1); }
-.part-label { font-size: 20px; color: #c5c6c7; font-weight: bold; width: 220px; text-align: left; }
-.part-preview { display: flex; align-items: center; gap: 15px; }
-.part-thumb { width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8)); }
-.part-val { font-size: 22px; color: #fff; font-weight: bold; width: 250px; text-align: right; }
+        .editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .part-slot { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); border: 2px dashed #45a29e; padding: 10px 20px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+        .part-slot:hover { border-color: #0ff; background: rgba(0,255,255,0.1); }
+        .part-label { font-size: 20px; color: #c5c6c7; font-weight: bold; width: 220px; text-align: left; }
+        .part-preview { display: flex; align-items: center; gap: 15px; }
+        .part-thumb { width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8)); }
+        .part-val { font-size: 22px; color: #fff; font-weight: bold; width: 250px; text-align: right; }
 
-.grid-modal { z-index: 1060 !important; }
-.grid-container { max-height: 60vh; overflow-y: auto; padding: 10px; margin-top: 10px; }
-.grid-inner { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-.grid-item { position: relative; background: rgba(255,255,255,0.05); border: 2px solid #555; border-radius: 12px; padding: 15px 10px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: space-between;}
-.grid-item:hover { border-color: #f1c40f; background: rgba(241,196,15,0.1); transform: scale(1.05); }
-.grid-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-.grid-title { font-size: 18px; font-weight: bold; color: #fff; word-break: break-all; }
-.variant-badge { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; }
-.filter-btn { background: #111; border: 2px solid #555; color: #aaa; padding: 8px 18px; border-radius: 20px; font-size: 16px; margin: 5px; cursor: pointer; transition:0.2s; }
-.filter-btn:hover { border-color:#f1c40f; color:#fff;}
-.filter-btn.active { background: #f1c40f; border-color: #f1c40f; color: #000; font-weight: bold; }
+        .grid-modal { z-index: 1060 !important; }
+        .grid-container { max-height: 60vh; overflow-y: auto; padding: 10px; margin-top: 10px; }
+        .grid-inner { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+        .grid-item { position: relative; background: rgba(255,255,255,0.05); border: 2px solid #555; border-radius: 12px; padding: 15px 10px; text-align: center; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: space-between;}
+        .grid-item:hover { border-color: #f1c40f; background: rgba(241,196,15,0.1); transform: scale(1.05); }
+        .grid-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .grid-title { font-size: 18px; font-weight: bold; color: #fff; word-break: break-all; }
+        .variant-badge { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; }
+        .filter-btn { background: #111; border: 2px solid #555; color: #aaa; padding: 8px 18px; border-radius: 20px; font-size: 16px; margin: 5px; cursor: pointer; transition:0.2s; }
+        .filter-btn:hover { border-color:#f1c40f; color:#fff;}
+        .filter-btn.active { background: #f1c40f; border-color: #f1c40f; color: #000; font-weight: bold; }
         
     </style>
 </head>
 <body>
 
-    <datalist id="list-blade"></datalist>
-    <datalist id="list-ratchet"></datalist>
-    <datalist id="list-bit"></datalist>
-    <datalist id="list-lockchip"></datalist>
-    <datalist id="list-mainblade"></datalist>
-    <datalist id="list-overblade"></datalist>
-    <datalist id="list-metalblade"></datalist>
-    <datalist id="list-assistblade"></datalist>
-
     <h1>🏆 BEYBLADE X 專業賽事系統</h1>
     <div id="dataStatusIndicator" style="text-align: center; font-size: 18px; color: #aaa; margin-top: -30px; margin-bottom: 20px;">
-        📡 正在嘗試讀取本地陀螺資料庫 (beyblade_data.json)...
+        📡 系統初始化中...
     </div>
     
     <div class="setup-box">
@@ -495,74 +477,6 @@
     </div>
 
 <script>
-// ================== 本地資料庫讀取引擎 ==================
-let fetchedBeybladeData = null;
-
-async function loadBeybladeData() {
-    const indicator = document.getElementById('dataStatusIndicator');
-    try {
-        const response = await fetch('beyblade_data.json');
-        if (!response.ok) throw new Error('找不到檔案或無權限');
-        fetchedBeybladeData = await response.json();
-        indicator.innerHTML = `✅ 成功讀取本地資料庫！(已連線至陀螺數據庫)`;
-        indicator.style.color = '#2ecc71';
-        populateDatalists();
-    } catch (error) {
-        console.warn("無法讀取 beyblade_data.json，系統將進入純文字手動輸入模式。", error);
-        indicator.innerHTML = `⚠️ 無法讀取本地資料庫。目前為「手動輸入模式」。(請確保 json 檔案放置於同資料夾)`;
-        indicator.style.color = '#e74c3c';
-    }
-}
-
-// 解析 JSON 並灌入 HTML <datalist> 供自動完成使用 (升級多語系解碼版)
-function populateDatalists() {
-    if (!fetchedBeybladeData) return;
-    
-    // 建立臨時的 Set 來過濾重複名稱
-    let sets = { blade: new Set(), ratchet: new Set(), bit: new Set(), lockchip: new Set(), mainblade: new Set(), overblade: new Set(), metalblade: new Set(), assistblade: new Set() };
-    
-    let items = Array.isArray(fetchedBeybladeData) ? fetchedBeybladeData : 
-                (fetchedBeybladeData.items || fetchedBeybladeData.data || Object.values(fetchedBeybladeData));
-    
-    if(Array.isArray(items)) {
-        items.forEach(item => {
-            // 抓取原始名稱資料
-            let rawName = item.name || item.Name || item.title || item.id;
-            if(!rawName) return;
-            
-            // 🌟 多國語系解碼核心邏輯 🌟
-            let finalName = rawName;
-            if (typeof rawName === 'object') {
-                // 優先順序：繁體中文 -> 日文 -> 英文 -> 第一個找到的語言
-                finalName = rawName['tw'] || rawName['zh-TW'] || rawName['zh_tw'] || rawName['ja'] || rawName['jp'] || rawName['en'] || Object.values(rawName)[0];
-            }
-            
-            // 確保最後拿到的是字串，否則跳過
-            if (!finalName || typeof finalName !== 'string') return;
-            
-            // 將整個 item 轉成字串，用來暴力但有效地判斷零件類型
-            let typeStr = JSON.stringify(item).toLowerCase(); 
-            
-            if (typeStr.includes('bit')) sets.bit.add(finalName);
-            else if (typeStr.includes('ratchet')) sets.ratchet.add(finalName);
-            else if (typeStr.includes('lock chip') || typeStr.includes('lockchip')) sets.lockchip.add(finalName);
-            else if (typeStr.includes('over blade') || typeStr.includes('overblade')) sets.overblade.add(finalName);
-            else if (typeStr.includes('metal blade') || typeStr.includes('metalblade')) sets.metalblade.add(finalName);
-            else if (typeStr.includes('assist blade') || typeStr.includes('assistblade')) sets.assistblade.add(finalName);
-            else if (typeStr.includes('main blade') || typeStr.includes('mainblade')) sets.mainblade.add(finalName);
-            else sets.blade.add(finalName); // 預設歸類為一般 Blade
-        });
-    }
-
-    // 將 Set 轉換為 <option> 塞入對應的 <datalist>
-    for (let key in sets) {
-        let datalist = document.getElementById(`list-${key}`);
-        if(datalist) {
-            datalist.innerHTML = Array.from(sets[key]).map(name => `<option value="${name}">`).join('');
-        }
-    }
-}
-
 // ================== 核心系統變數 ==================
 const defaultColors = ['#00f3ff', '#ff003c', '#00ff66', '#f1c40f', '#bc13fe', '#ff7700', '#00ffcc', '#ff00aa'];
 const schedulesConfig = {
@@ -575,7 +489,6 @@ for(let n=6; n<=8; n++){ schedulesConfig[n] = []; for(let i=0; i<n; i++){ for(le
 
 let roster = [];
 let currentEditIndex = -1;
-let currentDeckEditIndex = -1;
 let appState = { id: null, tournamentName: "", timeString: "", players: [], matches: [], p1DeckOrderOverride: {}, p2DeckOrderOverride: {} };
 let careerChartInstance = null;
 let radarChartInstance = null;
@@ -585,8 +498,8 @@ Chart.defaults.color = '#c5c6c7';
 Chart.defaults.font.family = "'Courier New', Courier, monospace";
 Chart.defaults.font.size = 32;
 
-window.onload = function() { 
-    loadBeybladeData(); // 啟動時讀取 JSON
+window.onload = async function() { 
+    await loadArsenalDatabase(); // 啟動兵工廠圖鑑引擎
     initRoster(); 
     loadState(); 
     if(!appState.matches || appState.matches.length === 0) { document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); }
@@ -620,9 +533,9 @@ function getPlayerColor(name) {
 // ================== Roster 與 Deck 模型初始化 ==================
 function createEmptyDeck() {
     return [
-        { mode: 'standard', blade: '', ratchet: '', bit: '', lockChip: '', mainBlade: '', overBlade: '', metalBlade: '', assistBlade: '' },
-        { mode: 'standard', blade: '', ratchet: '', bit: '', lockChip: '', mainBlade: '', overBlade: '', metalBlade: '', assistBlade: '' },
-        { mode: 'standard', blade: '', ratchet: '', bit: '', lockChip: '', mainBlade: '', overBlade: '', metalBlade: '', assistBlade: '' }
+        { mode: 'standard', parts: {} },
+        { mode: 'standard', parts: {} },
+        { mode: 'standard', parts: {} }
     ];
 }
 
@@ -657,8 +570,8 @@ function renderRosterList() {
         let leftBtn = index === 0 ? `<button disabled title="已在最左側">◀</button>` : `<button onclick="moveRosterLeft(${index})" title="向左移動">◀</button>`;
         let rightBtn = index === roster.length - 1 ? `<button disabled title="已在最右側">▶</button>` : `<button onclick="moveRosterRight(${index})" title="向右移動">▶</button>`;
 
-        // 檢查該選手是否有設定完整牌組
-        let isDeckReady = p.deck.every(d => (d.mode==='standard'&&d.blade&&d.ratchet&&d.bit) || (d.mode==='cx1'&&d.lockChip&&d.mainBlade&&d.assistBlade&&d.ratchet&&d.bit) || (d.mode==='cx2'&&d.lockChip&&d.overBlade&&d.metalBlade&&d.assistBlade&&d.ratchet&&d.bit));
+        // 檢查該選手是否有設定完整牌組 (新版)
+        let isDeckReady = p.deck && p.deck.length >= 3 && p.deck.slice(0, 3).every(d => d.parts && d.parts.TopPart && d.parts.Bit);
         let deckBtnColor = isDeckReady ? '#2ecc71' : '#e74c3c';
         let deckBtnText = isDeckReady ? '✅ 牌組已準備就緒' : '⚠️ 配置 3on3 牌組';
 
@@ -717,138 +630,26 @@ function updateRosterName(index, newName) {
     if(appChanged) saveState(); renderRosterList();
 }
 
-// ================== Deck Builder (3on3 牌組編輯器) 邏輯 ==================
+// 將 Deck 轉化為易讀字串的輔助函數 (與新圖鑑相容)
+function formatDeckString(d) {
+    return getDeckFullName(d);
+}
+
+// ================== 進入兵工廠的橋樑 ==================
 function openDeckBuilder(index) {
     currentDeckEditIndex = index;
     let p = roster[index];
-    document.getElementById('deckPlayerName').innerText = p.name;
-    document.getElementById('deckPlayerName').style.color = p.color;
-    document.getElementById('deckValidationMsg').innerText = "";
-    
-    const container = document.getElementById('deckContainer');
-    container.innerHTML = '';
-    
-    // 渲染 3 個 Slot
-    for(let i=0; i<3; i++) {
-        let d = p.deck[i];
-        let selectHtml = `
-            <select class="mode-selector" id="deck_${i}_mode" onchange="renderDeckSlot(${i})">
-                <option value="standard" ${d.mode==='standard'?'selected':''}>⚔️ 一般系列 (Blade)</option>
-                <option value="cx1" ${d.mode==='cx1'?'selected':''}>🛡️ CX 標準組裝 (MainBlade)</option>
-                <option value="cx2" ${d.mode==='cx2'?'selected':''}>🔥 CX 進階組裝 (CX-13~17)</option>
-            </select>
-        `;
-        container.innerHTML += `
-            <div class="deck-slot" id="deckSlot_${i}">
-                <h4>陀螺 ${i+1}</h4>
-                ${selectHtml}
-                <div id="deck_${i}_fields"></div>
-            </div>
-        `;
-        setTimeout(() => renderDeckSlot(i), 0);
+    if (p.deck && p.deck.length > 0 && p.deck[0].parts) {
+        allDecks = JSON.parse(JSON.stringify(p.deck));
+    } else {
+        allDecks = createEmptyDeck();
     }
-    
-    document.getElementById('deckBuilderModal').style.display = 'block';
+    document.getElementById('rosterModal').style.display = 'none';
+    let nameTitle = document.getElementById('builderPlayerName');
+    nameTitle.innerText = p.name; nameTitle.style.color = p.color;
+    document.getElementById('builderModal').style.display = 'block';
+    renderDeckOverview();
 }
-
-function renderDeckSlot(i) {
-    let mode = document.getElementById(`deck_${i}_mode`).value;
-    let fieldsDiv = document.getElementById(`deck_${i}_fields`);
-    let d = roster[currentDeckEditIndex].deck[i];
-    
-    // 清除舊的值
-    let html = '';
-    
-    if(mode === 'standard') {
-        html += `<div class="deck-part"><label>上蓋 (Blade)</label><input type="text" id="deck_${i}_blade" value="${d.blade||''}" list="list-blade" placeholder="輸入或選擇"></div>`;
-    } else if(mode === 'cx1') {
-        html += `<div class="deck-part"><label>紋章 (Lock Chip)</label><input type="text" id="deck_${i}_lockchip" value="${d.lockChip||''}" list="list-lockchip" placeholder="輸入或選擇"></div>`;
-        html += `<div class="deck-part"><label>主要戰刃 (Main Blade)</label><input type="text" id="deck_${i}_mainblade" value="${d.mainBlade||''}" list="list-mainblade" placeholder="輸入或選擇"></div>`;
-        html += `<div class="deck-part"><label>輔助戰刃 (Assist Blade)</label><input type="text" id="deck_${i}_assistblade" value="${d.assistBlade||''}" list="list-assistblade" placeholder="輸入或選擇"></div>`;
-    } else if(mode === 'cx2') {
-        html += `<div class="deck-part"><label>紋章 (Lock Chip)</label><input type="text" id="deck_${i}_lockchip" value="${d.lockChip||''}" list="list-lockchip" placeholder="輸入或選擇"></div>`;
-        html += `<div class="deck-part"><label>超越戰刃 (Over Blade)</label><input type="text" id="deck_${i}_overblade" value="${d.overBlade||''}" list="list-overblade" placeholder="輸入或選擇"></div>`;
-        html += `<div class="deck-part"><label>金屬戰刃 (Metal Blade)</label><input type="text" id="deck_${i}_metalblade" value="${d.metalBlade||''}" list="list-metalblade" placeholder="輸入或選擇"></div>`;
-        html += `<div class="deck-part"><label>輔助戰刃 (Assist Blade)</label><input type="text" id="deck_${i}_assistblade" value="${d.assistBlade||''}" list="list-assistblade" placeholder="輸入或選擇"></div>`;
-    }
-    
-    // Ratchet & Bit 是共同的
-    html += `<div class="deck-part" style="margin-top:10px;"><label>固鎖 (Ratchet)</label><input type="text" id="deck_${i}_ratchet" value="${d.ratchet||''}" list="list-ratchet" placeholder="輸入或選擇"></div>`;
-    html += `<div class="deck-part"><label>軸心 (Bit)</label><input type="text" id="deck_${i}_bit" value="${d.bit||''}" list="list-bit" placeholder="輸入或選擇"></div>`;
-    
-    fieldsDiv.innerHTML = html;
-}
-
-function saveDeck() {
-    let p = roster[currentDeckEditIndex];
-    let allParts = [];
-    let hasEmpty = false;
-    let deckData = [];
-    
-    for(let i=0; i<3; i++) {
-        let mode = document.getElementById(`deck_${i}_mode`).value;
-        let d = { mode: mode, blade:'', lockChip:'', mainBlade:'', overBlade:'', metalBlade:'', assistBlade:'', ratchet:'', bit:'' };
-        let partsInThisBey = [];
-        
-        let ratchet = document.getElementById(`deck_${i}_ratchet`).value.trim();
-        let bit = document.getElementById(`deck_${i}_bit`).value.trim();
-        d.ratchet = ratchet; d.bit = bit;
-        if(!ratchet || !bit) hasEmpty = true; else { partsInThisBey.push(ratchet, bit); }
-        
-        if(mode === 'standard') {
-            let blade = document.getElementById(`deck_${i}_blade`).value.trim();
-            d.blade = blade; if(!blade) hasEmpty = true; else partsInThisBey.push(blade);
-        } else if(mode === 'cx1') {
-            d.lockChip = document.getElementById(`deck_${i}_lockchip`).value.trim();
-            d.mainBlade = document.getElementById(`deck_${i}_mainblade`).value.trim();
-            d.assistBlade = document.getElementById(`deck_${i}_assistblade`).value.trim();
-            if(!d.lockChip||!d.mainBlade||!d.assistBlade) hasEmpty = true; else partsInThisBey.push(d.lockChip, d.mainBlade, d.assistBlade);
-        } else if(mode === 'cx2') {
-            d.lockChip = document.getElementById(`deck_${i}_lockchip`).value.trim();
-            d.overBlade = document.getElementById(`deck_${i}_overblade`).value.trim();
-            d.metalBlade = document.getElementById(`deck_${i}_metalblade`).value.trim();
-            d.assistBlade = document.getElementById(`deck_${i}_assistblade`).value.trim();
-            if(!d.lockChip||!d.overBlade||!d.metalBlade||!d.assistBlade) hasEmpty = true; else partsInThisBey.push(d.lockChip, d.overBlade, d.metalBlade, d.assistBlade);
-        }
-        
-        allParts.push(...partsInThisBey);
-        deckData.push(d);
-    }
-    
-    let msgDiv = document.getElementById('deckValidationMsg');
-    if(hasEmpty) {
-        msgDiv.innerText = "❌ 儲存失敗：有欄位空白！請為 3 顆陀螺填寫完整的零件。";
-        msgDiv.style.color = "#e74c3c";
-        return;
-    }
-    
-    // 驗證重複零件 (3on3 核心規則)
-    let uniqueParts = new Set(allParts);
-    if(uniqueParts.size !== allParts.length) {
-        msgDiv.innerText = "❌ 儲存失敗：牌組內有重複使用的零件！(違反 3on3 規則)";
-        msgDiv.style.color = "#e74c3c";
-        return;
-    }
-    
-    p.deck = deckData;
-    saveRoster();
-    msgDiv.innerText = "✅ 牌組驗證通過並儲存成功！";
-    msgDiv.style.color = "#2ecc71";
-    renderRosterList();
-    setTimeout(closeDeckBuilder, 1500);
-}
-
-function closeDeckBuilder() { document.getElementById('deckBuilderModal').style.display = 'none'; currentDeckEditIndex = -1; }
-
-// ================== 將 Deck 轉化為易讀字串的輔助函數 ==================
-function formatDeckString(d) {
-    if(!d) return "無配置";
-    if(d.mode === 'standard') return `[上]${d.blade} / [固]${d.ratchet} / [軸]${d.bit}`;
-    if(d.mode === 'cx1') return `[紋]${d.lockChip} / [主]${d.mainBlade} / [輔]${d.assistBlade} / [固]${d.ratchet} / [軸]${d.bit}`;
-    if(d.mode === 'cx2') return `[紋]${d.lockChip} / [超]${d.overBlade} / [金]${d.metalBlade} / [輔]${d.assistBlade} / [固]${d.ratchet} / [軸]${d.bit}`;
-    return "解析錯誤";
-}
-
 
 // ================== 原有系統 UI / 渲染邏輯 ==================
 function getPlayerPillHtml(name, size = "normal") {
@@ -907,7 +708,7 @@ function generateNewSchedule() {
     // 檢查出賽選手是否都有牌組 (警告即可，不妨礙開賽，以防純體驗的用戶)
     let missingDecks = appState.players.filter(pName => {
         let r = roster.find(x => x.name === pName);
-        return !r.deck.every(d => (d.mode==='standard'&&d.blade&&d.ratchet&&d.bit) || (d.mode==='cx1'&&d.lockChip&&d.mainBlade&&d.assistBlade&&d.ratchet&&d.bit) || (d.mode==='cx2'&&d.lockChip&&d.overBlade&&d.metalBlade&&d.assistBlade&&d.ratchet&&d.bit));
+        return !(r.deck && r.deck.length >= 3 && r.deck.slice(0, 3).every(d => d.parts && d.parts.TopPart && d.parts.Bit));
     });
     if(missingDecks.length > 0) {
         if(!confirm(`⚠️ 以下選手的 3on3 牌組尚未配置完成：\n${missingDecks.join(', ')}\n\n是否仍然要強制開賽？(計分面板的陀螺資訊將會留空)`)) return;
@@ -1353,7 +1154,7 @@ function renderHistory() {
 }
 function clearHistory() { if(confirm('⚠ 警告：確定要刪除所有的生涯紀錄嗎？這無法復原！')) { localStorage.removeItem('beyblade_history'); document.getElementById('historyBody').innerHTML = '<tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">尚無歷史歸檔紀錄</td></tr>'; if(careerChartInstance) careerChartInstance.destroy(); } }
 
-    // ================== 兵工廠專屬核心 JS ==================
+// ================== 兵工廠專屬核心 JS ==================
 let arsenalPartsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
 const ARSENAL_BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
 let arsenalSetStructureMap = {};
@@ -1368,29 +1169,7 @@ window.handleArsenalImgError = function(img) {
     else if (!img.dataset.triedFallback) { img.dataset.triedFallback = "true"; img.src = ARSENAL_FALLBACK_IMG; }
 };
 
-// 確保與原有的 onload 融合並載入圖鑑資料庫
-const originalOnload = window.onload;
-window.onload = async function() {
-    if (originalOnload) await originalOnload();
-    await loadArsenalDatabase();
-};
-
-// ================== 兵工廠攔截器 (Override 原本按鈕功能) ==================
-window.openDeckBuilderModal = function(index) {
-    currentDeckEditIndex = index;
-    let p = roster[index];
-    if (p.deck && p.deck.length > 0 && p.deck[0].parts) {
-        allDecks = JSON.parse(JSON.stringify(p.deck));
-    } else {
-        allDecks = [ { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} } ];
-    }
-    document.getElementById('rosterModal').style.display = 'none';
-    let nameTitle = document.getElementById('builderPlayerName');
-    nameTitle.innerText = p.name; nameTitle.style.color = p.color;
-    document.getElementById('builderModal').style.display = 'block';
-    renderDeckOverview();
-};
-
+// ================== 兵工廠攔截器 ==================
 window.saveBuilderToPlayer = function() {
     if (currentDeckEditIndex === -1) return;
     let starters = allDecks.slice(0, 3);
@@ -1433,18 +1212,28 @@ window.renderScoringActiveBey = function(p, m, isP1) {
 
 window.cycleBey = function(isP1) {
     if(typeof currentScoringMatchId === 'undefined' || !currentScoringMatchId) return;
-    let m = allMatches.find(x => x.id === currentScoringMatchId); if(!m) return;
+    let m = appState.matches.find(x => x.id === currentScoringMatchId); if(!m) return;
     if(isP1) m.p1BeyIndex = ((m.p1BeyIndex || 0) + 1) % 3;
     else m.p2BeyIndex = ((m.p2BeyIndex || 0) + 1) % 3;
     if(typeof saveState === 'function') saveState();
-    if(typeof openScoringModal === 'function') openScoringModal(currentScoringMatchId);
+    if(typeof openScoringModal === 'function') renderScoringModal(); // 直接刷新介面
 };
 
 // ================== 圖鑑引擎運算邏輯 ==================
 async function loadArsenalDatabase() {
+    const indicator = document.getElementById('dataStatusIndicator');
     let mainDataObj = {}; let hardcodedDataObj = {};
-    try { const resMain = await fetch('main_db.json'); const mainData = await resMain.json(); if(mainData && mainData.data) mainDataObj = mainData.data; } catch(e) {}
-    try { const resHard = await fetch('hardcoded.json'); const hardcodedData = await resHard.json(); if(hardcodedData && hardcodedData.data) hardcodedDataObj = hardcodedData.data; } catch(e) {}
+    try { 
+        indicator.innerHTML = "📡 正在連線讀取圖鑑資料庫 (main_db.json, hardcoded.json)...";
+        const resMain = await fetch('main_db.json'); const mainData = await resMain.json(); if(mainData && mainData.data) mainDataObj = mainData.data; 
+        const resHard = await fetch('hardcoded.json'); const hardcodedData = await resHard.json(); if(hardcodedData && hardcodedData.data) hardcodedDataObj = hardcodedData.data; 
+        indicator.innerHTML = `✅ 成功讀取本地資料庫！(已連線至最新陀螺圖鑑)`;
+        indicator.style.color = '#2ecc71';
+    } catch(e) {
+        indicator.innerHTML = `⚠️ 無法讀取圖鑑資料庫 (請確認檔案存在)，裝備庫可能受限。`;
+        indicator.style.color = '#e74c3c';
+    }
+
     const datasets = [mainDataObj, hardcodedDataObj];
     const categoryMap = { 'BeybladePartsBlade': 'Blade', 'BeybladePartsMainBlade': 'MainBlade', 'BeybladePartsOverBlade': 'OverBlade', 'BeybladePartsMetalBlade': 'MetalBlade', 'BeybladePartsAssistBlade': 'AssistBlade', 'BeybladePartsLockChip': 'LockChip', 'BeybladePartsRatchet': 'Ratchet', 'BeybladePartsBit': 'Bit' };
     
@@ -1553,7 +1342,7 @@ function getDeckCoverHtml(deck) {
 }
 
 function getDeckFullName(deck) {
-    if (!deck || !deck.parts || !deck.parts.TopPart) return "點擊進行配置";
+    if (!deck || !deck.parts || !deck.parts.TopPart) return "尚未配置";
     let rb = [deck.parts.Ratchet?.clean_name, deck.parts.Bit?.clean_name].filter(Boolean).join("");
     if (deck.mode === 'standard') return deck.parts.TopPart.clean_name + (rb ? ` ${rb}` : "");
     else if (deck.mode === 'cx1') return `${deck.parts.LockChip?.clean_name||""}${deck.parts.TopPart.clean_name}${deck.parts.AssistBlade?.clean_name||""} ${rb}`.trim();
