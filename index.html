@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極CX修正與正名版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極自由混搭防護版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -206,7 +206,6 @@ function cleanPartName(rawName, instId, shortCat) {
     
     cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版本?)/ig, '');
     
-    // ✨ 精準剔除「版本」及涵蓋全形數字(２等) ✨
     cleaned = cleaned.replace(/\s+[A-Za-z0-9\u4e00-\u9fa5\uFF10-\uFF19]+(Ver\.|バージョン|版本?)/ig, '');
     
     cleaned = cleaned.replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '');
@@ -220,7 +219,6 @@ function cleanPartName(rawName, instId, shortCat) {
     cleaned = cleaned.replace(/\s*(紋章|ロックチップ)/ig, '');
     cleaned = cleaned.replace(/\s*(メタル|メイン|オーバー|アシスト)ブレード/ig, '');
 
-    // ✨ 福音戰士完美正名修復 ✨
     if (cleaned.includes('福音戰士')) {
         cleaned = cleaned.replace(/\s+([A-Z])$/i, '$1');
     }
@@ -316,14 +314,13 @@ async function loadDatabase() {
 
                 if (isExplicitBX && !isExplicitUX) isUX = false; 
 
-                // ✨ 修復 CX1 誤判：結構判定優先 ✨
                 let sysType = 'BX';
                 if (struct['MetalBlade']) {
                     sysType = 'CX2';
                 } else if (struct['MainBlade']) {
                     sysType = 'CX1';
                 } else if (isExplicitCX) {
-                    sysType = 'CX1'; // 確保純標籤 CX 在沒有 MetalBlade 時預設為 CX1，避免誤開超越戰刃插槽
+                    sysType = 'CX1'; 
                 } else if (isUX) {
                     sysType = 'UX';
                 }
@@ -414,7 +411,7 @@ async function loadDatabase() {
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
     partsDb.TopPart.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
 
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(CX1 自動換裝完美修復、福音戰士精準正名)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(獨立戰刃防呆混搭保護機制上線)</span>`;
 }
 
 // ================== 牌組總覽與立體圖層生成 ==================
@@ -849,10 +846,10 @@ function applyVariant(variant, cleanName) {
         }
 
         let instId = variant.instId; 
-        
         let isCX = variant.tags.includes('CX') || variant.sysType === 'CX1' || variant.sysType === 'CX2';
 
-        if ((variant.category === 'Blade' || variant.category === 'MainBlade' || variant.category === 'MetalBlade') && isCX) {
+        if (variant.category === 'Blade' && isCX) {
+            // 一鍵套用整組 CX 零件
             let lock = findPartByInstanceId('LockChip', instId);
             let metal = findPartByInstanceId('MetalBlade', instId);
             let over = findPartByInstanceId('OverBlade', instId);
@@ -860,12 +857,12 @@ function applyVariant(variant, cleanName) {
             let assist = findPartByInstanceId('AssistBlade', instId);
 
             if (variant.sysType === 'CX2' || metal) { 
-                deck.parts['TopPart'] = metal || (variant.category === 'MetalBlade' ? finalPart : null) || finalPart; 
+                deck.parts['TopPart'] = metal || finalPart; 
                 deck.parts['LockChip'] = lock || null; 
                 deck.parts['OverBlade'] = over || null; 
                 deck.parts['AssistBlade'] = assist || null;
             } else if (variant.sysType === 'CX1' || main) { 
-                deck.parts['TopPart'] = main || (variant.category === 'MainBlade' ? finalPart : null) || finalPart; 
+                deck.parts['TopPart'] = main || finalPart; 
                 deck.parts['LockChip'] = lock || null; 
                 deck.parts['AssistBlade'] = assist || null;
                 deck.parts['OverBlade'] = null; 
@@ -873,16 +870,21 @@ function applyVariant(variant, cleanName) {
                 deck.parts['TopPart'] = finalPart;
             }
         } 
+        else if (variant.category === 'MetalBlade') {
+            // ✨ 自由混搭 CX2：只替換金屬戰刃，絕不覆蓋既有紋章與其他插槽 ✨
+            deck.parts['TopPart'] = finalPart;
+        }
+        else if (variant.category === 'MainBlade') {
+            // ✨ 自由混搭 CX1：只替換主要戰刃，清空不相容的超越戰刃，保留紋章與輔助戰刃 ✨
+            deck.parts['TopPart'] = finalPart;
+            deck.parts.OverBlade = null;
+        }
         else {
+            // 一般 BX / UX：替換核心，並清空所有 CX 專屬零件
             deck.parts['TopPart'] = finalPart; 
-            if (finalPart.category === 'Blade') {
-                deck.parts.LockChip = null; 
-                deck.parts.OverBlade = null; 
-                deck.parts.AssistBlade = null;
-            } 
-            else if (finalPart.category === 'MainBlade') {
-                deck.parts.OverBlade = null; 
-            }
+            deck.parts.LockChip = null; 
+            deck.parts.OverBlade = null; 
+            deck.parts.AssistBlade = null;
         }
 
         if (isIntegratedBlade) {
