@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極智慧陳列版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極視覺錯位版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -31,9 +31,16 @@
         .deck-overview-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
         .deck-card { width: 340px; background: rgba(0,0,0,0.6); border: 2px solid #45a29e; border-radius: 16px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; }
         .deck-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,255,255,0.3); border-color: #0ff; }
-        .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .deck-name { font-size: 22px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; }
-        .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; }
+        .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
+
+        /* ✨ CX 立體疊加圖層視覺 CSS ✨ */
+        .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
+        .stack-base { position: absolute; width: 140px; height: 140px; bottom: 0; left: 20px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-mid { position: absolute; width: 120px; height: 120px; top: 10px; right: 5px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-top-cx2 { position: absolute; width: 90px; height: 90px; top: -5px; left: 10px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
+        .stack-top-cx1 { position: absolute; width: 90px; height: 90px; top: 10px; right: 10px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
 
         /* 配置編輯器 */
         .editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
@@ -167,6 +174,9 @@ function cleanPartName(rawName, instId, shortCat) {
         cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
     }
 
+    // ✨ 專屬淨化：切除 DMM 抽獎冗長前綴 ✨
+    cleaned = cleaned.replace(/DMM\s*(抽獎|スクラッチ).*?[賞獎]\s*/ig, '');
+
     cleaned = cleaned.replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '');
     cleaned = cleaned.replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版)?/ig, '');
     cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|透明)(Ver\.|バージョン|版)/ig, '');
@@ -229,18 +239,22 @@ async function loadDatabase() {
             for (const [id, item] of Object.entries(obj)) {
                 let nameObj = item.name || item.catalog_title;
                 let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
+                let shortCat = getTrueCategoryFromId(id, defaultCat);
                 
-                // 🛑 核心修復 1 & 5：全域垃圾清空 (包含 一體式殘留物)
-                if (/軸心套組|軸心組|加贈活動|活動加贈|限定軸心|活動軸心|加贈軸心活動|加贈軸心|rental|PRD-939542-04|一體式戰刃|一體式軸心/i.test(rawNameTW) || /rental|PRD-939542-04/i.test(id)) {
+                if (/軸心套組|軸心組|加贈活動|活動加贈|限定軸心|活動軸心|加贈軸心活動|加贈軸心|rental|PRD-939542-04/i.test(rawNameTW) || /rental|PRD-939542-04/i.test(id)) {
                     continue; 
                 }
 
-                // 🛑 核心修復 2：防分身濾波器 (過濾掉以 R 或 RR 結尾的方向變體 ID)
+                // ✨ 最底層攔截器：只要是固鎖，且名字裡含「一體」，直接蒸發
+                if (shortCat === 'Ratchet' && (/一體/i.test(rawNameTW) || /一體/i.test(id))) {
+                    continue;
+                }
+
+                // 移除方向性 R 或 RR 重複零件
                 if (/-\d{2}R{1,2}$/i.test(id)) {
                     continue; 
                 }
 
-                let shortCat = getTrueCategoryFromId(id, defaultCat);
                 let instId = getInstId(id, item);
                 let struct = setStructureMap[instId];
 
@@ -300,10 +314,19 @@ async function loadDatabase() {
         }
     }
     
+    // 版本排序處理
     Object.values(partsDb).forEach(catList => {
         catList.forEach(group => { group.variants.sort((a, b) => a.hasColorWord === b.hasColorWord ? 0 : (a.hasColorWord ? 1 : -1)); });
     });
 
+    // ✨ A-Z 字典級排序 (超越戰刃, 輔助戰刃, 軸心) ✨
+    ['OverBlade', 'AssistBlade', 'Bit'].forEach(cat => {
+        if(partsDb[cat]) {
+            partsDb[cat].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
+        }
+    });
+
+    // 固鎖高度排序
     if (partsDb['Ratchet']) {
         let parseRatchet = (name) => {
             if (!name) return { points: 99, height: 999 };
@@ -323,20 +346,53 @@ async function loadDatabase() {
     }
 
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(智慧固鎖陳列架已上線、方向性變體與標籤清理完成)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(A-Z精準排序、DMM冗名清除、CX錯位圖層引擎上線)</span>`;
 }
 
-// ================== 牌組總覽 ==================
+// ================== 牌組總覽與立體圖層生成 ==================
+function getDeckCoverHtml(deck) {
+    if (!deck.parts.TopPart) {
+        return `<img src="${FALLBACK_IMG}" class="deck-img">`;
+    }
+
+    if (deck.mode === 'cx2') {
+        let metal = deck.parts.TopPart ? deck.parts.TopPart.image : FALLBACK_IMG;
+        let over = deck.parts.OverBlade ? deck.parts.OverBlade.image : FALLBACK_IMG;
+        let lock = deck.parts.LockChip ? deck.parts.LockChip.image : FALLBACK_IMG;
+        
+        return `
+            <div class="stack-container">
+                <img src="${metal}" class="stack-base" onerror="handleImgError(this)">
+                ${deck.parts.OverBlade ? `<img src="${over}" class="stack-mid" onerror="handleImgError(this)">` : ''}
+                ${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx2" onerror="handleImgError(this)">` : ''}
+            </div>`;
+    } 
+    else if (deck.mode === 'cx1') {
+        let main = deck.parts.TopPart ? deck.parts.TopPart.image : FALLBACK_IMG;
+        let lock = deck.parts.LockChip ? deck.parts.LockChip.image : FALLBACK_IMG;
+
+        return `
+            <div class="stack-container">
+                <img src="${main}" class="stack-base" onerror="handleImgError(this)">
+                ${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx1" onerror="handleImgError(this)">` : ''}
+            </div>`;
+    } 
+    else {
+        return `<img src="${deck.parts.TopPart.image}" class="deck-img" onerror="handleImgError(this)">`;
+    }
+}
+
 function renderDeckOverview() {
     const container = document.getElementById('deckOverview');
     container.innerHTML = '';
     currentDecks.forEach((deck, index) => {
         let fullName = getDeckFullName(deck);
-        let coverImg = deck.parts.TopPart ? deck.parts.TopPart.image : FALLBACK_IMG;
+        let coverHtml = getDeckCoverHtml(deck);
+        
         container.innerHTML += `
             <div class="deck-card" onclick="openEditor(${index})">
                 <div class="deck-badge">陀螺 ${index + 1}</div>
-                <img src="${coverImg}" class="deck-img" onerror="handleImgError(this)">
+                ${coverHtml}
                 <div class="deck-name">${fullName}</div>
             </div>`;
     });
@@ -464,7 +520,6 @@ function openVisualGrid(category, label) {
             <button class="filter-btn" onclick="applyFilter('Stamina')">持久型 (Stamina)</button>
             <button class="filter-btn" onclick="applyFilter('Balance')">平衡型 (Balance)</button>`;
     } else {
-        // 🛑 核心修復 3：移除「限定/機密」與「隨機抽包」按鈕
         filterHtml = `
             <button class="filter-btn active" onclick="applyFilter('ALL')">全部</button>
             <button class="filter-btn" onclick="applyFilter('BX')">BX</button>
@@ -504,12 +559,12 @@ function applyFilter(filterType = currentFilterType) {
     if (partsList.length === 0) {
         container.innerHTML = `<h3 style="color:#e74c3c; width:100%;">此篩選條件下無零件資料。</h3>`;
     } else {
-        // 🛑 核心修復 4：固鎖依照刃數橫列陳列 🛑
+        // ✨ 智慧陳列架：固鎖依照刃數橫排展開
         if (selectingPartCategory === 'Ratchet') {
             let ratchetGroups = {};
             partsList.forEach((partGroup) => {
                 let match = partGroup.clean_name.match(/^(\d+)-/);
-                let bladeCount = match ? parseInt(match[1]) : 99; // 99 for unknown formats
+                let bladeCount = match ? parseInt(match[1]) : 99;
                 if (!ratchetGroups[bladeCount]) ratchetGroups[bladeCount] = [];
                 ratchetGroups[bladeCount].push(partGroup);
             });
@@ -520,7 +575,7 @@ function applyFilter(filterType = currentFilterType) {
             sortedBlades.forEach(blade => {
                 let rowTitle = blade == 99 ? "特殊固鎖" : `${blade} 刃固鎖`;
                 finalHtml += `<div style="width:100%; border-bottom:1px solid #45a29e; margin-top:15px; margin-bottom:15px; padding-bottom:5px; color:#66fcf1; font-weight:bold; font-size:22px; text-align:left;">${rowTitle}</div>`;
-                finalHtml += `<div class="grid-inner">`; // 使用原有的 grid-inner 排版
+                finalHtml += `<div class="grid-inner">`;
                 
                 ratchetGroups[blade].forEach(partGroup => {
                     let thumb = partGroup.variants[0].image;
@@ -538,17 +593,10 @@ function applyFilter(filterType = currentFilterType) {
             container.innerHTML = finalHtml;
         } 
         else {
-            // 一般裝備的陳列邏輯
             let normalGridHtml = `<div class="grid-inner">`;
             partsList.forEach((partGroup) => {
                 let thumb = partGroup.variants[0].image;
                 let variantBadge = partGroup.variants.length > 1 ? `<div class="variant-badge">${partGroup.variants.length} 種版本</div>` : "";
-                
-                let titleSuffix = "";
-                if (selectingPartCategory === 'TopPart') {
-                    if (partGroup.category === 'MetalBlade') titleSuffix = ' <span style="font-size:12px;color:#f1c40f;">[超越-鋼鐵]</span>';
-                    if (partGroup.category === 'MainBlade') titleSuffix = ' <span style="font-size:12px;color:#2ecc71;">[一般-主要]</span>';
-                }
                 
                 let realIndex = partsDb[selectingPartCategory].indexOf(partGroup);
 
@@ -556,7 +604,7 @@ function applyFilter(filterType = currentFilterType) {
                     <div class="grid-item" onclick="handleGroupClick(${realIndex})">
                         ${variantBadge}
                         <img src="${thumb}" class="grid-img" loading="lazy" onerror="handleImgError(this)">
-                        <div class="grid-title">${partGroup.clean_name}${titleSuffix}</div>
+                        <div class="grid-title">${partGroup.clean_name}</div>
                     </div>`;
             });
             normalGridHtml += `</div>`;
