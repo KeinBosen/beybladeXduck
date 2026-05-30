@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極備戰與血統校正版)</title>
+    <title>BEYBLADE X 專業賽事系統 (終極標籤解析版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
@@ -34,11 +34,11 @@
         .deck-name { font-size: 22px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; }
         .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
 
-        /* CX 立體疊加圖層視覺 CSS */
+        /* ✨ CX 立體疊加圖層視覺 CSS (修正超越戰刃與金屬戰刃完美重合) ✨ */
         .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
-        .stack-base { position: absolute; width: 140px; height: 140px; bottom: 0; left: 20px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
-        .stack-mid { position: absolute; width: 120px; height: 120px; top: 10px; right: 5px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-base { position: absolute; width: 140px; height: 140px; top: 15px; left: 20px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
+        .stack-mid { position: absolute; width: 140px; height: 140px; top: 15px; left: 20px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: -5px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
         .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: -5px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
 
@@ -144,7 +144,6 @@ window.handleImgError = function(img) {
 let partsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
 const BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
 
-// ✨ 牌組陣列擴充：前 3 個為先發，第 4 個起為備戰 ✨
 let allDecks = [ 
     { mode: 'standard', parts: {} }, 
     { mode: 'standard', parts: {} }, 
@@ -205,7 +204,6 @@ function cleanPartName(rawName, instId, shortCat) {
     cleaned = cleaned.replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '');
     cleaned = cleaned.replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版)?/ig, '');
     
-    // ✨ 擴增「闇黑」與剝除「連擊型」、「上升攻擊型」 ✨
     cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版)/ig, '');
     cleaned = cleaned.replace(/\s+[A-Za-z0-9\u4e00-\u9fa5]+(Ver\.|バージョン|版)/ig, '');
     cleaned = cleaned.replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '');
@@ -269,7 +267,6 @@ async function loadDatabase() {
                 let nameObj = item.name || item.catalog_title;
                 let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
                 
-                // ✨ 官方誤植強力修正：將蒼龍勇氣 金屬塗層:闇黑 強制加上 S ✨
                 if (rawNameTW.includes("蒼龍勇氣") && rawNameTW.includes("闇黑") && !rawNameTW.includes("蒼龍勇氣S")) {
                     rawNameTW = rawNameTW.replace("蒼龍勇氣", "蒼龍勇氣S");
                 }
@@ -300,15 +297,25 @@ async function loadDatabase() {
                     continue; 
                 }
 
-                // ✨ UX 血統強力認證：透過 ID 與特定字眼抓取 UX 歸屬 ✨
-                let isUX = /UX|936542|942062/i.test(id) || /UX/i.test(rawNameTW) || item.series === 'UX' || /UX/i.test(item.base_set_id) || /UX/i.test(item.set_id);
+                // ✨ 讀取官方 JSON 內建 tags ✨
+                let jsonTags = (item.tags && Array.isArray(item.tags)) ? item.tags.map(t => String(t).toUpperCase()) : [];
+                let isExplicitUX = jsonTags.includes('UX');
+                let isExplicitBX = jsonTags.includes('BX');
+                let isExplicitCX = jsonTags.includes('CX');
+
+                let isUX = isExplicitUX || /UX|936542|942062/i.test(id) || /UX/i.test(rawNameTW) || item.series === 'UX' || /UX/i.test(item.base_set_id) || /UX/i.test(item.set_id);
                 let uxNames = ['DRAN BUSTER', 'HELLS HAMMER', 'WIZARD ROD', 'LEON CREST', 'SHINOBI SHADOW', 'AERO PEGASUS', 'SAMURAI SABER', '巨劍飛龍', '戰鎚地獄', '魔杖巫師', '飛龍懸浮', '隱密忍者', '空力天馬', '武士軍刀', '武士聖劍'];
                 if (uxNames.some(n => String(rawNameTW).toUpperCase().includes(n))) isUX = true;
 
+                // 若 JSON 官方明確標示 BX，壓制 UX 誤判 (完美解決 暴龍咆哮 982432-02 問題)
+                if (isExplicitBX && !isExplicitUX) isUX = false; 
+
                 let sysType = 'BX';
-                if (struct['MetalBlade']) sysType = 'CX2';
-                else if (struct['MainBlade']) sysType = 'CX1'; 
-                else if (isUX) sysType = 'UX';
+                if (struct['MetalBlade'] || struct['MainBlade'] || isExplicitCX) {
+                    sysType = (struct['MetalBlade'] || isExplicitCX) ? 'CX2' : 'CX1';
+                } else if (isUX) {
+                    sysType = 'UX';
+                }
 
                 let parsedBitType = 'Balance';
                 if (shortCat === 'Bit' && item.type) {
@@ -320,12 +327,16 @@ async function loadDatabase() {
                 }
 
                 let tags = new Set();
-                let upperName = String(rawNameTW).toUpperCase();
-                let fullText = upperName + " " + instId.toUpperCase();
                 
+                // 完全繼承 JSON 官方所有標籤
+                jsonTags.forEach(t => tags.add(t));
+
                 if (sysType === 'CX1' || sysType === 'CX2') tags.add('CX');
                 else if (sysType === 'UX') tags.add('UX');
                 else tags.add('BX');
+
+                let upperName = String(rawNameTW).toUpperCase();
+                let fullText = upperName + " " + instId.toUpperCase();
                 
                 if (fullText.includes('BXG') || upperName.includes('復刻') || upperName.includes('聯名') || fullText.includes('CROSSOVER') || item.series === 'BXG') tags.add('BXG');
                 if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('BXH') || upperName.includes('G1') || upperName.includes('G2') || upperName.includes('G3') || upperName.includes('大賽') || upperName.includes('CUP')) tags.add('EVE');
@@ -353,24 +364,20 @@ async function loadDatabase() {
         }
     }
     
-    // ✨ 核心升級：血統校正與時間軸鎖定 (以最舊發行為主) ✨
     Object.values(partsDb).forEach(catList => {
         catList.forEach(group => { 
-            // 變體依發行時間早到晚排列 (variants[0] 為最舊初代)
             group.variants.sort((a, b) => a.releaseAt.localeCompare(b.releaseAt)); 
-            group.earliestRelease = group.variants[0].releaseAt; // 鎖定群組最早時間
+            group.earliestRelease = group.variants[0].releaseAt; 
             
-            // 校正群組血統：BX / UX / CX 標籤強制以「最舊版本」為主
             let sysTags = ['BX', 'UX', 'CX'];
-            let oldestSys = group.variants[0].tags.find(t => sysTags.includes(t));
-            if (oldestSys) {
+            let oldestSysTags = group.variants[0].tags.filter(t => sysTags.includes(t));
+            if (oldestSysTags.length > 0) {
                 group.tags = group.tags.filter(t => !sysTags.includes(t));
-                group.tags.push(oldestSys);
+                oldestSysTags.forEach(t => group.tags.push(t));
             }
         });
     });
 
-    // A-Z 字典級預設排序
     ['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].forEach(cat => {
         if(partsDb[cat]) {
             partsDb[cat].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
@@ -398,7 +405,7 @@ async function loadDatabase() {
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
     partsDb.TopPart.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
 
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(備戰區上線、BX血統依最舊校正完成)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(疊加偏移修復、官方 JSON Tags 完全掛載成功)</span>`;
 }
 
 // ================== 牌組總覽與立體圖層生成 ==================
@@ -447,7 +454,6 @@ function renderDeckOverview() {
         let badgeText = isMain ? `先發 ${index + 1}` : `備戰 ${index - 2}`;
         let badgeColor = isMain ? '#45a29e' : '#f1c40f';
         
-        // 替換與刪除按鈕 (停止事件冒泡，避免觸發編輯器)
         let actionBtns = `
             <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
                 <button class="btn-blue" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); openSwapModal(${index})">🔄 替換</button>
@@ -710,7 +716,6 @@ function applyFilter(filterType = currentFilterType) {
         }
     }
 
-    // ✨ 執行時間軸排序 (避開固鎖區塊以免破壞其特有排版，並以最舊初代比較) ✨
     if (['TopPart', 'Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].includes(selectingPartCategory)) {
         if (currentSortType === 'NEW_TO_OLD') {
             displayList.sort((a, b) => b.earliestRelease.localeCompare(a.earliestRelease));
@@ -759,7 +764,7 @@ function applyFilter(filterType = currentFilterType) {
         else {
             let normalGridHtml = `<div class="grid-inner">`;
             displayList.forEach((partGroup) => {
-                let thumb = partGroup.variants[0].image; // 必定是最舊初代圖
+                let thumb = partGroup.variants[0].image; 
                 let variantBadge = partGroup.variants.length > 1 ? `<div class="variant-badge">${partGroup.variants.length} 種版本</div>` : "";
                 let realIndex = partsDb[selectingPartCategory].indexOf(partGroup);
 
