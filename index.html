@@ -2,50 +2,51 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 兵工廠 & 專業賽事系統 (SPA 融合版)</title>
+    <title>BEYBLADE X 極限戰情室 & 兵工廠 雙核融合版</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 全域與基本設定 */
+        /* ================= 科技感全域設定 & SPA 架構 ================= */
         * { box-sizing: border-box; }
-        body { font-family: '微軟正黑體', sans-serif; margin: 0; padding: 20px; background-color: #0a0b10; color: #d8dee9; font-size: 20px; }
+        body { font-family: '微軟正黑體', sans-serif; margin: 20px; background-color: #0a0b10; color: #d8dee9; font-size: 20px; 
+               background-image: linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px); background-size: 50px 50px; }
         input, select, button { font-family: inherit; }
-        h1 { color: #0ff; text-align: center; text-shadow: 0 0 15px rgba(0, 255, 255, 0.8); font-size: 42px; margin-bottom: 20px; margin-top: 10px; }
-        h2 { color: #66fcf1; border-bottom: 2px dashed rgba(102, 252, 241, 0.3); padding-bottom: 10px; margin-top: 0; }
         
-        /* ✨ SPA 導航列 ✨ */
-        .top-nav { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; background: rgba(15, 18, 25, 0.9); padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 255, 255, 0.3); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        h1 { color: #0ff; text-align: center; text-shadow: 0 0 15px rgba(0, 255, 255, 0.8); font-size: 42px; margin-bottom: 20px; margin-top: 10px; }
+        h2 { color: #66fcf1; border-bottom: 2px dashed rgba(102, 252, 241, 0.3); padding-bottom: 10px; margin-top: 0; display:flex; justify-content:space-between; align-items:center; }
+
+        /* ✨ 導航列與視圖切換 ✨ */
+        .top-nav { display: flex; justify-content: center; gap: 20px; margin-bottom: 25px; background: rgba(15, 18, 25, 0.9); padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 255, 255, 0.3); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         .nav-btn { background: #111; color: #aaa; border: 2px solid #555; padding: 12px 30px; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; transition: 0.3s; }
-        .nav-btn:hover { border-color: #0ff; color: #fff; }
+        .nav-btn:hover:not(:disabled) { border-color: #0ff; color: #fff; }
         .nav-btn.active { background: #45a29e; color: #000; border-color: #66fcf1; box-shadow: 0 0 15px rgba(102,252,241,0.6); }
 
-        /* ✨ 視圖切換 ✨ */
         .view-section { display: none; animation: fadeIn 0.4s ease-in-out; }
         .view-section.view-active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 模組框與按鈕 */
-        .box { background: rgba(15, 18, 25, 0.85); padding: 25px; border-radius: 20px; border: 1px solid rgba(0, 255, 255, 0.2); margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        /* 模組框與按鈕共用 */
+        .box, .modal-content, .setup-box { background: rgba(15, 18, 25, 0.85); padding: 25px; border-radius: 20px; border: 1px solid rgba(0, 255, 255, 0.2); margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; overflow: hidden; backdrop-filter: blur(8px); }
         button { color: white; border: 2px solid transparent; padding: 12px 20px; font-size: 18px; cursor: pointer; border-radius: 10px; font-weight: bold; transition: 0.2s; }
         .btn-blue { background: #1f2833; border-color: #45a29e; color: #66fcf1; } .btn-blue:hover { background: #45a29e; color: #000; box-shadow: 0 0 15px #45a29e; }
-        .btn-danger { background: #1f2833; border-color: #e74c3c; color: #e74c3c; } .btn-danger:hover { background: #e74c3c; color: #fff; }
-        
-        /* 動態篩選標籤按鈕 */
-        .filter-container { text-align: center; margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .filter-btn { background: #111; border: 2px solid #555; color: #aaa; padding: 8px 18px; border-radius: 20px; font-size: 16px; transition: 0.2s; }
-        .filter-btn:hover { border-color: #f1c40f; color: #fff; }
-        .filter-btn.active { background: #f1c40f; border-color: #f1c40f; color: #000; box-shadow: 0 0 10px rgba(241,196,15,0.5); font-weight: bold; }
+        .btn-danger { background: #1f2833; border-color: #e74c3c; color: #e74c3c; } .btn-danger:hover { background: #e74c3c; color: #fff; box-shadow: 0 0 15px #e74c3c; }
+        .btn-green { background: #1f2833; border-color: #2ecc71; color: #2ecc71; } .btn-green:hover { background: #2ecc71; color: #000; box-shadow: 0 0 15px #2ecc71; }
+        .btn-yellow { background: #1f2833; border-color: #f1c40f; color: #f1c40f; } .btn-yellow:hover { background: #f1c40f; color: #000; box-shadow: 0 0 15px #f1c40f; }
 
-        /* Modal 彈出層設定 */
+        input[type="text"], select { padding: 10px 15px; font-size: 20px; background: rgba(0, 0, 0, 0.6); color: #fff; border: 2px solid #45a29e; border-radius: 12px; }
+        input[type="color"] { cursor: pointer; border: 2px solid #0ff; border-radius: 50%; padding: 0; width: 40px; height: 40px; background: transparent; }
+
+        /* Modal 彈出層 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; overflow-y: auto; padding: 25px; backdrop-filter: blur(5px); }
-        .modal-content { max-width: 1400px; margin: 0 auto; background: rgba(15, 18, 25, 0.95); padding: 30px; border-radius: 20px; border: 2px solid #0ff; }
-        
-        /* 牌組總覽 */
+        .modal-content { max-width: 1400px; margin: 0 auto; border: 2px solid #0ff; }
+
+        /* ================= 兵工廠專屬 CSS ================= */
         .deck-overview-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
         .deck-card { width: 340px; background: rgba(0,0,0,0.6); border: 2px solid #45a29e; border-radius: 16px; padding: 25px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; }
         .deck-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,255,255,0.3); border-color: #0ff; }
-        .deck-name { font-size: 22px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; }
+        .deck-name { font-size: 20px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; line-height: 1.3; }
         .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
 
-        /* CX 立體疊加圖層視覺 CSS (180px 原尺寸) */
+        /* ✨ 3D 疊加引擎 (原尺寸 180px) ✨ */
         .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
         .stack-base { position: absolute; width: 140px; height: 140px; top: 10px; left: 10px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
@@ -53,19 +54,11 @@
         .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
         .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
 
-        /* ✨ 賽程表專用：微縮版立體圖層 (Mini-Scale Engine) ✨ */
-        .mini-icon-wrapper { width: 90px; height: 90px; margin: 0 auto; position: relative; }
-        .mini-icon-wrapper .deck-img { width: 90px; height: 90px; margin: 0; }
-        .mini-icon-wrapper .stack-container { transform: scale(0.45); transform-origin: top left; margin: 0; position: absolute; top: 5px; left: 5px; }
+        /* ✨ 賽事圖標微縮引擎 (支援名單與對戰卡片縮放) ✨ */
+        .mini-icon-wrapper { width: 80px; height: 80px; position: relative; display: inline-block; }
+        .mini-icon-wrapper .deck-img { width: 80px; height: 80px; margin: 0; }
+        .mini-icon-wrapper .stack-container { transform: scale(0.44); transform-origin: top left; margin: 0; position: absolute; top: 0; left: 0; }
 
-        /* 賽事系統的展示對戰卡片 */
-        .match-container { display: flex; justify-content: center; align-items: center; gap: 30px; margin-top: 30px; }
-        .match-card { width: 220px; background: rgba(0,0,0,0.8); border: 2px solid #555; border-radius: 15px; padding: 15px; text-align: center; }
-        .match-vs { font-size: 40px; font-weight: bold; color: #e74c3c; text-shadow: 0 0 15px rgba(231,76,60,0.8); font-style: italic; }
-        .match-player-name { font-size: 18px; color: #c5c6c7; margin-bottom: 10px; }
-        .match-deck-name { font-size: 16px; color: #f1c40f; font-weight: bold; margin-top: 10px; line-height: 1.3; }
-
-        /* 配置編輯器 */
         .editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
         .part-slot { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); border: 2px dashed #45a29e; padding: 10px 20px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
         .part-slot:hover { border-color: #0ff; background: rgba(0,255,255,0.1); }
@@ -74,7 +67,6 @@
         .part-thumb { width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8)); }
         .part-val { font-size: 22px; color: #fff; font-weight: bold; width: 250px; text-align: right; }
 
-        /* 視覺化九宮格與陳列架 */
         .grid-modal { z-index: 1050; }
         .grid-container { max-height: 60vh; overflow-y: auto; padding: 10px; margin-top: 10px; }
         .grid-inner { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
@@ -82,9 +74,38 @@
         .grid-item:hover { border-color: #f1c40f; background: rgba(241,196,15,0.1); transform: scale(1.05); }
         .grid-img { width: 120px; height: 120px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .grid-title { font-size: 18px; font-weight: bold; color: #fff; word-break: break-all; }
-        
-        .variant-badge { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; box-shadow: 0 0 10px rgba(231,76,60,0.8); }
+        .variant-badge { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: #fff; font-size: 12px; padding: 4px 8px; border-radius: 12px; font-weight: bold; }
+        .filter-btn { background: #111; border: 2px solid #555; color: #aaa; padding: 8px 18px; border-radius: 20px; font-size: 16px; margin: 5px; cursor: pointer; }
+        .filter-btn.active { background: #f1c40f; border-color: #f1c40f; color: #000; font-weight: bold; }
 
+        /* ================= 賽事專屬 CSS ================= */
+        .player-inputs-container { display: flex; gap: 25px; margin: 20px 0; flex-wrap: wrap; }
+        .player-field { display: flex; flex-direction: column; background: rgba(255,255,255,0.02); padding: 15px 20px; border-radius: 16px; border: 2px solid rgba(255,255,255,0.05); }
+        .player-field select { border-width: 3px; font-weight: bold; width: 180px; border-radius: 12px; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: rgba(0,0,0,0.3); border-radius: 16px; border: 2px solid rgba(0,255,255,0.2); }
+        th, td { border-bottom: 2px solid rgba(0,255,255,0.1); border-right: 2px solid rgba(0,255,255,0.1); padding: 15px; text-align: center; }
+        th { background: rgba(15, 18, 25, 0.9); color: #66fcf1; }
+        
+        .match-card { background: linear-gradient(145deg, rgba(25, 30, 40, 0.9), rgba(10, 12, 18, 0.9)); border-radius: 18px; border: 2px solid rgba(0, 255, 255, 0.15); padding: 25px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); transition: 0.3s; border-left: 8px solid #45a29e; margin-bottom: 25px; }
+        .match-card.finished { opacity: 0.8; border-left-color: #2ecc71; }
+        .match-header { display: flex; justify-content: space-between; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .match-body { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; }
+        .player-side { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 35%; }
+        .score-display { width: 100px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: bold; background: rgba(0,0,0,0.7); color: #0ff; border: 3px solid #45a29e; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .score-display:hover { background: rgba(0,255,255,0.1); box-shadow: 0 0 15px #0ff; }
+        
+        .player-pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 20px 8px 8px; border-radius: 40px; border: 3px solid; background: rgba(0,0,0,0.5); font-weight: bold; font-size: 20px; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background-color: #222; border: 2px solid currentColor; background-repeat: no-repeat; display:flex; align-items:center; justify-content:center; }
+        
+        .roster-card { min-width:320px; background:rgba(0,0,0,0.8); border:2px solid #aaa; border-radius:20px; padding:25px; text-align:center; box-shadow:0 0 20px rgba(0,0,0,0.5); scroll-snap-align: center; }
+        
+        /* 雙艙佈局 */
+        .flex-container { display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-start; }
+        .half-box { flex: 0 0 calc(50% - 15px); max-width: calc(50% - 15px); }
+        .sticky-box { position: sticky; top: 20px; z-index: 10; max-height: calc(100vh - 40px); overflow-y: auto; }
+        @media (max-width: 1400px) { .half-box { flex: 0 0 100%; max-width: 100%; } .sticky-box { position: static; max-height: none; } }
+        
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
         ::-webkit-scrollbar-thumb { background: rgba(69, 162, 158, 0.6); border-radius: 8px; }
@@ -94,14 +115,65 @@
 <body>
 
     <div class="top-nav">
-        <button id="nav-builder" class="nav-btn active" onclick="switchTab('builder')">🛠️ 選手兵工廠 (配置編輯)</button>
-        <button id="nav-tournament" class="nav-btn" onclick="switchTab('tournament')">🏆 專業賽事系統 (賽程表)</button>
+        <button id="nav-tournament" class="nav-btn active" onclick="switchTab('tournament')">🏆 專業賽事與對局管理</button>
+        <button id="nav-builder" class="nav-btn" onclick="switchTab('builder')">🛠️ 選手兵工廠 (裝備庫)</button>
+    </div>
+    
+    <div id="dataStatus" style="text-align:center; color:#aaa; margin-top:-10px; margin-bottom:15px;">📡 正在連線讀取資料庫...</div>
+
+    <div id="view-tournament" class="view-section view-active">
+        <div class="flex-container">
+            <div class="half-box">
+                <div class="setup-box">
+                    <h2>⚙️ 賽事設定與名單管理</h2>
+                    <div class="setup-row">
+                        <label>賽事名稱:</label>
+                        <input type="text" id="tourName" placeholder="例如: 2026 夏季盃" style="flex:1;">
+                    </div>
+                    <div class="setup-row" style="margin-bottom:0;">
+                        <button class="btn-yellow" onclick="document.getElementById('rosterModal').style.display='block';">👥 管理選手名單與配置</button>
+                        <button class="btn-green" onclick="generateSchedule()">🎲 生成賽程表</button>
+                        <button class="btn-danger" onclick="clearTournamentData()">🗑️ 重製清空</button>
+                    </div>
+                </div>
+
+                <div class="box">
+                    <h2>⚔️ 當前賽事對局</h2>
+                    <div id="scheduleContainer">
+                        <div style="color:#aaa; text-align:center; padding: 20px;">尚無賽程，請先設定參賽名單並點擊「生成賽程表」。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="half-box sticky-box">
+                <div class="box">
+                    <h2>🏆 即時排名積分板</h2>
+                    <div style="overflow-x:auto;">
+                        <table id="standingsTable">
+                            <thead><tr><th>排名</th><th>選手</th><th>勝負</th><th>積分</th><th>勝率</th></tr></thead>
+                            <tbody id="standingsBody"><tr><td colspan="5" style="color:#aaa;">無資料</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div style="text-align:center; margin-top:20px;">
+                        <button class="btn-yellow" onclick="finalizeTournament()">🎖️ 結束賽事並結算</button>
+                    </div>
+                </div>
+
+                <div class="box">
+                    <h2>📈 歷史賽事勝率圖表</h2>
+                    <div style="height: 350px;"><canvas id="careerChart"></canvas></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="view-builder" class="view-section view-active">
+    <div id="view-builder" class="view-section">
         <div class="box">
-            <h1>🏆 選手 3on3 牌組兵工廠</h1>
-            <div id="dataStatus" style="text-align:center; color:#aaa; margin-top:-20px; margin-bottom:20px;">📡 正在連線讀取資料庫...</div>
+            <div style="text-align:center; margin-bottom: 25px; background: rgba(0,0,0,0.4); padding: 15px; border-radius:15px; border:1px solid #45a29e;">
+                <h2 style="color:#0ff; border:none; margin:0; justify-content:center;">目前編輯選手：<span id="builderPlayerName" style="font-size:32px; text-shadow: 0 0 10px currentColor;">尚未選擇</span></h2>
+                <p style="color:#aaa; margin:10px 0 20px 0;">所有的配置都會直接綁定儲存於此選手的名單中。</p>
+                <button class="btn-green" onclick="saveBuilderToPlayer()" style="font-size:24px; padding:12px 40px; box-shadow: 0 0 20px #2ecc71;">✅ 儲存並返回賽事名單</button>
+            </div>
             
             <h2>⚔️ 先發 3on3 牌組</h2>
             <div class="deck-overview-container" id="mainDeckOverview"></div>
@@ -110,32 +182,82 @@
             <div class="deck-overview-container" id="reserveDeckOverview"></div>
             
             <div style="text-align: center; margin-top: 30px;">
-                <button class="btn-blue" style="background:#f1c40f; color:#000; border-color:#f1c40f; box-shadow: 0 0 15px rgba(241,196,15,0.5);" onclick="addReserveDeck()">➕ 新增備戰陀螺</button>
+                <button class="btn-yellow" onclick="addReserveDeck()">➕ 新增備戰陀螺</button>
             </div>
         </div>
     </div>
 
-    <div id="view-tournament" class="view-section">
-        <div class="box">
-            <h1>🏆 賽程表與對局管理 (開發預覽區)</h1>
-            <p style="text-align:center; color:#45a29e;">這裡將放置未來的樹狀圖與賽事邏輯。以下為「3D 錯位疊層等比例縮小」在對戰表上的顯示測試：</p>
-            
-            <div style="text-align:center; margin-top:20px;">
-                <button class="btn-blue" onclick="syncTournamentView()">🔄 載入兵工廠最新配置</button>
-            </div>
 
-            <div class="match-container" id="mockMatchContainer">
+    <div id="rosterModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>👥 選手名單管理中心 <button class="btn-blue" style="float:right;" onclick="document.getElementById('rosterModal').style.display='none'; updateSetupUI();">✅ 完成並返回</button></h2>
+            
+            <div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap; align-items:center; background:rgba(0,0,0,0.5); padding:20px; border-radius:12px;">
+                <input type="text" id="newPlayerName" placeholder="輸入新選手名稱..." style="flex:1; min-width:200px;">
+                <input type="color" id="newPlayerColor" value="#3498db" title="選擇選手代表色">
+                <button class="btn-green" onclick="addRosterPlayer()">➕ 新增選手</button>
+            </div>
+            
+            <div id="rosterListContainer" style="display: flex; gap: 30px; overflow-x: auto; padding: 30px 10px; scroll-snap-type: x mandatory;">
                 </div>
         </div>
     </div>
 
+    <div id="scoringModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 900px; text-align:center;">
+            <h2 style="justify-content:center;" id="scoringTitle">紀錄對局</h2>
+            
+            <div style="display:flex; justify-content:space-around; align-items:flex-start; margin-top:20px;">
+                <div style="width:40%; padding:20px; background:rgba(0,0,0,0.6); border-radius:15px; border:2px solid #555;" id="p1ScoreCol">
+                    <div id="p1PillHtml" style="margin-bottom:15px;"></div>
+                    <div style="font-size:60px; font-weight:bold; margin-bottom:10px; color:#0ff; font-family:monospace;" id="p1CurrentScore">0</div>
+                    <div style="background:rgba(255,255,255,0.05); border:1px dashed #aaa; border-radius:10px; padding:10px; cursor:pointer;" onclick="cycleBey(true)" title="點擊切換上陣陀螺">
+                        <div style="font-size:16px; color:#aaa; margin-bottom:5px;">🔄 點擊切換當前陀螺</div>
+                        <div id="p1ActiveBey"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                        <button class="btn-blue" onclick="handleScoreAction(1, 'spin', 1)">轉速取勝 (+1)</button>
+                        <button class="btn-yellow" onclick="handleScoreAction(1, 'over', 2)">擊出取勝 (+2)</button>
+                        <button class="btn-danger" onclick="handleScoreAction(1, 'burst', 2)">擊碎取勝 (+2)</button>
+                        <button class="btn-green" onclick="handleScoreAction(1, 'xtreme', 3)">Xtreme 取勝 (+3)</button>
+                        <button class="btn-danger" style="background:transparent; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(1, 'penalty', 0)">⚠️ 犯規醜一</button>
+                    </div>
+                </div>
+                
+                <div style="font-size:50px; font-weight:bold; color:#e74c3c; font-style:italic; padding-top:100px;">VS</div>
+                
+                <div style="width:40%; padding:20px; background:rgba(0,0,0,0.6); border-radius:15px; border:2px solid #555;" id="p2ScoreCol">
+                    <div id="p2PillHtml" style="margin-bottom:15px;"></div>
+                    <div style="font-size:60px; font-weight:bold; margin-bottom:10px; color:#0ff; font-family:monospace;" id="p2CurrentScore">0</div>
+                    <div style="background:rgba(255,255,255,0.05); border:1px dashed #aaa; border-radius:10px; padding:10px; cursor:pointer;" onclick="cycleBey(false)" title="點擊切換上陣陀螺">
+                        <div style="font-size:16px; color:#aaa; margin-bottom:5px;">🔄 點擊切換當前陀螺</div>
+                        <div id="p2ActiveBey"></div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                        <button class="btn-blue" onclick="handleScoreAction(2, 'spin', 1)">轉速取勝 (+1)</button>
+                        <button class="btn-yellow" onclick="handleScoreAction(2, 'over', 2)">擊出取勝 (+2)</button>
+                        <button class="btn-danger" onclick="handleScoreAction(2, 'burst', 2)">擊碎取勝 (+2)</button>
+                        <button class="btn-green" onclick="handleScoreAction(2, 'xtreme', 3)">Xtreme 取勝 (+3)</button>
+                        <button class="btn-danger" style="background:transparent; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(2, 'penalty', 0)">⚠️ 犯規醜一</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top:30px; display:flex; justify-content:center; gap:20px;">
+                <button class="btn-yellow" onclick="undoLastScore()">↩️ 復原上一筆紀錄</button>
+                <button class="btn-blue" onclick="closeScoringModal()">✅ 關閉計分板</button>
+            </div>
+        </div>
+    </div>
+
+
     <div id="editorModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 800px;">
             <h2>🛠️ 編輯配置 - <span id="currentEditingDeckNum"></span></h2>
-            <p style="color: #45a29e; text-align: center;">點擊組合包上蓋將一鍵裝備整套；點擊特定戰刃即可自由混搭！</p>
+            <p style="color: #45a29e; text-align: center;">點擊插槽進入圖鑑挑選！一體式會自動防呆互斥。</p>
             <div id="editorSlots" class="editor-container"></div>
             <div style="text-align: center; margin-top: 30px;">
-                <button class="btn-blue" onclick="saveCurrentDeck()" style="font-size: 24px; padding: 15px 40px;">✅ 確認並返回</button>
+                <button class="btn-blue" onclick="closeEditorModal()" style="font-size: 24px; padding: 15px 40px;">✅ 確定並返回總覽</button>
             </div>
         </div>
     </div>
@@ -145,19 +267,15 @@
             <h2 id="gridTitle" style="color: #f1c40f; margin-bottom: 15px;">選擇零件</h2>
             <div class="filter-container" id="systemFilter"></div>
             <div id="gridContainer" class="grid-container"></div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn-danger" onclick="closeVisualGrid()">❌ 取消選擇</button>
-            </div>
+            <div style="text-align: center; margin-top: 20px;"><button class="btn-danger" onclick="closeVisualGrid()">❌ 取消</button></div>
         </div>
     </div>
 
     <div id="variantModal" class="modal-overlay grid-modal" style="z-index: 1060;">
         <div class="modal-content" style="max-width: 1000px;">
-            <h2>請選擇指定版本</h2>
+            <h2>選擇版本與顏色</h2>
             <div id="variantContainer" class="grid-container grid-inner"></div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn-danger" onclick="closeVariantModal()">↩️ 返回上一頁</button>
-            </div>
+            <div style="text-align: center; margin-top: 20px;"><button class="btn-danger" onclick="closeVariantModal()">↩️ 返回圖鑑</button></div>
         </div>
     </div>
 
@@ -165,48 +283,23 @@
         <div class="modal-content" style="max-width: 900px;">
             <h2 id="swapTitle" style="color:#0ff; text-align:center;">請選擇要替換的牌組</h2>
             <div class="deck-overview-container" id="swapContainer" style="margin-top:20px;"></div>
-            <div style="text-align: center; margin-top: 30px;">
-                <button class="btn-danger" onclick="closeSwapModal()">❌ 取消</button>
-            </div>
+            <div style="text-align: center; margin-top: 30px;"><button class="btn-danger" onclick="closeSwapModal()">❌ 取消</button></div>
         </div>
     </div>
 
 <script>
-// ================== SPA 導航控制 ==================
-function switchTab(tabId) {
-    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('view-active'));
-    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-    
-    document.getElementById(`view-${tabId}`).classList.add('view-active');
-    document.getElementById(`nav-${tabId}`).classList.add('active');
+// ================== 雙系統共用變數與 SPA 控制 ==================
+let roster = JSON.parse(localStorage.getItem('beyblade_roster')) || [];
+let appState = JSON.parse(localStorage.getItem('beyblade_state')) || { tourName: "", matches: [], stats: {} };
+let allMatches = []; // 動態生成的對戰陣列
 
-    // 當切換到賽事畫面時，自動同步配置
-    if (tabId === 'tournament') {
-        syncTournamentView();
-    }
-}
-
-// ================== 防斷圖機制 ==================
-const FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23555' stroke-width='4'/><text x='50' y='55' fill='%23888' font-size='16' text-anchor='middle'>無圖片</text></svg>";
-window.handleImgError = function(img) {
-    if (!img.dataset.triedApp) {
-        img.dataset.triedApp = "true";
-        img.src = img.src.replace('/site/', '/app/');
-    } else if (!img.dataset.triedFallback) {
-        img.dataset.triedFallback = "true";
-        img.src = FALLBACK_IMG;
-    }
-};
-
-// ================== 核心資料庫 ==================
 let partsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
 const BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
+let setStructureMap = {};
 
-let allDecks = [ 
-    { mode: 'standard', parts: {} }, 
-    { mode: 'standard', parts: {} }, 
-    { mode: 'standard', parts: {} } 
-];
+// 兵工廠專用
+let allDecks = []; 
+let currentDeckEditIndex = -1; // 記錄正在編輯哪位選手的裝備庫
 let editingDeckIndex = -1; 
 let swappingIndex = -1;
 let selectingPartCategory = ""; 
@@ -214,92 +307,408 @@ let currentSelectedPartGroup = null;
 let currentFilterType = "ALL";
 let currentSortType = "NEW_TO_OLD"; 
 
-let setStructureMap = {};
+// 賽事專用
+let currentScoringMatchId = null;
+let careerChartInstance = null;
 
-window.onload = async function() { await loadDatabase(); renderDeckOverview(); };
-
-// ================== 基因解碼與名稱淨化 ==================
-function getTrueCategoryFromId(id, defaultCat) {
-    let prefix = id.split('-')[0].toUpperCase();
-    switch (prefix) {
-        case 'BL': return 'Blade';
-        case 'MB': return 'MainBlade';
-        case 'ME': return 'MetalBlade';
-        case 'OV': return 'OverBlade';
-        case 'AB': return 'AssistBlade';
-        case 'LC': return 'LockChip';
-        case 'RC': return 'Ratchet';
-        case 'RT': return 'Ratchet'; 
-        case 'BT': return 'Bit';
-        default: return defaultCat; 
+// ================== 啟動程序 ==================
+window.onload = async function() {
+    await loadDatabase();
+    if(roster.length === 0) {
+        roster = [
+            { name: "選手 A", color: "#e74c3c", avatar: "", scale: 100, xPos: 50, yPos: 50, deck: [] },
+            { name: "選手 B", color: "#3498db", avatar: "", scale: 100, xPos: 50, yPos: 50, deck: [] }
+        ];
+        saveRoster();
     }
-}
+    document.getElementById('tourName').value = appState.tourName || "";
+    updateSetupUI();
+    renderHistory();
+};
 
-function getInstId(id, item) {
-    let parts = id.split('-');
-    let knownPrefixes = ['BL', 'MB', 'ME', 'OV', 'AB', 'LC', 'RC', 'RT', 'BT']; 
-    if (parts.length >= 2 && knownPrefixes.includes(parts[0].toUpperCase())) {
-        return parts.slice(1).join('-'); 
+function switchTab(tabId) {
+    if (tabId === 'builder' && currentDeckEditIndex === -1) {
+        alert("🔒 請先在【賽事系統】點擊「管理選手名單」，然後點選該選手專屬的【進入兵工廠】按鈕！");
+        return;
     }
-    let base = item.base_set_id || item.set_id || "UNKNOWN";
-    let suffixMatch = id.match(/-\d{2}$/);
-    if (suffixMatch && !base.endsWith(suffixMatch[0])) return base + suffixMatch[0];
-    return base;
-}
-
-function cleanPartName(rawName, instId, shortCat) {
-    if (!rawName) return instId;
-    let name = String(rawName).trim();
-    if (name === "■" || name === "(機密/特殊聯名)") return `機密/特殊聯名`;
-
-    let cleaned = name.replace(/(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[A-Za-z0-9\-]+\s*/ig, ''); 
-
-    if (['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'LockChip', 'TopPart'].includes(shortCat)) {
-        cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
-    }
-
-    cleaned = cleaned.replace(/DMM\s*(抽獎|スクラッチ).*?[賞獎]\s*/ig, '');
-    cleaned = cleaned.replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '');
-    cleaned = cleaned.replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版本?)?/ig, '');
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('view-active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     
-    cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版本?)/ig, '');
-    cleaned = cleaned.replace(/\s+[A-Za-z0-9\u4e00-\u9fa5\uFF10-\uFF19]+(Ver\.|バージョン|版本?)/ig, '');
-    cleaned = cleaned.replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '');
-    cleaned = cleaned.replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet)[\)）]/ig, '');
-    cleaned = cleaned.replace(/\s*[\(（](連擊型|上升攻擊型)[\)）]/ig, '');
-    cleaned = cleaned.replace(/中收錄.*$/ig, '');
-    cleaned = cleaned.replace(/ランダムブースター.*$/ig, '');
-    cleaned = cleaned.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig, '');
-    cleaned = cleaned.replace(/\s*(紋章|ロックチップ)/ig, '');
-    cleaned = cleaned.replace(/\s*(メタル|メイン|オーバー|アシスト)ブレード/ig, '');
+    document.getElementById(`view-${tabId}`).classList.add('view-active');
+    document.getElementById(`nav-${tabId}`).classList.add('active');
+}
 
-    if (cleaned.includes('福音戰士')) {
-        cleaned = cleaned.replace(/\s+([A-Z])$/i, '$1');
+// ================== 圖片防斷機制 ==================
+const FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23555' stroke-width='4'/><text x='50' y='55' fill='%23888' font-size='16' text-anchor='middle'>無圖片</text></svg>";
+window.handleImgError = function(img) {
+    if (!img.dataset.triedApp) { img.dataset.triedApp = "true"; img.src = img.src.replace('/site/', '/app/'); } 
+    else if (!img.dataset.triedFallback) { img.dataset.triedFallback = "true"; img.src = FALLBACK_IMG; }
+};
+
+// ================== 賽事管理核心 ==================
+function saveRoster() { localStorage.setItem('beyblade_roster', JSON.stringify(roster)); }
+function saveState() { 
+    appState.tourName = document.getElementById('tourName').value;
+    localStorage.setItem('beyblade_state', JSON.stringify(appState)); 
+}
+
+function updateSetupUI() {
+    renderRosterList();
+    if(appState.matches && appState.matches.length > 0) {
+        allMatches = appState.matches;
+        renderMatches();
+        calculateRankings();
     }
+}
 
-    let finalName = cleaned.trim();
-    if (finalName === '') return `機密/特殊聯名`;
-    return finalName; 
+function getPlayerColor(name) { let p = roster.find(x => x.name === name); return p ? p.color : "#fff"; }
+function getPlayerPillHtml(name) {
+    let p = roster.find(x => x.name === name);
+    if(!p) return `<span class="player-pill" style="color:#fff; border-color:#fff;">${name}</span>`;
+    let avatarStyle = (p.avatar && p.avatar.trim()!=="") ? `background-image:url('${p.avatar}'); background-size:${p.scale}%; background-position:${p.xPos}% ${p.yPos}%; color:transparent;` : "";
+    let avatarContent = avatarStyle ? "" : `<span style="font-size:24px; color:#aaa;">圖</span>`;
+    return `<div class="player-pill" style="color:${p.color}; border-color:${p.color};">
+                <div class="avatar" style="border-color:${p.color}; ${avatarStyle}">${avatarContent}</div>
+                <span class="player-name-truncate">${p.name}</span>
+            </div>`;
+}
+
+// ✨ 名單管理 (Cover Flow) ✨
+function renderRosterList() {
+    let container = document.getElementById('rosterListContainer');
+    container.innerHTML = '';
+    roster.forEach((p, index) => {
+        let avatarStyle = (p.avatar && p.avatar.trim()!=="") ? `background-image:url('${p.avatar}'); background-size:${p.scale}%; background-position:${p.xPos}% ${p.yPos}%; color:transparent;` : "";
+        let avatarContent = avatarStyle ? "" : `<span style="font-size:32px; color:#aaa; line-height:120px;">圖</span>`;
+        
+        let deckDisplayHtml = `<div style="display:flex; gap:5px; justify-content:center; margin-top:20px; align-items:center; min-height:80px;">`;
+        if (p.deck && p.deck.length >= 3 && p.deck[0].parts && p.deck[0].parts.TopPart) {
+            for (let j = 0; j < 3; j++) {
+                deckDisplayHtml += `<div class="mini-icon-wrapper" style="transform: scale(0.65); transform-origin: top center; margin-bottom:-25px;" title="${getDeckFullName(p.deck[j])}">${getDeckCoverHtml(p.deck[j])}</div>`;
+            }
+        } else {
+            deckDisplayHtml += `<span style="color:#777; font-size:18px;">尚未配置 3on3 先發牌組</span>`;
+        }
+        deckDisplayHtml += `</div>`;
+
+        container.innerHTML += `
+            <div class="roster-card" style="border-color:${p.color}; box-shadow:0 0 15px ${p.color}60;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <button class="btn-blue" style="padding:5px 10px;" onclick="moveRosterLeft(${index})" ${index===0?'disabled':''}>◀</button>
+                    <button class="btn-danger" style="padding:5px 10px;" onclick="deleteRoster(${index})">❌ 刪除</button>
+                    <button class="btn-blue" style="padding:5px 10px;" onclick="moveRosterRight(${index})" ${index===roster.length-1?'disabled':''}>▶</button>
+                </div>
+                <div style="width:120px; height:120px; border-radius:50%; margin:0 auto 15px auto; border:4px solid ${p.color}; display:flex; align-items:center; justify-content:center; ${avatarStyle}">${avatarContent}</div>
+                <div style="font-size:28px; font-weight:bold; color:${p.color}; text-shadow:0 0 10px ${p.color}80;">${p.name}</div>
+                <hr style="border-color:rgba(255,255,255,0.1); margin:15px 0;">
+                ${deckDisplayHtml}
+                <button class="btn-yellow" style="width:100%; margin-top:30px;" onclick="openDeckBuilderFromRoster(${index})">🛠️ 進入專屬兵工廠</button>
+            </div>`;
+    });
+}
+
+function addRosterPlayer() {
+    let name = document.getElementById('newPlayerName').value.trim();
+    if(!name) return alert('請輸入選手名稱');
+    if(roster.some(p => p.name === name)) return alert('選手名稱已存在');
+    let color = document.getElementById('newPlayerColor').value;
+    roster.push({ name: name, color: color, avatar: "", scale: 100, xPos: 50, yPos: 50, deck: [] });
+    document.getElementById('newPlayerName').value = '';
+    saveRoster(); renderRosterList();
+}
+function deleteRoster(index) { if(confirm('確定刪除此選手？')) { roster.splice(index, 1); saveRoster(); renderRosterList(); } }
+function moveRosterLeft(index) { if(index > 0) { let t = roster[index-1]; roster[index-1]=roster[index]; roster[index]=t; saveRoster(); renderRosterList(); } }
+function moveRosterRight(index) { if(index < roster.length-1) { let t = roster[index+1]; roster[index+1]=roster[index]; roster[index]=t; saveRoster(); renderRosterList(); } }
+
+function generateSchedule() {
+    if(roster.length < 2) return alert("至少需要 2 名選手才能生成賽程！");
+    if(appState.matches && appState.matches.length > 0 && !confirm("警告：重新生成將清空目前的對戰紀錄，確定要繼續？")) return;
+    
+    appState.tourName = document.getElementById('tourName').value || `未命名賽事 ${new Date().toLocaleDateString()}`;
+    let matchId = 1;
+    allMatches = [];
+    
+    // 簡單單循環賽生成
+    for (let i = 0; i < roster.length; i++) {
+        for (let j = i + 1; j < roster.length; j++) {
+            allMatches.push({
+                id: matchId++, p1Idx: i, p2Idx: j, 
+                s1: 0, s2: 0, p1BeyIndex: 0, p2BeyIndex: 0,
+                p1Stats: { spin:0, burst:0, over:0, xtreme:0, penalty:0 },
+                p2Stats: { spin:0, burst:0, over:0, xtreme:0, penalty:0 },
+                logs: []
+            });
+        }
+    }
+    // 隨機打亂順序
+    allMatches.sort(() => Math.random() - 0.5);
+    appState.matches = allMatches;
+    saveState();
+    updateSetupUI();
+}
+
+function clearTournamentData() {
+    if(confirm("確定要清空所有賽事紀錄與排名嗎？(名單與裝備庫不會被刪除)")) {
+        appState.matches = []; appState.stats = {}; saveState(); updateSetupUI();
+    }
+}
+
+// ✨ 對戰表渲染 ✨
+function renderMatches() {
+    let container = document.getElementById('scheduleContainer');
+    container.innerHTML = '';
+    if(!allMatches || allMatches.length === 0) return;
+
+    allMatches.forEach((m, idx) => {
+        let n1 = roster[m.p1Idx].name; let n2 = roster[m.p2Idx].name;
+        let isFinished = (m.s1 >= 4 || m.s2 >= 4);
+        let cardClass = isFinished ? "match-card finished" : "match-card";
+        let statusHtml = isFinished ? `<span class="match-status" style="color:#2ecc71;">已結束</span>` : `<span class="match-status" style="color:#f1c40f;">進行中</span>`;
+        
+        container.innerHTML += `
+            <div class="${cardClass}">
+                <div class="match-header">
+                    <span class="match-number">Game ${idx + 1}</span>
+                    ${statusHtml}
+                </div>
+                <div class="match-body">
+                    <div class="player-side">
+                        ${getPlayerPillHtml(n1)}
+                        <div class="score-display" style="border-color:${getPlayerColor(n1)};" onclick="openScoringModal(${m.id})">${m.s1}</div>
+                        ${renderScoringActiveBey(roster[m.p1Idx], m, true)}
+                    </div>
+                    <div style="font-size:32px; font-weight:bold; color:#aaa; font-style:italic;">VS</div>
+                    <div class="player-side">
+                        ${getPlayerPillHtml(n2)}
+                        <div class="score-display" style="border-color:${getPlayerColor(n2)};" onclick="openScoringModal(${m.id})">${m.s2}</div>
+                        ${renderScoringActiveBey(roster[m.p2Idx], m, false)}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function renderScoringActiveBey(p, m, isP1) {
+    let beyIndex = isP1 ? (m.p1BeyIndex || 0) : (m.p2BeyIndex || 0);
+    if (p.deck && p.deck[beyIndex] && p.deck[beyIndex].parts && p.deck[beyIndex].parts.TopPart) {
+         return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px; margin-top:-10px;">
+                   <div class="mini-icon-wrapper" style="transform:scale(0.8); height:70px;">${getDeckCoverHtml(p.deck[beyIndex])}</div>
+                   <div style="font-size:14px; color:#f1c40f; line-height:1.2; text-align:center;">${getDeckFullName(p.deck[beyIndex])}</div>
+                 </div>`;
+    }
+    return `<div style="font-size:14px; color:#777;">(無配置裝備)</div>`;
+}
+
+// ✨ 計分板 Modal 邏輯 ✨
+function openScoringModal(matchId) {
+    currentScoringMatchId = matchId;
+    let m = allMatches.find(x => x.id === matchId);
+    let n1 = roster[m.p1Idx].name; let n2 = roster[m.p2Idx].name;
+    
+    document.getElementById('scoringTitle').innerText = `🏆 Game ${matchId} 計分台`;
+    document.getElementById('p1ScoreCol').style.borderColor = getPlayerColor(n1);
+    document.getElementById('p2ScoreCol').style.borderColor = getPlayerColor(n2);
+    
+    document.getElementById('p1PillHtml').innerHTML = getPlayerPillHtml(n1);
+    document.getElementById('p2PillHtml').innerHTML = getPlayerPillHtml(n2);
+    
+    document.getElementById('p1CurrentScore').innerText = m.s1;
+    document.getElementById('p2CurrentScore').innerText = m.s2;
+
+    document.getElementById('p1ActiveBey').innerHTML = renderScoringActiveBey(roster[m.p1Idx], m, true);
+    document.getElementById('p2ActiveBey').innerHTML = renderScoringActiveBey(roster[m.p2Idx], m, false);
+    
+    document.getElementById('scoringModal').style.display = 'block';
+}
+
+function cycleBey(isP1) {
+    let m = allMatches.find(x => x.id === currentScoringMatchId);
+    if(isP1) m.p1BeyIndex = ((m.p1BeyIndex || 0) + 1) % 3;
+    else m.p2BeyIndex = ((m.p2BeyIndex || 0) + 1) % 3;
+    saveState();
+    openScoringModal(currentScoringMatchId); // 刷新
+}
+
+function handleScoreAction(playerNum, type, points) {
+    let m = allMatches.find(x => x.id === currentScoringMatchId);
+    if (m.s1 >= 4 || m.s2 >= 4) { alert("此對局已達 4 分結束標準！"); return; }
+    
+    m.logs.push(JSON.parse(JSON.stringify({ s1: m.s1, s2: m.s2, p1Stats: m.p1Stats, p2Stats: m.p2Stats })));
+    
+    if (playerNum === 1) {
+        if(type === 'penalty') m.p1Stats.penalty++;
+        else { m.s1 += points; m.p1Stats[type]++; }
+    } else {
+        if(type === 'penalty') m.p2Stats.penalty++;
+        else { m.s2 += points; m.p2Stats[type]++; }
+    }
+    
+    saveState(); updateSetupUI(); openScoringModal(currentScoringMatchId);
+}
+
+function undoLastScore() {
+    let m = allMatches.find(x => x.id === currentScoringMatchId);
+    if(m.logs.length === 0) return alert("無歷史紀錄可復原！");
+    let prev = m.logs.pop();
+    m.s1 = prev.s1; m.s2 = prev.s2; m.p1Stats = prev.p1Stats; m.p2Stats = prev.p2Stats;
+    saveState(); updateSetupUI(); openScoringModal(currentScoringMatchId);
+}
+
+function closeScoringModal() { document.getElementById('scoringModal').style.display = 'none'; }
+
+// ✨ 排名計算 ✨
+function calculateRankings() {
+    let stats = {};
+    roster.forEach(p => {
+        stats[p.name] = { name: p.name, color: p.color, wins: 0, losses: 0, points: 0, spin:0, burst:0, over:0, xtreme:0, penalty:0 };
+    });
+    
+    allMatches.forEach(m => {
+        let n1 = roster[m.p1Idx].name; let n2 = roster[m.p2Idx].name;
+        if (m.s1 >= 4) { stats[n1].wins++; stats[n2].losses++; }
+        else if (m.s2 >= 4) { stats[n2].wins++; stats[n1].losses++; }
+        
+        stats[n1].points += m.s1; stats[n2].points += m.s2;
+        ['spin', 'burst', 'over', 'xtreme', 'penalty'].forEach(type => {
+            stats[n1][type] += m.p1Stats[type]; stats[n2][type] += m.p2Stats[type];
+        });
+    });
+    
+    appState.stats = stats;
+    let rankArr = Object.values(stats).sort((a,b) => {
+        if(b.wins !== a.wins) return b.wins - a.wins;
+        if(b.points !== a.points) return b.points - a.points;
+        return (a.losses) - (b.losses);
+    });
+    
+    let tbody = document.getElementById('standingsBody');
+    tbody.innerHTML = '';
+    rankArr.forEach((p, idx) => {
+        let winRate = (p.wins + p.losses) > 0 ? Math.round((p.wins / (p.wins + p.losses)) * 100) : 0;
+        let rankStr = (idx===0) ? "🥇 1" : (idx===1) ? "🥈 2" : (idx===2) ? "🥉 3" : (idx+1);
+        tbody.innerHTML += `
+            <tr style="background:rgba(${hexToRgb(p.color)},0.1);">
+                <td style="font-size:28px; font-weight:bold;">${rankStr}</td>
+                <td>${getPlayerPillHtml(p.name)}</td>
+                <td style="font-size:24px;"><b><span style="color:#2ecc71">${p.wins}</span> - <span style="color:#e74c3c">${p.losses}</span></b></td>
+                <td style="font-size:24px; font-weight:bold; color:#0ff;">${p.points}</td>
+                <td style="color:#f1c40f;">${winRate}%</td>
+            </tr>`;
+    });
+}
+function hexToRgb(hex) {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : `255,255,255`;
+}
+
+function finalizeTournament() {
+    if(!confirm("即將結束賽事並將最終名次寫入歷史圖表，確認結束？")) return;
+    let historyObj = JSON.parse(localStorage.getItem('beyblade_career_history')) || {};
+    let tn = appState.tourName || new Date().toLocaleDateString();
+    
+    Object.values(appState.stats).forEach(st => {
+        if(!historyObj[st.name]) historyObj[st.name] = { results: {} };
+        historyObj[st.name].results[tn] = { w: st.wins, l: st.losses };
+    });
+    localStorage.setItem('beyblade_career_history', JSON.stringify(historyObj));
+    alert("賽事已成功結算！即將刷新歷史圖表。");
+    renderHistory();
+}
+
+function renderHistory() {
+    let historyObj = JSON.parse(localStorage.getItem('beyblade_career_history')) || {};
+    let allTourneys = new Set();
+    Object.values(historyObj).forEach(p => Object.keys(p.results).forEach(t => allTourneys.add(t)));
+    
+    let xLabels = Array.from(allTourneys);
+    let datasets = roster.map(p => {
+        let data = xLabels.map(t => {
+            if(!historyObj[p.name] || !historyObj[p.name].results[t]) return null;
+            let r = historyObj[p.name].results[t];
+            return (r.w+r.l) > 0 ? Math.round((r.w/(r.w+r.l))*100) : null;
+        });
+        return { label: p.name, data: data, borderColor: p.color, backgroundColor: p.color, borderWidth: 3, spanGaps: true };
+    });
+
+    const ctx = document.getElementById('careerChart').getContext('2d'); 
+    if(careerChartInstance) careerChartInstance.destroy();
+    careerChartInstance = new Chart(ctx, { 
+        type: 'line', data: { labels: xLabels, datasets: datasets }, 
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } }
+    });
 }
 
 
-// ================== 雙核資料庫載入 ==================
+// ================== ✨ 雙系統橋樑 (Bridge) ✨ ==================
+
+function openDeckBuilderFromRoster(index) {
+    currentDeckEditIndex = index;
+    let p = roster[index];
+    
+    // 讀取該選手專屬配置，若無則初始化
+    if (p.deck && p.deck.length > 0 && p.deck[0].parts) {
+        allDecks = JSON.parse(JSON.stringify(p.deck));
+    } else {
+        allDecks = [ { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} } ];
+    }
+    
+    // 關閉清單 Modal，切換到兵工廠
+    document.getElementById('rosterModal').style.display = 'none';
+    
+    let nameTitle = document.getElementById('builderPlayerName');
+    nameTitle.innerText = p.name;
+    nameTitle.style.color = p.color;
+    
+    // 標記允許進入
+    switchTab('builder');
+    renderDeckOverview();
+}
+
+function saveBuilderToPlayer() {
+    if (currentDeckEditIndex === -1) return;
+    
+    let starters = allDecks.slice(0, 3);
+    let validCount = starters.filter(d => d.parts.TopPart && d.parts.Bit).length;
+    if (validCount < 3) {
+        if(!confirm("⚠️ 您的【先發 3 顆陀螺】尚未配置完成（核心上蓋與軸心為最低要求）！\n確定要強制儲存嗎？")) return;
+    }
+    
+    let usedParts = [];
+    let hasDuplicate = false;
+    for (let i = 0; i < 3; i++) {
+        let deck = allDecks[i];
+        if (!deck || !deck.parts) continue;
+        ['TopPart', 'LockChip', 'OverBlade', 'MainBlade', 'MetalBlade', 'AssistBlade', 'Ratchet', 'Bit'].forEach(cat => {
+            if (deck.parts[cat]) {
+                let partName = deck.parts[cat].clean_name;
+                if (usedParts.includes(partName)) hasDuplicate = true;
+                usedParts.push(partName);
+            }
+        });
+    }
+    if (hasDuplicate) {
+         if (!confirm("⚠️ 警告：您的【先發 3 顆陀螺】中有重複使用的零件，違反官方 3on3 賽制規則！\n\n確定仍要強制儲存嗎？")) return;
+    }
+    
+    // 寫入 Roster 並切換回賽事系統
+    roster[currentDeckEditIndex].deck = JSON.parse(JSON.stringify(allDecks));
+    saveRoster();
+    updateSetupUI(); // 更新賽程表上的圖標
+    
+    switchTab('tournament');
+    document.getElementById('rosterModal').style.display = 'block';
+    renderRosterList();
+}
+
+
+// ================== 兵工廠裝備庫核心程式 ==================
+
 async function loadDatabase() {
     const statusDiv = document.getElementById('dataStatus');
-    let mainDataObj = {};
-    let hardcodedDataObj = {};
-
-    try {
-        const resMain = await fetch('main_db.json');
-        const mainData = await resMain.json();
-        if(mainData && mainData.data) mainDataObj = mainData.data;
-    } catch(e) { console.error('無法讀取 main_db.json', e); }
-
-    try {
-        const resHard = await fetch('hardcoded.json');
-        const hardcodedData = await resHard.json();
-        if(hardcodedData && hardcodedData.data) hardcodedDataObj = hardcodedData.data;
-    } catch(e) { console.warn('未找到 hardcoded.json，將僅載入主資料庫', e); }
+    let mainDataObj = {}; let hardcodedDataObj = {};
+    try { const resMain = await fetch('main_db.json'); const mainData = await resMain.json(); if(mainData && mainData.data) mainDataObj = mainData.data; } catch(e) {}
+    try { const resHard = await fetch('hardcoded.json'); const hardcodedData = await resHard.json(); if(hardcodedData && hardcodedData.data) hardcodedDataObj = hardcodedData.data; } catch(e) {}
 
     const datasets = [mainDataObj, hardcodedDataObj];
     const categoryMap = { 'BeybladePartsBlade': 'Blade', 'BeybladePartsMainBlade': 'MainBlade', 'BeybladePartsOverBlade': 'OverBlade', 'BeybladePartsMetalBlade': 'MetalBlade', 'BeybladePartsAssistBlade': 'AssistBlade', 'BeybladePartsLockChip': 'LockChip', 'BeybladePartsRatchet': 'Ratchet', 'BeybladePartsBit': 'Bit' };
@@ -307,8 +716,7 @@ async function loadDatabase() {
     for (const dataset of datasets) {
         if (!dataset) continue;
         for (const [rawCat, obj] of Object.entries(dataset)) {
-            let defaultCat = categoryMap[rawCat];
-            if (!defaultCat) continue;
+            let defaultCat = categoryMap[rawCat]; if (!defaultCat) continue;
             for (const [id, item] of Object.entries(obj)) {
                 let trueCat = getTrueCategoryFromId(id, defaultCat);
                 let instId = getInstId(id, item);
@@ -321,63 +729,31 @@ async function loadDatabase() {
     for (const dataset of datasets) {
         if (!dataset) continue;
         for (const [rawCat, obj] of Object.entries(dataset)) {
-            let defaultCat = categoryMap[rawCat];
-            if (!defaultCat) continue;
+            let defaultCat = categoryMap[rawCat]; if (!defaultCat) continue;
             for (const [id, item] of Object.entries(obj)) {
-                let nameObj = item.name || item.catalog_title;
-                let rawNameTW = (nameObj && (nameObj['zh-TW'] || nameObj['ja-JP'] || nameObj.en_name)) || "";
-                
-                if (rawNameTW.includes("蒼龍勇氣") && rawNameTW.includes("闇黑") && !rawNameTW.includes("蒼龍勇氣S")) {
-                    rawNameTW = rawNameTW.replace("蒼龍勇氣", "蒼龍勇氣S");
-                }
-
+                let rawNameTW = ((item.name || item.catalog_title) && ((item.name || item.catalog_title)['zh-TW'] || (item.name || item.catalog_title)['ja-JP'] || (item.name || item.catalog_title).en_name)) || "";
+                if (rawNameTW.includes("蒼龍勇氣") && rawNameTW.includes("闇黑") && !rawNameTW.includes("蒼龍勇氣S")) rawNameTW = rawNameTW.replace("蒼龍勇氣", "蒼龍勇氣S");
                 let shortCat = getTrueCategoryFromId(id, defaultCat);
-                
-                if (/軸心套組|軸心組|加贈活動|活動加贈|限定軸心|活動軸心|加贈軸心活動|加贈軸心|rental|PRD-939542-04/i.test(rawNameTW) || /rental|PRD-939542-04/i.test(id)) {
-                    continue; 
-                }
-
-                if (shortCat === 'Ratchet' && (/一體/i.test(rawNameTW) || /一體/i.test(id))) {
-                    continue;
-                }
-
-                if (/-\d{2}R{1,2}$/i.test(id)) {
-                    continue; 
-                }
-
+                if (/軸心套組|軸心組|加贈活動|限定軸心|rental|PRD-939542-04/i.test(rawNameTW) || /rental|PRD-939542-04/i.test(id)) continue; 
+                if (shortCat === 'Ratchet' && /一體/i.test(rawNameTW)) continue;
+                if (/-\d{2}R{1,2}$/i.test(id)) continue; 
                 let instId = getInstId(id, item);
-                let struct = setStructureMap[instId];
-
-                if (shortCat === 'MainBlade' && struct['MetalBlade']) {
-                    continue; 
-                }
+                if (shortCat === 'MainBlade' && setStructureMap[instId]['MetalBlade']) continue; 
                 
                 let cleanName = cleanPartName(rawNameTW, instId, shortCat);
-                if (cleanName === "機密/特殊聯名") {
-                    continue; 
-                }
+                if (cleanName === "機密/特殊聯名") continue; 
 
                 let jsonTags = (item.tags && Array.isArray(item.tags)) ? item.tags.map(t => String(t).toUpperCase()) : [];
-                let isExplicitUX = jsonTags.includes('UX');
-                let isExplicitBX = jsonTags.includes('BX');
-                let isExplicitCX = jsonTags.includes('CX');
-
-                let isUX = isExplicitUX || /UX|936542|942062/i.test(id) || /UX/i.test(rawNameTW) || item.series === 'UX' || /UX/i.test(item.base_set_id) || /UX/i.test(item.set_id);
-                let uxNames = ['DRAN BUSTER', 'HELLS HAMMER', 'WIZARD ROD', 'LEON CREST', 'SHINOBI SHADOW', 'AERO PEGASUS', 'SAMURAI SABER', '巨劍飛龍', '戰鎚地獄', '魔杖巫師', '飛龍懸浮', '隱密忍者', '空力天馬', '武士軍刀', '武士聖劍'];
-                if (uxNames.some(n => String(rawNameTW).toUpperCase().includes(n))) isUX = true;
-
+                let isExplicitUX = jsonTags.includes('UX'); let isExplicitBX = jsonTags.includes('BX'); let isExplicitCX = jsonTags.includes('CX');
+                let isUX = isExplicitUX || /UX|936542|942062/i.test(id) || /UX/i.test(rawNameTW) || item.series === 'UX';
+                if (['DRAN BUSTER', 'HELLS HAMMER', 'WIZARD ROD', 'LEON CREST', 'SHINOBI SHADOW', 'AERO PEGASUS', 'SAMURAI SABER', '巨劍飛龍', '戰鎚地獄', '魔杖巫師', '飛龍懸浮', '隱密忍者', '空力天馬', '武士軍刀', '武士聖劍'].some(n => String(rawNameTW).toUpperCase().includes(n))) isUX = true;
                 if (isExplicitBX && !isExplicitUX) isUX = false; 
 
                 let sysType = 'BX';
-                if (struct['MetalBlade']) {
-                    sysType = 'CX2';
-                } else if (struct['MainBlade']) {
-                    sysType = 'CX1';
-                } else if (isExplicitCX) {
-                    sysType = 'CX1'; 
-                } else if (isUX) {
-                    sysType = 'UX';
-                }
+                if (setStructureMap[instId]['MetalBlade']) sysType = 'CX2';
+                else if (setStructureMap[instId]['MainBlade']) sysType = 'CX1';
+                else if (isExplicitCX) sysType = 'CX1'; 
+                else if (isUX) sysType = 'UX';
 
                 let parsedBitType = 'Balance';
                 if (shortCat === 'Bit' && item.type) {
@@ -385,41 +761,21 @@ async function loadDatabase() {
                     if (typeStr.includes('attack') || typeStr.includes('攻擊')) parsedBitType = 'Attack';
                     else if (typeStr.includes('defense') || typeStr.includes('防禦')) parsedBitType = 'Defense';
                     else if (typeStr.includes('stamina') || typeStr.includes('持久')) parsedBitType = 'Stamina';
-                    else if (typeStr.includes('balance') || typeStr.includes('平衡')) parsedBitType = 'Balance';
                 }
 
-                let tags = new Set();
-                jsonTags.forEach(t => tags.add(t));
-
-                if (sysType === 'CX1' || sysType === 'CX2') tags.add('CX');
-                else if (sysType === 'UX') tags.add('UX');
-                else tags.add('BX');
-
-                let upperName = String(rawNameTW).toUpperCase();
-                let fullText = upperName + " " + instId.toUpperCase();
-                
-                if (fullText.includes('BXG') || upperName.includes('復刻') || upperName.includes('聯名') || fullText.includes('CROSSOVER') || item.series === 'BXG') tags.add('BXG');
-                if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('BXH') || upperName.includes('G1') || upperName.includes('G2') || upperName.includes('G3') || upperName.includes('大賽') || upperName.includes('CUP')) tags.add('EVE');
+                let tags = new Set(); jsonTags.forEach(t => tags.add(t));
+                tags.add(sysType.includes('CX') ? 'CX' : (sysType==='UX'?'UX':'BX'));
+                let fullText = String(rawNameTW).toUpperCase() + " " + instId.toUpperCase();
+                if (fullText.includes('BXG') || fullText.includes('CROSSOVER') || item.series === 'BXG') tags.add('BXG');
+                if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('CUP')) tags.add('EVE');
 
                 let releaseAt = item.release_at ? String(item.release_at) : '9999-12-31';
-
-                let variantObj = {
-                    id: id, rawName: rawNameTW, image: `${BASE_IMG_URL}${shortCat}/${id}.png`,
-                    category: shortCat, set_id: item.base_set_id || item.set_id || id, 
-                    tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType,
-                    releaseAt: releaseAt
-                };
+                let variantObj = { id: id, rawName: rawNameTW, image: `${BASE_IMG_URL}${shortCat}/${id}.png`, category: shortCat, set_id: item.base_set_id || item.set_id || id, tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType, releaseAt: releaseAt };
 
                 let existingPart = partsDb[shortCat].find(p => p.clean_name === cleanName);
                 if (existingPart) {
-                    let duplicateCheck = existingPart.variants.find(v => v.id === id);
-                    if (!duplicateCheck) {
-                        existingPart.variants.push(variantObj);
-                        variantObj.tags.forEach(t => { if(!existingPart.tags.includes(t)) existingPart.tags.push(t); });
-                    }
-                } else {
-                    partsDb[shortCat].push({ clean_name: cleanName, category: shortCat, tags: [...variantObj.tags], variants: [variantObj] });
-                }
+                    if (!existingPart.variants.find(v => v.id === id)) { existingPart.variants.push(variantObj); variantObj.tags.forEach(t => { if(!existingPart.tags.includes(t)) existingPart.tags.push(t); }); }
+                } else { partsDb[shortCat].push({ clean_name: cleanName, category: shortCat, tags: [...variantObj.tags], variants: [variantObj] }); }
             }
         }
     }
@@ -428,574 +784,183 @@ async function loadDatabase() {
         catList.forEach(group => { 
             group.variants.sort((a, b) => a.releaseAt.localeCompare(b.releaseAt)); 
             group.earliestRelease = group.variants[0].releaseAt; 
-            
-            let sysTags = ['BX', 'UX', 'CX'];
-            let oldestSysTags = group.variants[0].tags.filter(t => sysTags.includes(t));
-            if (oldestSysTags.length > 0) {
-                group.tags = group.tags.filter(t => !sysTags.includes(t));
-                oldestSysTags.forEach(t => group.tags.push(t));
-            }
+            let sysTags = ['BX', 'UX', 'CX']; let oldestSysTags = group.variants[0].tags.filter(t => sysTags.includes(t));
+            if (oldestSysTags.length > 0) { group.tags = group.tags.filter(t => !sysTags.includes(t)); oldestSysTags.forEach(t => group.tags.push(t)); }
         });
     });
 
-    ['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].forEach(cat => {
-        if(partsDb[cat]) {
-            partsDb[cat].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
-        }
-    });
-
+    ['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].forEach(cat => { if(partsDb[cat]) partsDb[cat].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' })); });
     if (partsDb['Ratchet']) {
-        let parseRatchet = (name) => {
-            if (!name) return { points: 99, height: 999 };
-            let match = String(name).match(/(\d+)-(50|60|70|80|X5|85)/i);
-            if (!match) return { points: 99, height: 999 }; 
-            let pts = parseInt(match[1]);
-            let htStr = match[2].toUpperCase();
-            let ht = htStr === 'X5' ? 85 : parseInt(htStr);
-            return { points: pts, height: ht };
-        };
         partsDb['Ratchet'].sort((a, b) => {
-            let pA = parseRatchet(a.clean_name);
-            let pB = parseRatchet(b.clean_name);
-            if (pA.height !== pB.height) return pA.height - pB.height;
-            return pA.points - pB.points; 
+            let parse = (n) => { let m = String(n).match(/(\d+)-(50|60|70|80|X5|85)/i); return m ? {p: parseInt(m[1]), h: (m[2].toUpperCase()==='X5'?85:parseInt(m[2]))} : {p:99, h:999}; };
+            let pA = parse(a.clean_name); let pB = parse(b.clean_name);
+            return pA.h !== pB.h ? pA.h - pB.h : pA.p - pB.p; 
         });
     }
-
-    partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
-    partsDb.TopPart.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
-
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ SPA 系統就緒！(引擎載入完畢，支援無縫切換)</span>`;
+    partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
+    statusDiv.style.display = 'none';
 }
 
-// ================== 牌組總覽與立體圖層生成 ==================
-function getDeckCoverHtml(deck) {
-    if (!deck.parts.TopPart) {
-        return `<img src="${FALLBACK_IMG}" class="deck-img">`;
-    }
+function getTrueCategoryFromId(id, defaultCat) {
+    let prefix = id.split('-')[0].toUpperCase();
+    return { 'BL':'Blade', 'MB':'MainBlade', 'ME':'MetalBlade', 'OV':'OverBlade', 'AB':'AssistBlade', 'LC':'LockChip', 'RC':'Ratchet', 'RT':'Ratchet', 'BT':'Bit' }[prefix] || defaultCat;
+}
 
+function getInstId(id, item) {
+    let parts = id.split('-'); if (parts.length >= 2 && ['BL','MB','ME','OV','AB','LC','RC','RT','BT'].includes(parts[0].toUpperCase())) return parts.slice(1).join('-');
+    let base = item.base_set_id || item.set_id || "UNKNOWN"; let suffixMatch = id.match(/-\d{2}$/); return (suffixMatch && !base.endsWith(suffixMatch[0])) ? base + suffixMatch[0] : base;
+}
+
+function cleanPartName(rawName, instId, shortCat) {
+    if (!rawName) return instId;
+    let name = String(rawName).trim(); if (name === "■" || name === "(機密/特殊聯名)") return `機密/特殊聯名`;
+    let cleaned = name.replace(/(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[A-Za-z0-9\-]+\s*/ig, ''); 
+    if (['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'LockChip', 'TopPart'].includes(shortCat)) cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
+    cleaned = cleaned.replace(/DMM\s*(抽獎|スクラッチ).*?[賞獎]\s*/ig, '').replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '').replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版本?)?/ig, '').replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版本?)/ig, '').replace(/\s+[A-Za-z0-9\u4e00-\u9fa5\uFF10-\uFF19]+(Ver\.|バージョン|版本?)/ig, '').replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '').replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|連擊型|上升攻擊型)[\)）]/ig, '').replace(/中收錄.*$/ig, '').replace(/ランダムブースター.*$/ig, '').replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig, '').replace(/\s*(紋章|ロックチップ)/ig, '').replace(/\s*(メタル|メイン|オーバー|アシスト)ブレード/ig, '');
+    if (cleaned.includes('福音戰士')) cleaned = cleaned.replace(/\s+([A-Z])$/i, '$1');
+    return cleaned.trim() || `機密/特殊聯名`; 
+}
+
+function getDeckCoverHtml(deck) {
+    if (!deck || !deck.parts || !deck.parts.TopPart) return `<img src="${FALLBACK_IMG}" class="deck-img">`;
     if (deck.mode === 'cx2') {
         let metal = deck.parts.TopPart ? deck.parts.TopPart.image : FALLBACK_IMG;
         let over = deck.parts.OverBlade ? deck.parts.OverBlade.image : FALLBACK_IMG;
         let lock = deck.parts.LockChip ? deck.parts.LockChip.image : FALLBACK_IMG;
-        
-        return `
-            <div class="stack-container">
-                <img src="${metal}" class="stack-base" onerror="handleImgError(this)">
-                ${deck.parts.OverBlade ? `<img src="${over}" class="stack-mid" onerror="handleImgError(this)">` : ''}
-                ${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx2" onerror="handleImgError(this)">` : ''}
-            </div>`;
+        return `<div class="stack-container"><img src="${metal}" class="stack-base" onerror="handleImgError(this)">${deck.parts.OverBlade ? `<img src="${over}" class="stack-mid" onerror="handleImgError(this)">` : ''}${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx2" onerror="handleImgError(this)">` : ''}</div>`;
     } 
     else if (deck.mode === 'cx1') {
         let main = deck.parts.TopPart ? deck.parts.TopPart.image : FALLBACK_IMG;
         let lock = deck.parts.LockChip ? deck.parts.LockChip.image : FALLBACK_IMG;
-
-        return `
-            <div class="stack-container">
-                <img src="${main}" class="stack-base" onerror="handleImgError(this)">
-                ${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx1" onerror="handleImgError(this)">` : ''}
-            </div>`;
+        return `<div class="stack-container"><img src="${main}" class="stack-base" onerror="handleImgError(this)">${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx1" onerror="handleImgError(this)">` : ''}</div>`;
     } 
-    else {
-        return `<img src="${deck.parts.TopPart.image}" class="deck-img" onerror="handleImgError(this)">`;
-    }
+    return `<img src="${deck.parts.TopPart.image}" class="deck-img" onerror="handleImgError(this)">`;
 }
 
 function renderDeckOverview() {
-    const mainContainer = document.getElementById('mainDeckOverview');
-    const reserveContainer = document.getElementById('reserveDeckOverview');
-    mainContainer.innerHTML = '';
-    reserveContainer.innerHTML = '';
+    const mainContainer = document.getElementById('mainDeckOverview'); const reserveContainer = document.getElementById('reserveDeckOverview');
+    mainContainer.innerHTML = ''; reserveContainer.innerHTML = '';
 
     allDecks.forEach((deck, index) => {
         let fullName = getDeckFullName(deck);
-        let coverHtml = getDeckCoverHtml(deck);
-        let isMain = index < 3;
-        let badgeText = isMain ? `先發 ${index + 1}` : `備戰 ${index - 2}`;
-        let badgeColor = isMain ? '#45a29e' : '#f1c40f';
-        
-        let actionBtns = `
-            <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
-                <button class="btn-blue" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); openSwapModal(${index})">🔄 替換</button>
-                ${!isMain ? `<button class="btn-danger" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); deleteReserveDeck(${index})">❌ 刪除</button>` : ''}
-            </div>
-        `;
-
+        let badgeColor = index < 3 ? '#45a29e' : '#f1c40f';
         let cardHtml = `
             <div class="deck-card" onclick="openEditor(${index})">
-                <div class="deck-badge" style="background:${badgeColor}; color:#000;">${badgeText}</div>
-                ${coverHtml}
+                <div class="deck-badge" style="background:${badgeColor}; color:#000;">${index < 3 ? `先發 ${index + 1}` : `備戰 ${index - 2}`}</div>
+                ${getDeckCoverHtml(deck)}
                 <div class="deck-name">${fullName}</div>
-                ${actionBtns}
+                <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
+                    <button class="btn-blue" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); openSwapModal(${index})">🔄 替換</button>
+                    ${index >= 3 ? `<button class="btn-danger" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); deleteReserveDeck(${index})">❌ 刪除</button>` : ''}
+                </div>
             </div>`;
-
-        if (isMain) mainContainer.innerHTML += cardHtml;
-        else reserveContainer.innerHTML += cardHtml;
+        if (index < 3) mainContainer.innerHTML += cardHtml; else reserveContainer.innerHTML += cardHtml;
     });
 }
 
 function getDeckFullName(deck) {
-    let top = deck.parts.TopPart;
-    if (!top) return "點擊進行配置";
-
-    let ratchetName = deck.parts.Ratchet ? deck.parts.Ratchet.clean_name : "";
-    let bitName = deck.parts.Bit ? deck.parts.Bit.clean_name : "";
-    
-    let rbParts = [ratchetName, bitName].filter(Boolean).join("");
-    let rbSuffix = rbParts ? ` ${rbParts}` : "";
-
-    let name = "";
-    if (deck.mode === 'standard') {
-        name = top.clean_name + rbSuffix;
-    } else if (deck.mode === 'cx1') {
-        let lock = deck.parts.LockChip ? deck.parts.LockChip.clean_name : "";
-        let assist = deck.parts.AssistBlade ? deck.parts.AssistBlade.clean_name : "";
-        name = `${lock}${top.clean_name}${assist}${rbSuffix}`;
-    } else if (deck.mode === 'cx2') {
-        let lock = deck.parts.LockChip ? deck.parts.LockChip.clean_name : "";
-        let over = deck.parts.OverBlade ? deck.parts.OverBlade.clean_name : "";
-        let assist = deck.parts.AssistBlade ? deck.parts.AssistBlade.clean_name : "";
-        name = `${lock}${top.clean_name}${over}${assist}${rbSuffix}`;
-    }
-    return name.trim();
+    if (!deck || !deck.parts || !deck.parts.TopPart) return "點擊進行配置";
+    let rb = [deck.parts.Ratchet?.clean_name, deck.parts.Bit?.clean_name].filter(Boolean).join("");
+    if (deck.mode === 'standard') return deck.parts.TopPart.clean_name + (rb ? ` ${rb}` : "");
+    else if (deck.mode === 'cx1') return `${deck.parts.LockChip?.clean_name||""}${deck.parts.TopPart.clean_name}${deck.parts.AssistBlade?.clean_name||""} ${rb}`.trim();
+    else if (deck.mode === 'cx2') return `${deck.parts.LockChip?.clean_name||""}${deck.parts.TopPart.clean_name}${deck.parts.OverBlade?.clean_name||""}${deck.parts.AssistBlade?.clean_name||""} ${rb}`.trim();
 }
 
-// ================== 動態插槽編輯器 ==================
 function openEditor(index) {
     editingDeckIndex = index;
-    let isMain = index < 3;
-    let titleStr = isMain ? `先發陀螺 ${index + 1}` : `備戰陀螺 ${index - 2}`;
-    document.getElementById('currentEditingDeckNum').innerText = titleStr;
-    renderEditorSlots();
-    document.getElementById('editorModal').style.display = 'block';
+    document.getElementById('currentEditingDeckNum').innerText = index < 3 ? `先發陀螺 ${index + 1}` : `備戰陀螺 ${index - 2}`;
+    renderEditorSlots(); document.getElementById('editorModal').style.display = 'block';
 }
+function closeEditorModal() { document.getElementById('editorModal').style.display = 'none'; renderDeckOverview(); }
 
 function renderEditorSlots() {
-    let deck = allDecks[editingDeckIndex];
-    let topPart = deck.parts.TopPart;
-    
+    let deck = allDecks[editingDeckIndex]; let topPart = deck.parts.TopPart;
     deck.mode = 'standard';
-    if (topPart) {
-        if (topPart.sysType === 'CX1' || topPart.category === 'MainBlade') deck.mode = 'cx1';
-        else if (topPart.sysType === 'CX2' || topPart.category === 'MetalBlade') deck.mode = 'cx2';
-    }
+    if (topPart) { if (topPart.sysType === 'CX1' || topPart.category === 'MainBlade') deck.mode = 'cx1'; else if (topPart.sysType === 'CX2' || topPart.category === 'MetalBlade') deck.mode = 'cx2'; }
 
     let slotsHtml = "";
-    const createSlot = (category, label) => {
-        let part = deck.parts[category];
-        let img = part ? part.image : FALLBACK_IMG;
-        let txt = part ? part.clean_name : "請選擇配件";
-        let color = part ? "#fff" : "#aaa";
-        return `
-            <div class="part-slot" onclick="openVisualGrid('${category}', '${label}')">
-                <div class="part-label">${label}</div>
-                <div class="part-preview">
-                    <div class="part-val" style="color: ${color};">${txt}</div>
-                    <img src="${img}" class="part-thumb" onerror="handleImgError(this)">
-                </div>
-            </div>`;
+    const createSlot = (cat, label) => {
+        let p = deck.parts[cat];
+        return `<div class="part-slot" onclick="openVisualGrid('${cat}', '${label}')"><div class="part-label">${label}</div><div class="part-preview"><div class="part-val" style="color: ${p?"#fff":"#aaa"};">${p?p.clean_name:"請選擇配件"}</div><img src="${p?p.image:FALLBACK_IMG}" class="part-thumb" onerror="handleImgError(this)"></div></div>`;
     };
-
     slotsHtml += createSlot('TopPart', '🎯 核心上蓋 (BX/UX/CX)');
-    
-    if (deck.mode === 'cx1') {
-        slotsHtml += createSlot('LockChip', '紋章 (Lock Chip)');
-        slotsHtml += createSlot('AssistBlade', '輔助戰刃 (Assist)');
-    } else if (deck.mode === 'cx2') {
-        slotsHtml += createSlot('LockChip', '紋章 (Lock Chip)');
-        slotsHtml += createSlot('OverBlade', '超越戰刃 (Over)');
-        slotsHtml += createSlot('AssistBlade', '輔助戰刃 (Assist)');
-    }
+    if (deck.mode === 'cx1') { slotsHtml += createSlot('LockChip', '紋章'); slotsHtml += createSlot('AssistBlade', '輔助戰刃'); } 
+    else if (deck.mode === 'cx2') { slotsHtml += createSlot('LockChip', '紋章'); slotsHtml += createSlot('OverBlade', '超越戰刃'); slotsHtml += createSlot('AssistBlade', '輔助戰刃'); }
 
-    let isIntegratedBlade = topPart && /彈丸獅鷲|Aero Pegasus|UX-19/i.test(topPart.clean_name);
-    let isIntegratedBit = deck.parts.Bit && /^(Op|Tr|Elevate|Trick)/i.test(deck.parts.Bit.clean_name);
-
-    if (isIntegratedBlade) {
-        slotsHtml += `
-            <div class="part-slot" style="border-color: #f1c40f; background: rgba(241,196,15,0.05); cursor: not-allowed; opacity: 0.8;">
-                <div class="part-label" style="color: #f1c40f;">🔒 固鎖 (Ratchet)</div>
-                <div class="part-preview">
-                    <div class="part-val" style="color: #f1c40f; font-size:16px;">[上蓋佔用] 卸除一體式上蓋解鎖</div>
-                    <img src="${FALLBACK_IMG}" class="part-thumb">
-                </div>
-            </div>`;
-    } else if (isIntegratedBit) {
-        slotsHtml += `
-            <div class="part-slot" style="border-color: #f1c40f; background: rgba(241,196,15,0.05); cursor: not-allowed; opacity: 0.8;">
-                <div class="part-label" style="color: #f1c40f;">🔒 固鎖 (Ratchet)</div>
-                <div class="part-preview">
-                    <div class="part-val" style="color: #f1c40f; font-size:16px;">[軸心佔用] 卸除一體式軸心解鎖</div>
-                    <img src="${FALLBACK_IMG}" class="part-thumb">
-                </div>
-            </div>`;
-    } else {
-        slotsHtml += createSlot('Ratchet', '固鎖 (Ratchet)');
-    }
-
+    if (topPart && /彈丸獅鷲|Aero Pegasus|UX-19/i.test(topPart.clean_name)) slotsHtml += `<div class="part-slot" style="opacity:0.8; cursor:not-allowed;"><div class="part-label" style="color:#f1c40f;">🔒 固鎖 (Ratchet)</div><div class="part-preview"><div class="part-val" style="color:#f1c40f;">[上蓋佔用]</div><img src="${FALLBACK_IMG}" class="part-thumb"></div></div>`;
+    else if (deck.parts.Bit && /^(Op|Tr|Elevate|Trick)/i.test(deck.parts.Bit.clean_name)) slotsHtml += `<div class="part-slot" style="opacity:0.8; cursor:not-allowed;"><div class="part-label" style="color:#f1c40f;">🔒 固鎖 (Ratchet)</div><div class="part-preview"><div class="part-val" style="color:#f1c40f;">[軸心佔用]</div><img src="${FALLBACK_IMG}" class="part-thumb"></div></div>`;
+    else slotsHtml += createSlot('Ratchet', '固鎖 (Ratchet)');
     slotsHtml += createSlot('Bit', '軸心 (Bit)');
-
     document.getElementById('editorSlots').innerHTML = slotsHtml;
 }
 
-function saveCurrentDeck() {
-    document.getElementById('editorModal').style.display = 'none';
-    renderDeckOverview();
-}
-
-// ================== 備戰區陣容調度系統 ==================
-function addReserveDeck() {
-    allDecks.push({ mode: 'standard', parts: {} });
-    renderDeckOverview();
-}
-
-function deleteReserveDeck(index) {
-    if(confirm('確定要刪除這個備戰牌組嗎？')) {
-        allDecks.splice(index, 1);
-        renderDeckOverview();
-    }
-}
+function addReserveDeck() { allDecks.push({ mode: 'standard', parts: {} }); renderDeckOverview(); }
+function deleteReserveDeck(index) { if(confirm('刪除此備戰牌組？')) { allDecks.splice(index, 1); renderDeckOverview(); } }
 
 function openSwapModal(index) {
     swappingIndex = index;
-    const isMain = index < 3;
-    document.getElementById('swapTitle').innerText = isMain ? '請選擇要替換上場的備戰牌組' : '請選擇要替換下場的先發牌組';
-    
-    const container = document.getElementById('swapContainer');
-    container.innerHTML = '';
-    
-    let targetIndices = isMain ? 
-        allDecks.map((_, i) => i).filter(i => i >= 3) : 
-        [0, 1, 2];
-        
-    if (targetIndices.length === 0) {
-        container.innerHTML = '<h3 style="color:#e74c3c; text-align:center; width:100%;">目前沒有可替換的牌組。</h3>';
-    } else {
-        targetIndices.forEach(i => {
-            let deck = allDecks[i];
-            let fullName = getDeckFullName(deck);
-            let coverHtml = getDeckCoverHtml(deck);
-            let badgeText = i < 3 ? `先發 ${i + 1}` : `備戰 ${i - 2}`;
-            let badgeColor = i < 3 ? '#45a29e' : '#f1c40f';
-            
-            container.innerHTML += `
-                <div class="deck-card" onclick="executeSwap(${i})">
-                    <div class="deck-badge" style="background:${badgeColor}; color:#000;">${badgeText}</div>
-                    ${coverHtml}
-                    <div class="deck-name" style="font-size:18px;">${fullName}</div>
-                </div>`;
-        });
-    }
-    
+    document.getElementById('swapTitle').innerText = index < 3 ? '選擇替換上場的備戰' : '選擇替換下場的先發';
+    let targetIndices = index < 3 ? allDecks.map((_, i) => i).filter(i => i >= 3) : [0, 1, 2];
+    document.getElementById('swapContainer').innerHTML = targetIndices.length===0 ? '<h3 style="color:#e74c3c;">無牌組可替換</h3>' : targetIndices.map(i => `<div class="deck-card" onclick="executeSwap(${i})"><div class="deck-badge" style="background:${i<3?'#45a29e':'#f1c40f'}; color:#000;">${i<3?`先發 ${i+1}`:`備戰 ${i-2}`}</div>${getDeckCoverHtml(allDecks[i])}<div class="deck-name">${getDeckFullName(allDecks[i])}</div></div>`).join('');
     document.getElementById('swapModal').style.display = 'block';
 }
+function executeSwap(targetIndex) { let t = allDecks[swappingIndex]; allDecks[swappingIndex] = allDecks[targetIndex]; allDecks[targetIndex] = t; closeSwapModal(); renderDeckOverview(); }
+function closeSwapModal() { document.getElementById('swapModal').style.display = 'none'; }
 
-function executeSwap(targetIndex) {
-    let temp = allDecks[swappingIndex];
-    allDecks[swappingIndex] = allDecks[targetIndex];
-    allDecks[targetIndex] = temp;
-    closeSwapModal();
-    renderDeckOverview();
+function openVisualGrid(cat, label) {
+    selectingPartCategory = cat; document.getElementById('gridTitle').innerText = `選擇 ${label}`;
+    let filterHtml = (cat === 'Ratchet') ? '' : (cat === 'Bit') ? `<button class="filter-btn active" onclick="applyFilter('ALL')">全部</button><button class="filter-btn" onclick="applyFilter('Attack')">攻擊型</button><button class="filter-btn" onclick="applyFilter('Defense')">防禦型</button><button class="filter-btn" onclick="applyFilter('Stamina')">持久型</button><button class="filter-btn" onclick="applyFilter('Balance')">平衡型</button>` : `<button class="filter-btn active" onclick="applyFilter('ALL')">全部</button><button class="filter-btn" onclick="applyFilter('BX')">BX</button><button class="filter-btn" onclick="applyFilter('UX')">UX</button><button class="filter-btn" onclick="applyFilter('CX')">CX</button><button class="filter-btn" onclick="applyFilter('BXG')">復刻/BXG</button><button class="filter-btn" onclick="applyFilter('EVE')">比賽/EVE</button><select onchange="currentSortType=this.value;applyFilter();" style="margin-left:15px;"><option value="NEW_TO_OLD">新到舊</option><option value="DEFAULT">A-Z</option></select>`;
+    if(cat==='Ratchet' || cat==='Bit') currentSortType = 'DEFAULT'; else currentSortType = 'NEW_TO_OLD';
+    document.getElementById('systemFilter').innerHTML = filterHtml;
+    applyFilter('ALL'); document.getElementById('visualGridModal').style.display = 'block';
 }
-
-function closeSwapModal() {
-    document.getElementById('swapModal').style.display = 'none';
-}
-
-
-// ================== 視覺化主圖鑑與智慧篩選器 ==================
-function changeSort(val) {
-    currentSortType = val;
-    applyFilter();
-}
-
-function openVisualGrid(category, label) {
-    selectingPartCategory = category;
-    document.getElementById('gridTitle').innerText = `請選擇 ${label}`;
+function applyFilter(f = currentFilterType) {
+    currentFilterType = f; document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active'); if(b.getAttribute('onclick').includes(`'${f}'`)) b.classList.add('active'); });
+    let list = [...(partsDb[selectingPartCategory] || [])];
+    if(f !== 'ALL') list = list.filter(g => (selectingPartCategory==='Bit') ? g.variants.some(v=>v.bitType===f) : g.tags.includes(f));
+    if(['TopPart','Blade','MainBlade','MetalBlade','OverBlade','AssistBlade','Bit'].includes(selectingPartCategory)) { if(currentSortType==='NEW_TO_OLD') list.sort((a,b)=>b.earliestRelease.localeCompare(a.earliestRelease)); else if(currentSortType==='DEFAULT') list.sort((a,b)=>a.clean_name.localeCompare(b.clean_name,'en',{numeric:true,sensitivity:'base'})); }
     
-    let filterHtml = '';
-    let sortHtml = '';
-
-    if (category === 'Ratchet') {
-        filterHtml = ''; 
-        currentSortType = "DEFAULT"; 
-    } else if (category === 'Bit') {
-        filterHtml = `
-            <button class="filter-btn active" onclick="applyFilter('ALL')">全部</button>
-            <button class="filter-btn" onclick="applyFilter('Attack')">攻擊型 (Attack)</button>
-            <button class="filter-btn" onclick="applyFilter('Defense')">防禦型 (Defense)</button>
-            <button class="filter-btn" onclick="applyFilter('Stamina')">持久型 (Stamina)</button>
-            <button class="filter-btn" onclick="applyFilter('Balance')">平衡型 (Balance)</button>`;
-        currentSortType = "DEFAULT"; 
+    let html = "";
+    if (selectingPartCategory === 'Ratchet') {
+        let g={}; list.forEach(p => { let m=p.clean_name.match(/^(\d+)-/); let b = m?parseInt(m[1]):99; if(!g[b]) g[b]=[]; g[b].push(p); });
+        Object.keys(g).sort((a,b)=>a-b).forEach(b => {
+            html += `<div style="width:100%; border-bottom:1px solid #45a29e; margin:15px 0 5px; color:#66fcf1; font-weight:bold; font-size:22px;">${b==99?"特殊":`${b} 刃`}固鎖</div><div class="grid-inner">`;
+            g[b].forEach(p => { let idx=partsDb['Ratchet'].indexOf(p); html += `<div class="grid-item" onclick="handleGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
+            html += `</div>`;
+        });
     } else {
-        filterHtml = `
-            <button class="filter-btn active" onclick="applyFilter('ALL')">全部</button>
-            <button class="filter-btn" onclick="applyFilter('BX')">BX</button>
-            <button class="filter-btn" onclick="applyFilter('UX')">UX</button>
-            <button class="filter-btn" onclick="applyFilter('CX')">CX</button>
-            <button class="filter-btn" onclick="applyFilter('BXG')">復刻/BXG</button>
-            <button class="filter-btn" onclick="applyFilter('EVE')">比賽/EVE</button>`;
-        
-        sortHtml = `
-            <select id="sortSelect" onchange="changeSort(this.value)" style="margin-left: 15px; padding: 6px 12px; border-radius: 10px; background: #111; color: #f1c40f; border: 2px solid #555; font-size:16px; font-weight:bold; cursor:pointer; outline:none;">
-                <option value="NEW_TO_OLD">發行時間 (新到舊)</option>
-                <option value="OLD_TO_NEW">發行時間 (舊到新)</option>
-                <option value="DEFAULT">預設 A-Z 排序</option>
-            </select>`;
-        currentSortType = "NEW_TO_OLD"; 
+        html += `<div class="grid-inner">`;
+        list.forEach(p => { let idx=partsDb[selectingPartCategory].indexOf(p); html += `<div class="grid-item" onclick="handleGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
+        html += `</div>`;
     }
-    
-    document.getElementById('systemFilter').innerHTML = filterHtml + sortHtml;
-    
-    let selectEl = document.getElementById('sortSelect');
-    if(selectEl) selectEl.value = currentSortType;
-
-    applyFilter('ALL'); 
-    document.getElementById('visualGridModal').style.display = 'block';
+    document.getElementById('gridContainer').innerHTML = html;
 }
-
-function applyFilter(filterType = currentFilterType) {
-    currentFilterType = filterType;
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`'${filterType}'`)) {
-            btn.classList.add('active');
-        }
-    });
-    
-    const container = document.getElementById('gridContainer');
-    container.innerHTML = '';
-    
-    let baseList = partsDb[selectingPartCategory] || [];
-    let displayList = [...baseList];
-
-    if (currentFilterType !== 'ALL') {
-        if (selectingPartCategory === 'Bit') {
-            displayList = displayList.filter(g => g.variants.some(v => v.bitType === currentFilterType));
-        } else if (selectingPartCategory !== 'Ratchet') {
-            displayList = displayList.filter(g => g.tags.includes(currentFilterType));
-        }
-    }
-
-    if (['TopPart', 'Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].includes(selectingPartCategory)) {
-        if (currentSortType === 'NEW_TO_OLD') {
-            displayList.sort((a, b) => b.earliestRelease.localeCompare(a.earliestRelease));
-        } else if (currentSortType === 'OLD_TO_NEW') {
-            displayList.sort((a, b) => a.earliestRelease.localeCompare(b.earliestRelease));
-        } else if (currentSortType === 'DEFAULT') {
-            displayList.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
-        }
-    }
-    
-    if (displayList.length === 0) {
-        container.innerHTML = `<h3 style="color:#e74c3c; width:100%;">此篩選條件下無零件資料。</h3>`;
-    } else {
-        if (selectingPartCategory === 'Ratchet') {
-            let ratchetGroups = {};
-            displayList.forEach((partGroup) => {
-                let match = partGroup.clean_name.match(/^(\d+)-/);
-                let bladeCount = match ? parseInt(match[1]) : 99;
-                if (!ratchetGroups[bladeCount]) ratchetGroups[bladeCount] = [];
-                ratchetGroups[bladeCount].push(partGroup);
-            });
-            
-            let sortedBlades = Object.keys(ratchetGroups).sort((a,b) => a-b);
-            
-            let finalHtml = "";
-            sortedBlades.forEach(blade => {
-                let rowTitle = blade == 99 ? "特殊固鎖" : `${blade} 刃固鎖`;
-                finalHtml += `<div style="width:100%; border-bottom:1px solid #45a29e; margin-top:15px; margin-bottom:15px; padding-bottom:5px; color:#66fcf1; font-weight:bold; font-size:22px; text-align:left;">${rowTitle}</div>`;
-                finalHtml += `<div class="grid-inner">`;
-                
-                ratchetGroups[blade].forEach(partGroup => {
-                    let thumb = partGroup.variants[0].image;
-                    let variantBadge = partGroup.variants.length > 1 ? `<div class="variant-badge">${partGroup.variants.length} 種版本</div>` : "";
-                    let realIndex = partsDb['Ratchet'].indexOf(partGroup);
-                    finalHtml += `
-                        <div class="grid-item" onclick="handleGroupClick(${realIndex})">
-                            ${variantBadge}
-                            <img src="${thumb}" class="grid-img" loading="lazy" onerror="handleImgError(this)">
-                            <div class="grid-title">${partGroup.clean_name}</div>
-                        </div>`;
-                });
-                finalHtml += `</div>`;
-            });
-            container.innerHTML = finalHtml;
-        } 
-        else {
-            let normalGridHtml = `<div class="grid-inner">`;
-            displayList.forEach((partGroup) => {
-                let thumb = partGroup.variants[0].image; 
-                let variantBadge = partGroup.variants.length > 1 ? `<div class="variant-badge">${partGroup.variants.length} 種版本</div>` : "";
-                let realIndex = partsDb[selectingPartCategory].indexOf(partGroup);
-
-                normalGridHtml += `
-                    <div class="grid-item" onclick="handleGroupClick(${realIndex})">
-                        ${variantBadge}
-                        <img src="${thumb}" class="grid-img" loading="lazy" onerror="handleImgError(this)">
-                        <div class="grid-title">${partGroup.clean_name}</div>
-                    </div>`;
-            });
-            normalGridHtml += `</div>`;
-            container.innerHTML = normalGridHtml;
-        }
-    }
-}
-
 function closeVisualGrid() { document.getElementById('visualGridModal').style.display = 'none'; }
-function handleGroupClick(groupIndex) {
-    let partGroup = partsDb[selectingPartCategory][groupIndex];
-    if (partGroup.variants.length === 1) applyVariant(partGroup.variants[0], partGroup.clean_name);
-    else openVariantModal(partGroup);
-}
-
-// ================== 版本選擇器 ==================
-function openVariantModal(partGroup) {
-    currentSelectedPartGroup = partGroup;
-    
-    const container = document.getElementById('variantContainer');
-    container.innerHTML = '';
-    
-    partGroup.variants.forEach((variant, vIndex) => {
-        let displayRawName = variant.rawName.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃|(紋章)|(ロックチップ|メタル|メイン|オーバー|アシスト)ブレード/ig, '').trim();
-        
-        container.innerHTML += `
-            <div class="grid-item" onclick="applyVariantByIndex(${vIndex})">
-                <img src="${variant.image}" class="grid-img" loading="lazy" onerror="handleImgError(this)">
-                <div class="grid-title" style="font-size:14px; color:#aaa; margin-bottom: 5px;">[來源: ${variant.set_id}]</div>
-                <div class="grid-title" style="font-size:16px;">${displayRawName}</div>
-            </div>`;
-    });
-    document.getElementById('variantModal').style.display = 'block';
-}
-
-function applyVariantByIndex(vIndex) {
-    applyVariant(currentSelectedPartGroup.variants[vIndex], currentSelectedPartGroup.clean_name);
-}
-
-function findPartByInstanceId(category, instId) {
-    if (!instId) return null;
-    for (let group of partsDb[category] || []) {
-        for (let v of group.variants) {
-            if (v.instId === instId) {
-                return { id: v.id, clean_name: group.clean_name, image: v.image, rawName: v.rawName, category: v.category, sysType: v.sysType };
-            }
-        }
-    }
-    return null;
-}
-
-// ✨ 一體式互斥防禦與組合核心 ✨
-function applyVariant(variant, cleanName) {
-    let finalPart = { id: variant.id, clean_name: cleanName, image: variant.image, rawName: variant.rawName, category: variant.category, sysType: variant.sysType };
-    let deck = allDecks[editingDeckIndex];
-
-    let isIntegratedBlade = /彈丸獅鷲|Aero Pegasus|UX-19/i.test(finalPart.clean_name);
-    let isIntegratedBit = /^(Op|Tr|Elevate|Trick)/i.test(finalPart.clean_name);
-
-    if (selectingPartCategory === 'TopPart') {
-        
-        if (isIntegratedBlade && deck.parts.Bit && /^(Op|Tr|Elevate|Trick)/i.test(deck.parts.Bit.clean_name)) {
-            alert("⚠️ 固鎖槽衝突：已經裝備了【一體式軸心】，無法同時使用【一體式戰刃】！\n請先卸除軸心。");
-            return; 
-        }
-
-        let instId = variant.instId; 
-        let isCX = variant.tags.includes('CX') || variant.sysType === 'CX1' || variant.sysType === 'CX2';
-
-        if (variant.category === 'Blade' && isCX) {
-            let lock = findPartByInstanceId('LockChip', instId);
-            let metal = findPartByInstanceId('MetalBlade', instId);
-            let over = findPartByInstanceId('OverBlade', instId);
-            let main = findPartByInstanceId('MainBlade', instId);
-            let assist = findPartByInstanceId('AssistBlade', instId);
-
-            if (variant.sysType === 'CX2' || metal) { 
-                deck.parts['TopPart'] = metal || finalPart; 
-                deck.parts['LockChip'] = lock || null; 
-                deck.parts['OverBlade'] = over || null; 
-                deck.parts['AssistBlade'] = assist || null;
-            } else if (variant.sysType === 'CX1' || main) { 
-                deck.parts['TopPart'] = main || finalPart; 
-                deck.parts['LockChip'] = lock || null; 
-                deck.parts['AssistBlade'] = assist || null;
-                deck.parts['OverBlade'] = null; 
-            } else {
-                deck.parts['TopPart'] = finalPart;
-            }
-        } 
-        else if (variant.category === 'MetalBlade') {
-            deck.parts['TopPart'] = finalPart;
-        }
-        else if (variant.category === 'MainBlade') {
-            deck.parts['TopPart'] = finalPart;
-            deck.parts.OverBlade = null;
-        }
-        else {
-            deck.parts['TopPart'] = finalPart; 
-            deck.parts.LockChip = null; 
-            deck.parts.OverBlade = null; 
-            deck.parts.AssistBlade = null;
-        }
-
-        if (isIntegratedBlade) {
-            deck.parts.Ratchet = null;
-        }
-
-    } else if (selectingPartCategory === 'Bit') {
-        
-        if (isIntegratedBit && deck.parts.TopPart && /彈丸獅鷲|Aero Pegasus|UX-19/i.test(deck.parts.TopPart.clean_name)) {
-            alert("⚠️ 固鎖槽衝突：已經裝備了【一體式戰刃】，無法同時使用【一體式軸心】！\n請先卸除核心上蓋。");
-            return;
-        }
-
-        deck.parts[selectingPartCategory] = finalPart;
-        
-        if (isIntegratedBit) {
-            deck.parts.Ratchet = null;
-        }
-        
-    } else {
-        deck.parts[selectingPartCategory] = finalPart;
-    }
-
-    closeVariantModal();
-    closeVisualGrid();
-    renderEditorSlots(); 
-}
-
+function handleGroupClick(idx) { let g = partsDb[selectingPartCategory][idx]; if(g.variants.length===1) applyVariant(g.variants[0], g.clean_name); else { currentSelectedPartGroup=g; document.getElementById('variantContainer').innerHTML=g.variants.map((v,i)=>`<div class="grid-item" onclick="applyVariant(currentSelectedPartGroup.variants[${i}], currentSelectedPartGroup.clean_name)"><img src="${v.image}" class="grid-img" onerror="handleImgError(this)"><div class="grid-title" style="font-size:14px;color:#aaa;">[來源: ${v.set_id}]</div><div class="grid-title">${v.rawName.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃|(紋章)|(ロックチップ|メタル|メイン|オーバー|アシスト)ブレード/ig, '').trim()}</div></div>`).join(''); document.getElementById('variantModal').style.display='block'; } }
 function closeVariantModal() { document.getElementById('variantModal').style.display = 'none'; }
+function findPartByInstanceId(cat, instId) { for(let g of (partsDb[cat]||[])) for(let v of g.variants) if(v.instId===instId) return {id:v.id, clean_name:g.clean_name, image:v.image, rawName:v.rawName, category:v.category, sysType:v.sysType}; return null; }
 
-
-// ================== ✨ 賽事系統專屬互動 (SPA 跨域串接) ✨ ==================
-function syncTournamentView() {
-    const container = document.getElementById('mockMatchContainer');
-    
-    // 從兵工廠取得先發 1 號與先發 2 號來進行對局模擬
-    let deck1 = allDecks[0];
-    let deck2 = allDecks[1];
-    
-    let player1Name = "紅方選手 (先發 1)";
-    let player2Name = "藍方選手 (先發 2)";
-    
-    let deck1Html = `<div class="mini-icon-wrapper">${getDeckCoverHtml(deck1)}</div>`;
-    let deck2Html = `<div class="mini-icon-wrapper">${getDeckCoverHtml(deck2)}</div>`;
-    
-    container.innerHTML = `
-        <div class="match-card">
-            <div class="match-player-name">${player1Name}</div>
-            ${deck1Html}
-            <div class="match-deck-name">${getDeckFullName(deck1)}</div>
-        </div>
-        
-        <div class="match-vs">VS</div>
-        
-        <div class="match-card">
-            <div class="match-player-name">${player2Name}</div>
-            ${deck2Html}
-            <div class="match-deck-name">${getDeckFullName(deck2)}</div>
-        </div>
-    `;
+function applyVariant(v, cn) {
+    let fp = { id: v.id, clean_name: cn, image: v.image, rawName: v.rawName, category: v.category, sysType: v.sysType };
+    let d = allDecks[editingDeckIndex];
+    if (selectingPartCategory === 'TopPart') {
+        if (/彈丸獅鷲|Aero Pegasus|UX-19/i.test(fp.clean_name) && d.parts.Bit && /^(Op|Tr|Elevate|Trick)/i.test(d.parts.Bit.clean_name)) return alert("⚠️ 固鎖槽衝突：已經裝備一體式軸心！請先卸除。");
+        if (v.category === 'Blade' && (v.tags.includes('CX') || v.sysType.includes('CX'))) {
+            let l = findPartByInstanceId('LockChip', v.instId), m = findPartByInstanceId('MetalBlade', v.instId), o = findPartByInstanceId('OverBlade', v.instId), mb = findPartByInstanceId('MainBlade', v.instId), a = findPartByInstanceId('AssistBlade', v.instId);
+            if (v.sysType === 'CX2' || m) { d.parts['TopPart']=m||fp; d.parts['LockChip']=l||null; d.parts['OverBlade']=o||null; d.parts['AssistBlade']=a||null; }
+            else if (v.sysType === 'CX1' || mb) { d.parts['TopPart']=mb||fp; d.parts['LockChip']=l||null; d.parts['AssistBlade']=a||null; d.parts['OverBlade']=null; }
+            else d.parts['TopPart']=fp;
+        } else if (v.category === 'MetalBlade') { d.parts['TopPart']=fp; }
+        else if (v.category === 'MainBlade') { d.parts['TopPart']=fp; d.parts.OverBlade=null; }
+        else { d.parts['TopPart']=fp; d.parts.LockChip=null; d.parts.OverBlade=null; d.parts.AssistBlade=null; }
+        if (/彈丸獅鷲|Aero Pegasus|UX-19/i.test(fp.clean_name)) d.parts.Ratchet = null;
+    } else if (selectingPartCategory === 'Bit') {
+        if (/^(Op|Tr|Elevate|Trick)/i.test(fp.clean_name) && d.parts.TopPart && /彈丸獅鷲|Aero Pegasus|UX-19/i.test(d.parts.TopPart.clean_name)) return alert("⚠️ 固鎖槽衝突：已經裝備一體式戰刃！請先卸除。");
+        d.parts[selectingPartCategory] = fp; if (/^(Op|Tr|Elevate|Trick)/i.test(fp.clean_name)) d.parts.Ratchet = null;
+    } else d.parts[selectingPartCategory] = fp;
+    closeVariantModal(); closeVisualGrid(); renderEditorSlots();
 }
+
 </script>
 </body>
 </html>
