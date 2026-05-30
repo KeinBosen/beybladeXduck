@@ -2,15 +2,26 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>BEYBLADE X 專業賽事系統 (終極自由混搭防護版)</title>
+    <title>BEYBLADE X 兵工廠 & 專業賽事系統 (SPA 融合版)</title>
     <style>
         /* 全域與基本設定 */
         * { box-sizing: border-box; }
-        body { font-family: '微軟正黑體', sans-serif; margin: 30px; background-color: #0a0b10; color: #d8dee9; font-size: 20px; }
+        body { font-family: '微軟正黑體', sans-serif; margin: 0; padding: 20px; background-color: #0a0b10; color: #d8dee9; font-size: 20px; }
         input, select, button { font-family: inherit; }
-        h1 { color: #0ff; text-align: center; text-shadow: 0 0 15px rgba(0, 255, 255, 0.8); font-size: 42px; margin-bottom: 30px; }
+        h1 { color: #0ff; text-align: center; text-shadow: 0 0 15px rgba(0, 255, 255, 0.8); font-size: 42px; margin-bottom: 20px; margin-top: 10px; }
         h2 { color: #66fcf1; border-bottom: 2px dashed rgba(102, 252, 241, 0.3); padding-bottom: 10px; margin-top: 0; }
         
+        /* ✨ SPA 導航列 ✨ */
+        .top-nav { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; background: rgba(15, 18, 25, 0.9); padding: 15px; border-radius: 15px; border: 1px solid rgba(0, 255, 255, 0.3); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        .nav-btn { background: #111; color: #aaa; border: 2px solid #555; padding: 12px 30px; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .nav-btn:hover { border-color: #0ff; color: #fff; }
+        .nav-btn.active { background: #45a29e; color: #000; border-color: #66fcf1; box-shadow: 0 0 15px rgba(102,252,241,0.6); }
+
+        /* ✨ 視圖切換 ✨ */
+        .view-section { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .view-section.view-active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         /* 模組框與按鈕 */
         .box { background: rgba(15, 18, 25, 0.85); padding: 25px; border-radius: 20px; border: 1px solid rgba(0, 255, 255, 0.2); margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
         button { color: white; border: 2px solid transparent; padding: 12px 20px; font-size: 18px; cursor: pointer; border-radius: 10px; font-weight: bold; transition: 0.2s; }
@@ -34,13 +45,25 @@
         .deck-name { font-size: 22px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; }
         .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
 
-        /* CX 立體疊加圖層視覺 CSS */
+        /* CX 立體疊加圖層視覺 CSS (180px 原尺寸) */
         .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
         .stack-base { position: absolute; width: 140px; height: 140px; top: 10px; left: 10px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-mid { position: absolute; width: 140px; height: 140px; top: 30px; left: 30px; z-index: 2; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
         .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
+
+        /* ✨ 賽程表專用：微縮版立體圖層 (Mini-Scale Engine) ✨ */
+        .mini-icon-wrapper { width: 90px; height: 90px; margin: 0 auto; position: relative; }
+        .mini-icon-wrapper .deck-img { width: 90px; height: 90px; margin: 0; }
+        .mini-icon-wrapper .stack-container { transform: scale(0.45); transform-origin: top left; margin: 0; position: absolute; top: 5px; left: 5px; }
+
+        /* 賽事系統的展示對戰卡片 */
+        .match-container { display: flex; justify-content: center; align-items: center; gap: 30px; margin-top: 30px; }
+        .match-card { width: 220px; background: rgba(0,0,0,0.8); border: 2px solid #555; border-radius: 15px; padding: 15px; text-align: center; }
+        .match-vs { font-size: 40px; font-weight: bold; color: #e74c3c; text-shadow: 0 0 15px rgba(231,76,60,0.8); font-style: italic; }
+        .match-player-name { font-size: 18px; color: #c5c6c7; margin-bottom: 10px; }
+        .match-deck-name { font-size: 16px; color: #f1c40f; font-weight: bold; margin-top: 10px; line-height: 1.3; }
 
         /* 配置編輯器 */
         .editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
@@ -70,18 +93,39 @@
 </head>
 <body>
 
-    <div class="box">
-        <h1>🏆 選手 3on3 牌組兵工廠</h1>
-        <div id="dataStatus" style="text-align:center; color:#aaa; margin-top:-20px; margin-bottom:20px;">📡 正在連線讀取資料庫 (main_db.json & hardcoded.json)...</div>
-        
-        <h2>⚔️ 先發 3on3 牌組</h2>
-        <div class="deck-overview-container" id="mainDeckOverview"></div>
+    <div class="top-nav">
+        <button id="nav-builder" class="nav-btn active" onclick="switchTab('builder')">🛠️ 選手兵工廠 (配置編輯)</button>
+        <button id="nav-tournament" class="nav-btn" onclick="switchTab('tournament')">🏆 專業賽事系統 (賽程表)</button>
+    </div>
 
-        <h2 style="margin-top: 40px; border-bottom: 2px dashed rgba(241, 196, 15, 0.3); color: #f1c40f;">🛡️ 備戰區 (Reserve)</h2>
-        <div class="deck-overview-container" id="reserveDeckOverview"></div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-            <button class="btn-blue" style="background:#f1c40f; color:#000; border-color:#f1c40f; box-shadow: 0 0 15px rgba(241,196,15,0.5);" onclick="addReserveDeck()">➕ 新增備戰陀螺</button>
+    <div id="view-builder" class="view-section view-active">
+        <div class="box">
+            <h1>🏆 選手 3on3 牌組兵工廠</h1>
+            <div id="dataStatus" style="text-align:center; color:#aaa; margin-top:-20px; margin-bottom:20px;">📡 正在連線讀取資料庫...</div>
+            
+            <h2>⚔️ 先發 3on3 牌組</h2>
+            <div class="deck-overview-container" id="mainDeckOverview"></div>
+
+            <h2 style="margin-top: 40px; border-bottom: 2px dashed rgba(241, 196, 15, 0.3); color: #f1c40f;">🛡️ 備戰區 (Reserve)</h2>
+            <div class="deck-overview-container" id="reserveDeckOverview"></div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn-blue" style="background:#f1c40f; color:#000; border-color:#f1c40f; box-shadow: 0 0 15px rgba(241,196,15,0.5);" onclick="addReserveDeck()">➕ 新增備戰陀螺</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-tournament" class="view-section">
+        <div class="box">
+            <h1>🏆 賽程表與對局管理 (開發預覽區)</h1>
+            <p style="text-align:center; color:#45a29e;">這裡將放置未來的樹狀圖與賽事邏輯。以下為「3D 錯位疊層等比例縮小」在對戰表上的顯示測試：</p>
+            
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn-blue" onclick="syncTournamentView()">🔄 載入兵工廠最新配置</button>
+            </div>
+
+            <div class="match-container" id="mockMatchContainer">
+                </div>
         </div>
     </div>
 
@@ -128,6 +172,20 @@
     </div>
 
 <script>
+// ================== SPA 導航控制 ==================
+function switchTab(tabId) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('view-active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(`view-${tabId}`).classList.add('view-active');
+    document.getElementById(`nav-${tabId}`).classList.add('active');
+
+    // 當切換到賽事畫面時，自動同步配置
+    if (tabId === 'tournament') {
+        syncTournamentView();
+    }
+}
+
 // ================== 防斷圖機制 ==================
 const FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23555' stroke-width='4'/><text x='50' y='55' fill='%23888' font-size='16' text-anchor='middle'>無圖片</text></svg>";
 window.handleImgError = function(img) {
@@ -205,14 +263,10 @@ function cleanPartName(rawName, instId, shortCat) {
     cleaned = cleaned.replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版本?)?/ig, '');
     
     cleaned = cleaned.replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版本?)/ig, '');
-    
     cleaned = cleaned.replace(/\s+[A-Za-z0-9\u4e00-\u9fa5\uFF10-\uFF19]+(Ver\.|バージョン|版本?)/ig, '');
-    
     cleaned = cleaned.replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '');
     cleaned = cleaned.replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet)[\)）]/ig, '');
-    
     cleaned = cleaned.replace(/\s*[\(（](連擊型|上升攻擊型)[\)）]/ig, '');
-
     cleaned = cleaned.replace(/中收錄.*$/ig, '');
     cleaned = cleaned.replace(/ランダムブースター.*$/ig, '');
     cleaned = cleaned.replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig, '');
@@ -411,7 +465,7 @@ async function loadDatabase() {
     partsDb.TopPart = [...partsDb.Blade, ...partsDb.MainBlade, ...partsDb.MetalBlade];
     partsDb.TopPart.sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
 
-    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ 系統就緒！(獨立戰刃防呆混搭保護機制上線)</span>`;
+    statusDiv.innerHTML = `<span style="color:#2ecc71;">✅ SPA 系統就緒！(引擎載入完畢，支援無縫切換)</span>`;
 }
 
 // ================== 牌組總覽與立體圖層生成 ==================
@@ -849,7 +903,6 @@ function applyVariant(variant, cleanName) {
         let isCX = variant.tags.includes('CX') || variant.sysType === 'CX1' || variant.sysType === 'CX2';
 
         if (variant.category === 'Blade' && isCX) {
-            // 一鍵套用整組 CX 零件
             let lock = findPartByInstanceId('LockChip', instId);
             let metal = findPartByInstanceId('MetalBlade', instId);
             let over = findPartByInstanceId('OverBlade', instId);
@@ -871,16 +924,13 @@ function applyVariant(variant, cleanName) {
             }
         } 
         else if (variant.category === 'MetalBlade') {
-            // ✨ 自由混搭 CX2：只替換金屬戰刃，絕不覆蓋既有紋章與其他插槽 ✨
             deck.parts['TopPart'] = finalPart;
         }
         else if (variant.category === 'MainBlade') {
-            // ✨ 自由混搭 CX1：只替換主要戰刃，清空不相容的超越戰刃，保留紋章與輔助戰刃 ✨
             deck.parts['TopPart'] = finalPart;
             deck.parts.OverBlade = null;
         }
         else {
-            // 一般 BX / UX：替換核心，並清空所有 CX 專屬零件
             deck.parts['TopPart'] = finalPart; 
             deck.parts.LockChip = null; 
             deck.parts.OverBlade = null; 
@@ -914,6 +964,38 @@ function applyVariant(variant, cleanName) {
 }
 
 function closeVariantModal() { document.getElementById('variantModal').style.display = 'none'; }
+
+
+// ================== ✨ 賽事系統專屬互動 (SPA 跨域串接) ✨ ==================
+function syncTournamentView() {
+    const container = document.getElementById('mockMatchContainer');
+    
+    // 從兵工廠取得先發 1 號與先發 2 號來進行對局模擬
+    let deck1 = allDecks[0];
+    let deck2 = allDecks[1];
+    
+    let player1Name = "紅方選手 (先發 1)";
+    let player2Name = "藍方選手 (先發 2)";
+    
+    let deck1Html = `<div class="mini-icon-wrapper">${getDeckCoverHtml(deck1)}</div>`;
+    let deck2Html = `<div class="mini-icon-wrapper">${getDeckCoverHtml(deck2)}</div>`;
+    
+    container.innerHTML = `
+        <div class="match-card">
+            <div class="match-player-name">${player1Name}</div>
+            ${deck1Html}
+            <div class="match-deck-name">${getDeckFullName(deck1)}</div>
+        </div>
+        
+        <div class="match-vs">VS</div>
+        
+        <div class="match-card">
+            <div class="match-player-name">${player2Name}</div>
+            ${deck2Html}
+            <div class="match-deck-name">${getDeckFullName(deck2)}</div>
+        </div>
+    `;
+}
 </script>
 </body>
 </html>
