@@ -371,15 +371,18 @@
     </div>
 
     <div id="reorderDeckModal" class="modal-overlay" style="z-index: 1010;">
-        <div class="edit-modal-content" style="max-width: 600px; padding: 30px;">
-            <h3 style="color:#0ff; text-align:center;">🔄 變更配置順序 (延長賽)</h3>
-            <p style="color:#aaa; font-size:18px; text-align:center;">請手動選擇下一回合要派出的陀螺 (1~3)</p>
-            <div style="display:flex; flex-direction:column; gap:20px; margin:20px 0;">
-                <div id="reorderP1Area"></div>
-                <div id="reorderP2Area"></div>
+        <div class="edit-modal-content" style="max-width: 800px; padding: 30px;">
+            <h3 style="color:#0ff; text-align:center; font-size:32px; margin-top:0;">🔄 設定 3on3 上陣順序</h3>
+            <p style="color:#aaa; font-size:18px; text-align:center;">請設定雙方接下來的 1、2、3 發出戰順序</p>
+            <div style="display:flex; gap:30px; margin:20px 0;">
+                <div id="reorderP1Area" style="flex:1; background:rgba(0,0,0,0.5); padding:20px; border-radius:16px; border:2px solid #444;"></div>
+                <div id="reorderP2Area" style="flex:1; background:rgba(0,0,0,0.5); padding:20px; border-radius:16px; border:2px solid #444;"></div>
             </div>
-            <button class="btn-green" onclick="applyReorderDeck()" style="width:100%;">確認變更</button>
-            <button class="btn-danger" onclick="closeReorderDeckModal()" style="width:100%; margin-top:10px;">取消</button>
+            <div id="reorderErrorMsg" style="color:#e74c3c; font-weight:bold; font-size:20px; margin-bottom:15px; min-height:25px;"></div>
+            <div style="display:flex; gap:20px;">
+                <button class="btn-green" onclick="applyReorderDeck()" style="flex:1; font-size:24px; margin:0;">確認變更</button>
+                <button class="btn-danger" onclick="closeReorderDeckModal()" style="flex:1; font-size:24px; margin:0;">取消</button>
+            </div>
         </div>
     </div>
 
@@ -411,7 +414,10 @@
 <div id="builderModal" class="modal-overlay" style="background: #0a0b10; overflow-y: auto; z-index: 1040;">
     <div style="padding: 20px; max-width: 1400px; margin: 0 auto;">
         <div style="text-align:center; margin-bottom: 25px; background: rgba(0,0,0,0.6); padding: 25px; border-radius:20px; border:2px solid #45a29e; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-            <h2 style="color:#0ff; border:none; margin:0; justify-content:center;">目前編輯選手：<span id="builderPlayerName" style="font-size:36px; text-shadow: 0 0 15px currentColor;">尚未選擇</span></h2>
+            <h2 style="color:#0ff; border:none; margin:0; display:flex; justify-content:center; align-items:center;">
+                <div id="builderPlayerAvatar" style="margin-right:15px; transform:scale(1.2);"></div>
+                目前編輯選手：<span id="builderPlayerName" style="font-size:36px; text-shadow: 0 0 15px currentColor;">尚未選擇</span>
+            </h2>
             <p style="color:#aaa; margin:15px 0 25px 0; font-size: 20px;">所有的配置都會直接綁定儲存於此選手的專屬裝備庫中。</p>
             <button class="btn-green" onclick="saveBuilderToPlayer()" style="font-size:24px; padding:12px 40px; box-shadow: 0 0 20px #2ecc71;">✅ 儲存並返回選手名單</button>
             <button class="btn-danger" onclick="document.getElementById('builderModal').style.display='none'; document.getElementById('rosterModal').style.display='block';" style="font-size:24px; padding:12px 40px;">❌ 取消變更</button>
@@ -489,7 +495,7 @@ for(let n=6; n<=8; n++){ schedulesConfig[n] = []; for(let i=0; i<n; i++){ for(le
 
 let roster = [];
 let currentEditIndex = -1;
-let appState = { id: null, tournamentName: "", timeString: "", players: [], matches: [], p1DeckOrderOverride: {}, p2DeckOrderOverride: {} };
+let appState = { id: null, tournamentName: "", timeString: "", players: [], matches: [] };
 let careerChartInstance = null;
 let radarChartInstance = null;
 let currentScoringMatchId = null;
@@ -645,8 +651,12 @@ function openDeckBuilder(index) {
         allDecks = createEmptyDeck();
     }
     document.getElementById('rosterModal').style.display = 'none';
+    
+    // 更新頭像與名稱
+    document.getElementById('builderPlayerAvatar').innerHTML = getPureAvatarHtml(p.name);
     let nameTitle = document.getElementById('builderPlayerName');
     nameTitle.innerText = p.name; nameTitle.style.color = p.color;
+    
     document.getElementById('builderModal').style.display = 'block';
     renderDeckOverview();
 }
@@ -721,9 +731,6 @@ function generateNewSchedule() {
     while (Object.values(history).some(h => h.name === finalName)) { counter++; finalName = `${inputName} (${counter})`; }
     document.getElementById('tournamentName').value = finalName; appState.tournamentName = finalName;
 
-    appState.p1DeckOrderOverride = {}; // 清空 Override
-    appState.p2DeckOrderOverride = {};
-
     let baseConfig = schedulesConfig[currentCount]; let rounds = parseInt(document.getElementById('roundCount').value);
     let allMatches = []; let lastMatch = null;
     for(let r = 0; r < rounds; r++) {
@@ -739,7 +746,8 @@ function generateNewSchedule() {
                 p1Idx: mapping[m.p1], p2Idx: mapping[m.p2], s1: 0, s2: 0, 
                 p1Stats: { spin:0, burst:0, over:0, xtreme:0, penalty:0 }, 
                 p2Stats: { spin:0, burst:0, over:0, xtreme:0, penalty:0 },
-                p1Penalties: 0, p2Penalties: 0, logs: [] 
+                p1Penalties: 0, p2Penalties: 0, logs: [],
+                p1DeckOrder: [0, 1, 2], p2DeckOrder: [0, 1, 2] // 預設上陣順序
             }); 
         });
         lastMatch = allMatches[allMatches.length - 1];
@@ -764,7 +772,10 @@ function renderMatches() {
     let encounterCountMap = {}; 
     appState.matches.forEach((m, idx) => {
         if(!m.logs) { m.logs = []; m.p1Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p2Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p1Penalties = 0; m.p2Penalties = 0; }
+        if(!m.p1DeckOrder) m.p1DeckOrder = [0, 1, 2];
+        if(!m.p2DeckOrder) m.p2DeckOrder = [0, 1, 2];
         if(m.p1Stats.penalty === undefined) { m.p1Stats.penalty = 0; m.p2Stats.penalty = 0; }
+        
         let n1 = appState.players[m.p1Idx], n2 = appState.players[m.p2Idx];
         let ref = (m.refIdx !== null && m.refIdx !== undefined) ? appState.players[m.refIdx] : null;
         
@@ -796,10 +807,8 @@ function openScoringModal(matchId) {
     currentScoringMatchId = matchId; let m = appState.matches.find(x => x.id === matchId);
     if(!m.logs) { m.logs = []; m.p1Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p2Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p1Penalties = 0; m.p2Penalties = 0; }
     if(m.p1Stats.penalty === undefined) { m.p1Stats.penalty = 0; m.p2Stats.penalty = 0; }
-    
-    // 初始化 Override
-    if(!appState.p1DeckOrderOverride) appState.p1DeckOrderOverride = {};
-    if(!appState.p2DeckOrderOverride) appState.p2DeckOrderOverride = {};
+    if(!m.p1DeckOrder) m.p1DeckOrder = [0, 1, 2];
+    if(!m.p2DeckOrder) m.p2DeckOrder = [0, 1, 2];
 
     renderScoringModal(); document.getElementById('scoringModal').style.display = 'block';
 }
@@ -818,29 +827,24 @@ function renderScoringModal() {
     let r2 = roster.find(x => x.name === n2);
     
     // 判斷上場的陀螺 (0, 1, 2)
-    let p1BeyIndex = (currentRound - 1) % 3;
-    let p2BeyIndex = (currentRound - 1) % 3;
+    let p1BeyIndex = m.p1DeckOrder[(currentRound - 1) % 3];
+    let p2BeyIndex = m.p2DeckOrder[(currentRound - 1) % 3];
     
-    // 如果進入第 4 回合以上，檢查是否有自定義覆蓋順序
-    if (currentRound >= 4) {
-        if (appState.p1DeckOrderOverride[m.id] !== undefined) p1BeyIndex = appState.p1DeckOrderOverride[m.id];
-        if (appState.p2DeckOrderOverride[m.id] !== undefined) p2BeyIndex = appState.p2DeckOrderOverride[m.id];
-    }
+    // 檢查是否可以變陣 (開局 0-0 或 第4回合起延長賽)
+    let canReorder = (currentRound === 1 || currentRound >= 4);
+    let reorderHint = canReorder ? `<div style="font-size:16px; color:#f1c40f; margin-bottom:8px;">🔄 點擊變更 1~3 發出戰順序</div>` : `<div style="font-size:16px; color:#aaa; margin-bottom:8px;">🔒 第 ${currentRound} 回合鎖定上陣</div>`;
+    let activeBeyStyle = canReorder ? "cursor:pointer; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.4);" : "cursor:not-allowed; border-color:#555; opacity:0.8;";
     
-    let p1DeckInfo = formatDeckString(r1.deck[p1BeyIndex]);
-    let p2DeckInfo = formatDeckString(r2.deck[p2BeyIndex]);
-    
-    // 變更順序按鈕 (第4回合才顯示)
-    let reorderBtnHtml = currentRound >= 4 ? `<button onclick="openReorderDeckModal()" style="position:absolute; top:15px; right:15px; background:transparent; border:1px solid #f1c40f; color:#f1c40f; border-radius:8px; padding:5px 10px; font-size:16px; cursor:pointer; font-weight:bold;">🔄 變陣</button>` : '';
+    let reorderBtnHtml = canReorder ? `<button onclick="handleActiveBeyClick()" style="position:absolute; top:15px; right:15px; background:transparent; border:1px solid #f1c40f; color:#f1c40f; border-radius:8px; padding:5px 10px; font-size:16px; cursor:pointer; font-weight:bold;">🔄 變陣</button>` : '';
 
     document.getElementById('scoringPanelBody').innerHTML = `
         <div class="player-score-col" style="border-color:${c1}80;">
             ${reorderBtnHtml}
             ${getPlayerPillHtml(n1)}
-            <div class="active-bey-info" style="cursor:pointer; padding: 15px; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.2);" onclick="cycleBey(true)" title="點擊切換上陣陀螺">
-    <div style="font-size:16px; color:#aaa; margin-bottom:8px;">🔄 點擊切換上陣陀螺 (#${(m.p1BeyIndex||0)+1})</div>
-    ${renderScoringActiveBey(roster[m.p1Idx], m, true)}
-</div>
+            <div class="active-bey-info" style="${activeBeyStyle} padding: 15px;" onclick="handleActiveBeyClick()" title="${canReorder ? '點擊設定上陣順序' : '對局中，順序已鎖定'}">
+                ${reorderHint}
+                ${renderScoringActiveBey(r1, p1BeyIndex)}
+            </div>
             <div class="score-huge" style="color:${c1};">${m.s1}</div><div class="penalty-text">${m.p1Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div>
             <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'spin', 1)"><span>轉停勝利 (Spin)</span><span class="win-pts">+1</span></button>
             <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'burst', 2)"><span>爆裂勝利 (Burst)</span><span class="win-pts">+2</span></button>
@@ -851,10 +855,10 @@ function renderScoringModal() {
         <div class="player-score-col" style="border-color:${c2}80;">
             ${reorderBtnHtml}
             ${getPlayerPillHtml(n2)}
-            <div class="active-bey-info" style="cursor:pointer; padding: 15px; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.2);" onclick="cycleBey(false)" title="點擊切換上陣陀螺">
-    <div style="font-size:16px; color:#aaa; margin-bottom:8px;">🔄 點擊切換上陣陀螺 (#${(m.p2BeyIndex||0)+1})</div>
-    ${renderScoringActiveBey(roster[m.p2Idx], m, false)}
-</div>
+            <div class="active-bey-info" style="${activeBeyStyle} padding: 15px;" onclick="handleActiveBeyClick()" title="${canReorder ? '點擊設定上陣順序' : '對局中，順序已鎖定'}">
+                ${reorderHint}
+                ${renderScoringActiveBey(r2, p2BeyIndex)}
+            </div>
             <div class="score-huge" style="color:${c2};">${m.s2}</div><div class="penalty-text">${m.p2Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div>
             <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'spin', 1)"><span>轉停勝利 (Spin)</span><span class="win-pts">+1</span></button>
             <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'burst', 2)"><span>爆裂勝利 (Burst)</span><span class="win-pts">+2</span></button>
@@ -865,30 +869,61 @@ function renderScoringModal() {
     `;
 }
 
+// 點擊變更順序觸發
+window.handleActiveBeyClick = function() {
+    let m = appState.matches.find(x => x.id === currentScoringMatchId);
+    let currentRound = m.logs.length + 1;
+    if (currentRound === 1 || currentRound >= 4) {
+        openReorderDeckModal();
+    }
+};
+
 // ================== 變更陣容 (Reorder Deck) 面板邏輯 ==================
 function openReorderDeckModal() {
     let m = appState.matches.find(x => x.id === currentScoringMatchId); 
     let n1 = appState.players[m.p1Idx]; let n2 = appState.players[m.p2Idx];
     let r1 = roster.find(x => x.name === n1); let r2 = roster.find(x => x.name === n2);
 
-    let currentP1 = appState.p1DeckOrderOverride[m.id] !== undefined ? appState.p1DeckOrderOverride[m.id] : (m.logs.length % 3);
-    let currentP2 = appState.p2DeckOrderOverride[m.id] !== undefined ? appState.p2DeckOrderOverride[m.id] : (m.logs.length % 3);
+    let o1 = m.p1DeckOrder || [0, 1, 2];
+    let o2 = m.p2DeckOrder || [0, 1, 2];
 
-    function buildOptions(deck, selectedIdx) {
-        return deck.map((d, i) => `<option value="${i}" ${i === selectedIdx ? 'selected' : ''}>陀螺 ${i+1}: ${formatDeckString(d)}</option>`).join('');
+    function buildSelects(playerNum, deck, orderArr) {
+        let html = '';
+        for(let i=0; i<3; i++) {
+            let options = [0, 1, 2].map(idx => `<option value="${idx}" ${orderArr[i] === idx ? 'selected' : ''}>[先發 ${idx+1}] ${formatDeckString(deck[idx])}</option>`).join('');
+            html += `<div style="margin-bottom:15px;">
+                        <label style="display:block; color:#0ff; margin-bottom:5px; font-weight:bold;">第 ${i+1} 發出戰：</label>
+                        <select id="reorderP${playerNum}_${i}" style="width:100%; font-size:18px; padding:10px; border-radius:8px; background:#1f2833; color:#fff; border:2px solid #45a29e;">${options}</select>
+                     </div>`;
+        }
+        return html;
     }
 
-    document.getElementById('reorderP1Area').innerHTML = `<h4 style="color:${getPlayerColor(n1)}; margin:0 0 10px 0;">${n1}</h4><select id="reorderP1Select" style="width:100%;">${buildOptions(r1.deck, currentP1)}</select>`;
-    document.getElementById('reorderP2Area').innerHTML = `<h4 style="color:${getPlayerColor(n2)}; margin:0 0 10px 0;">${n2}</h4><select id="reorderP2Select" style="width:100%;">${buildOptions(r2.deck, currentP2)}</select>`;
+    document.getElementById('reorderP1Area').innerHTML = `<h3 style="color:${getPlayerColor(n1)}; text-align:center; margin-top:0;">${n1}</h3>${buildSelects(1, r1.deck, o1)}`;
+    document.getElementById('reorderP2Area').innerHTML = `<h3 style="color:${getPlayerColor(n2)}; text-align:center; margin-top:0;">${n2}</h3>${buildSelects(2, r2.deck, o2)}`;
+    document.getElementById('reorderErrorMsg').innerText = "";
     
     document.getElementById('reorderDeckModal').style.display = 'block';
 }
 
 function applyReorderDeck() {
-    let p1Select = parseInt(document.getElementById('reorderP1Select').value);
-    let p2Select = parseInt(document.getElementById('reorderP2Select').value);
-    appState.p1DeckOrderOverride[currentScoringMatchId] = p1Select;
-    appState.p2DeckOrderOverride[currentScoringMatchId] = p2Select;
+    let m = appState.matches.find(x => x.id === currentScoringMatchId);
+    
+    let p1o = [parseInt(document.getElementById('reorderP1_0').value), parseInt(document.getElementById('reorderP1_1').value), parseInt(document.getElementById('reorderP1_2').value)];
+    let p2o = [parseInt(document.getElementById('reorderP2_0').value), parseInt(document.getElementById('reorderP2_1').value), parseInt(document.getElementById('reorderP2_2').value)];
+    
+    if(new Set(p1o).size !== 3) {
+        document.getElementById('reorderErrorMsg').innerText = "❌ 選手 1 的出戰陀螺設定有重複！請確認 1、2、3 發為不同陀螺。";
+        return;
+    }
+    if(new Set(p2o).size !== 3) {
+        document.getElementById('reorderErrorMsg').innerText = "❌ 選手 2 的出戰陀螺設定有重複！請確認 1、2、3 發為不同陀螺。";
+        return;
+    }
+
+    m.p1DeckOrder = p1o;
+    m.p2DeckOrder = p2o;
+    
     saveState();
     closeReorderDeckModal();
     renderScoringModal();
@@ -899,12 +934,14 @@ function closeReorderDeckModal() { document.getElementById('reorderDeckModal').s
 
 function handleScoreAction(playerNum, actionType, points) {
     let m = appState.matches.find(x => x.id === currentScoringMatchId);
-    m.logs.push({ s1: m.s1, s2: m.s2, p1Stats: {...m.p1Stats}, p2Stats: {...m.p2Stats}, p1Penalties: m.p1Penalties, p2Penalties: m.p2Penalties, p1Override: appState.p1DeckOrderOverride[m.id], p2Override: appState.p2DeckOrderOverride[m.id] });
+    m.logs.push({ 
+        s1: m.s1, s2: m.s2, 
+        p1Stats: {...m.p1Stats}, p2Stats: {...m.p2Stats}, 
+        p1Penalties: m.p1Penalties, p2Penalties: m.p2Penalties,
+        p1DeckOrder: [...(m.p1DeckOrder || [0,1,2])], // 記錄當時陣容順序
+        p2DeckOrder: [...(m.p2DeckOrder || [0,1,2])]  
+    });
     
-    // 如果過回合，重置 override 以便下一回合正常輪替，除非想要保留
-    delete appState.p1DeckOrderOverride[m.id];
-    delete appState.p2DeckOrderOverride[m.id];
-
     if (actionType === 'penalty') {
         if (playerNum === 1) { m.p1Stats.penalty = (m.p1Stats.penalty || 0) + 1; m.p1Penalties++; if (m.p1Penalties >= 2) { m.s2 += 1; m.p1Penalties = 0; m.p2Penalties = 0; } } 
         else { m.p2Stats.penalty = (m.p2Stats.penalty || 0) + 1; m.p2Penalties++; if (m.p2Penalties >= 2) { m.s1 += 1; m.p1Penalties = 0; m.p2Penalties = 0; } }
@@ -920,8 +957,9 @@ function undoScore() {
     let prev = m.logs.pop(); 
     m.s1 = prev.s1; m.s2 = prev.s2; m.p1Stats = prev.p1Stats; m.p2Stats = prev.p2Stats; m.p1Penalties = prev.p1Penalties; m.p2Penalties = prev.p2Penalties; 
     
-    if (prev.p1Override !== undefined) appState.p1DeckOrderOverride[m.id] = prev.p1Override;
-    if (prev.p2Override !== undefined) appState.p2DeckOrderOverride[m.id] = prev.p2Override;
+    // 如果有復原動作，還原當時的陣容設定
+    if(prev.p1DeckOrder) m.p1DeckOrder = prev.p1DeckOrder;
+    if(prev.p2DeckOrder) m.p2DeckOrder = prev.p2DeckOrder;
 
     saveState(); renderScoringModal();
 }
@@ -929,7 +967,7 @@ function undoScore() {
 function clearCurrentMatch() {
     if(!confirm("確定要清空此局所有的得分與犯規紀錄嗎？")) return;
     let m = appState.matches.find(x => x.id === currentScoringMatchId); m.s1 = 0; m.s2 = 0; m.logs = []; m.p1Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p2Stats = {spin:0, burst:0, over:0, xtreme:0, penalty:0}; m.p1Penalties = 0; m.p2Penalties = 0; 
-    delete appState.p1DeckOrderOverride[m.id]; delete appState.p2DeckOrderOverride[m.id];
+    m.p1DeckOrder = [0, 1, 2]; m.p2DeckOrder = [0, 1, 2];
     saveState(); renderScoringModal();
 }
 
@@ -988,8 +1026,8 @@ function renderSummary() {
 }
 
 function saveState() { localStorage.setItem('beyblade_app_state', JSON.stringify(appState)); }
-function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { appState = JSON.parse(saved); if(!appState.p1DeckOrderOverride) appState.p1DeckOrderOverride = {}; if(!appState.p2DeckOrderOverride) appState.p2DeckOrderOverride = {}; if(appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); } } }
-function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.players = []; appState.p1DeckOrderOverride = {}; appState.p2DeckOrderOverride = {}; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
+function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { appState = JSON.parse(saved); if(!appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); } } }
+function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.players = []; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
 function escapeCSV(str) { if (str === null || str === undefined) return '""'; return `"${String(str).replace(/"/g, '""')}"`; }
 function exportToCSV() {
     if(appState.matches.length === 0) return alert("目前沒有賽事資料可匯出！");
@@ -1199,24 +1237,14 @@ window.saveBuilderToPlayer = function() {
 };
 
 // ================== 計分板 3D 視覺渲染 ==================
-window.renderScoringActiveBey = function(p, m, isP1) {
-    let beyIndex = isP1 ? (m.p1BeyIndex || 0) : (m.p2BeyIndex || 0);
+window.renderScoringActiveBey = function(p, beyIndex) {
     if (p.deck && p.deck[beyIndex] && p.deck[beyIndex].parts && p.deck[beyIndex].parts.TopPart) {
          return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
                    <div class="mini-icon-wrapper">${getDeckCoverHtml(p.deck[beyIndex])}</div>
                    <div style="font-size:18px; color:#f1c40f; line-height:1.2; text-align:center; font-weight:bold; margin-top:5px; text-shadow: 0 0 5px rgba(241,196,15,0.5);">${getDeckFullName(p.deck[beyIndex])}</div>
                  </div>`;
     }
-    return `<div style="font-size:18px; color:#777; margin-top:15px;">(尚未配置 3on3)</div>`;
-};
-
-window.cycleBey = function(isP1) {
-    if(typeof currentScoringMatchId === 'undefined' || !currentScoringMatchId) return;
-    let m = appState.matches.find(x => x.id === currentScoringMatchId); if(!m) return;
-    if(isP1) m.p1BeyIndex = ((m.p1BeyIndex || 0) + 1) % 3;
-    else m.p2BeyIndex = ((m.p2BeyIndex || 0) + 1) % 3;
-    if(typeof saveState === 'function') saveState();
-    if(typeof openScoringModal === 'function') renderScoringModal(); // 直接刷新介面
+    return `<div style="font-size:18px; color:#777; margin-top:15px;">(尚未配置)</div>`;
 };
 
 // ================== 圖鑑引擎運算邏輯 ==================
@@ -1391,8 +1419,8 @@ window.renderEditorSlots = function() {
 window.addReserveDeck = function() { allDecks.push({ mode: 'standard', parts: {} }); renderDeckOverview(); };
 window.deleteReserveDeck = function(index) { if(confirm('刪除此備戰牌組？')) { allDecks.splice(index, 1); renderDeckOverview(); } };
 window.openSwapModal = function(index) {
-    swappingIndex = index; document.getElementById('swapTitle').innerText = index < 3 ? '選擇替換上場的備戰' : '選擇替換下場的先發';
-    let targetIndices = index < 3 ? allDecks.map((_, i) => i).filter(i => i >= 3) : [0, 1, 2];
+    swappingIndex = index; document.getElementById('swapTitle').innerText = '請選擇要替換的牌組';
+    let targetIndices = allDecks.map((_, i) => i).filter(i => i !== swappingIndex);
     document.getElementById('swapContainer').innerHTML = targetIndices.length===0 ? '<h3 style="color:#e74c3c; width:100%;">無牌組可替換</h3>' : targetIndices.map(i => `<div class="deck-card" onclick="executeSwap(${i})"><div class="deck-badge" style="background:${i<3?'#45a29e':'#f1c40f'}; color:#000;">${i<3?`先發 ${i+1}`:`備戰 ${i-2}`}</div>${getDeckCoverHtml(allDecks[i])}<div class="deck-name">${getDeckFullName(allDecks[i])}</div></div>`).join('');
     document.getElementById('swapModal').style.display = 'block';
 };
