@@ -162,6 +162,7 @@
         .score-huge { font-size: 85px; font-weight: 900; line-height: 1; margin: 0 0 5px 0; font-family: 'Courier New', monospace; text-shadow: 0 0 20px currentColor; }
         .win-btn { width: 100%; padding: 12px 20px; font-size: 22px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 2px solid; transition: 0.2s; background: rgba(0,0,0,0.8); display:flex; justify-content: space-between; align-items:center; margin-top: 5px; }
         .win-btn:hover { filter: brightness(1.3); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.6); }
+        .win-btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; } /* 本局結束後鎖住計分按鈕 */
         .win-pts { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 6px; font-family: monospace; font-size: 20px; }
         .penalty-text { font-size: 18px; font-weight: bold; color: #e74c3c; text-shadow: 0 0 10px rgba(231,76,60,0.8); min-height: 25px; letter-spacing: 2px; margin: 0;}
         
@@ -400,6 +401,7 @@
                 <div id="roundIndicator" style="font-size:24px; font-weight:bold; color:#f1c40f; background:rgba(241,196,15,0.1); padding:8px 20px; border-radius:12px; border:1px solid #f1c40f;">第 1 回合 (Round 1)</div>
             </div>
             <p style="text-align:center; color:#aaa; font-size:18px; margin-top:0px; margin-bottom:10px;">*任一方達成 4 分即結束賽局，或點擊下方「完成此局」儲存</p>
+            <div id="matchFinishedBanner" style="display:none; text-align:center; font-size:26px; font-weight:bold; color:#2ecc71; background:rgba(46,204,113,0.1); border:2px solid #2ecc71; border-radius:12px; padding:12px; margin-bottom:10px;"></div>
             
             <div class="scoring-panel" id="scoringPanelBody"></div>
             
@@ -527,6 +529,15 @@
     </div>
 
 <script>
+// ================== 修改紀錄 (2026-11-22) ==================
+// 1. loadState：修正條件寫反，重新整理後會還原賽程與選手欄
+// 2. 配件統計 key 改為「部位::名稱」，避免超越戰刃/輔助戰刃/軸心同名 (B、F、G...) 被合併
+// 3. 圖鑑過濾「加贈軸心活動」、UF/K/LO 等占位用假零件 (isArsenalPlaceholderPart)
+// 4. 名稱清洗：移除釣魚魂/FC/鍍金等聯名後綴、合併連續空白、修正「蒼龍勇氣 S」重複
+// 5. 計分：任一方達 4 分後鎖住計分按鈕，並顯示結果橫幅 (仍可 Undo)
+// 6. 選手名稱一律 escapeHtml，inline 事件改讀 dataset，避免 ' " < > & 破壞畫面
+// 7. 改名同步更新 partStats；刪除賽程中的選手會被擋下
+// 8. 固鎖排序/分組改為通用格式 (刃數-高度)，M 型與 55/61/63/65 不再被歸到「特殊」
 // ================== 核心系統變數 ==================
 const defaultColors = ['#00f3ff', '#ff003c', '#00ff66', '#f1c40f', '#bc13fe', '#ff7700', '#00ffcc', '#ff00aa'];
 const schedulesConfig = {
@@ -583,6 +594,11 @@ function getPlayerColor(name) {
     return `hsl(${Math.abs(hash) % 360}, 80%, 65%)`;
 }
 
+// 將文字轉成可安全放進 HTML 內容或屬性的字串 (避免選手名稱含 ' " < > & 時破壞畫面或 inline 事件)
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function createEmptyDeck() {
     return [ { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} } ];
 }
@@ -626,7 +642,7 @@ function renderRosterList() {
                 <button class="delete-card-btn" onclick="deleteRosterPlayer(${index})" title="刪除此選手">✕</button>
                 <div class="avatar" style="${avatarStyle} text-align:center; color:${p.color}; box-shadow: 0 0 20px ${p.color}80;" onclick="openAvatarEditModal(${index})" title="點擊變更頭像與圖片網址">${avatarContent}</div>
                 <div class="name-edit-wrapper">
-                    <input type="text" class="card-name" value="${p.name}" onchange="updateRosterName(${index}, this.value)" style="color:${p.color};" title="點擊即可修改名稱">
+                    <input type="text" class="card-name" value="${escapeHtml(p.name)}" onchange="updateRosterName(${index}, this.value)" style="color:${p.color};" title="點擊即可修改名稱">
                     <span class="pencil-icon" style="color:${p.color};">✎</span>
                 </div>
                 <div style="position: relative; display: inline-block; margin-top: -5px;">
@@ -662,7 +678,12 @@ function updateAvatarPreview() {
 }
 function saveAvatarEdit() { if(currentEditIndex === -1) return; roster[currentEditIndex].scale = document.getElementById('editScale').value; roster[currentEditIndex].xPos = document.getElementById('editX').value; roster[currentEditIndex].yPos = document.getElementById('editY').value; roster[currentEditIndex].avatar = document.getElementById('editAvatarUrl').value.trim(); saveRoster(); renderRosterList(); closeAvatarEditModal(); }
 function addNewRosterPlayer() { roster.push({ id: Date.now(), name: `新選手${roster.length+1}`, avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[roster.length % defaultColors.length], deck: createEmptyDeck() }); saveRoster(); renderRosterList(); setTimeout(() => { const c = document.getElementById('rosterListContainer').querySelectorAll('.roster-card'); if(c.length>0) c[c.length-1].scrollIntoView({ behavior: 'smooth', inline: 'center' }); }, 100); }
-function deleteRosterPlayer(index) { if(confirm("確定要刪除這名選手嗎？")) { roster.splice(index, 1); saveRoster(); renderRosterList(); } }
+// 刪除選手：若該選手正在進行中的賽程裡，計分面板會找不到選手資料而報錯，所以直接擋下
+function deleteRosterPlayer(index) {
+    if (appState.matches && appState.matches.length > 0 && appState.players.includes(roster[index].name)) {
+        return alert("⚠ 此選手目前在進行中的賽程裡，無法刪除！\n請先「結算並儲存」或「清空並重置當前賽局」。");
+    }
+    if(confirm("確定要刪除這名選手嗎？")) { roster.splice(index, 1); saveRoster(); renderRosterList(); } }
 function updateRosterAttr(index, attr, value) { roster[index][attr] = value; saveRoster(); renderRosterList(); }
 function updateRosterName(index, newName) {
     let oldName = roster[index].name; newName = newName.trim();
@@ -670,7 +691,11 @@ function updateRosterName(index, newName) {
     if(roster.some(r => r.name === newName)) { alert("名稱重複！"); return renderRosterList(); }
     roster[index].name = newName; saveRoster();
     let history = JSON.parse(localStorage.getItem('beyblade_history') || '{}'); let historyChanged = false;
-    for (let tId in history) { if (history[tId].results[oldName]) { history[tId].results[newName] = history[tId].results[oldName]; delete history[tId].results[oldName]; historyChanged = true; } }
+    // 歷史紀錄的勝負統計 (results) 與配件統計 (partStats) 都要一併改名，否則配件勝率面板會把同一人拆成兩位
+    for (let tId in history) {
+        if (history[tId].results && history[tId].results[oldName]) { history[tId].results[newName] = history[tId].results[oldName]; delete history[tId].results[oldName]; historyChanged = true; }
+        if (history[tId].partStats && history[tId].partStats[oldName]) { history[tId].partStats[newName] = history[tId].partStats[oldName]; delete history[tId].partStats[oldName]; historyChanged = true; }
+    }
     if(historyChanged) localStorage.setItem('beyblade_history', JSON.stringify(history));
     let appChanged = false; appState.players = appState.players.map(p => { if(p === oldName) { appChanged = true; return newName; } return p; });
     if(appChanged) saveState(); renderRosterList();
@@ -693,13 +718,14 @@ function openDeckBuilder(index) {
     renderDeckOverview();
 }
 
+// 選手膠囊：名稱一律跳脫；hover 事件改讀 this.dataset.player，避免名稱含單引號時 inline JS 語法錯誤
 function getPlayerPillHtml(name, size = "normal") {
     let color = getPlayerColor(name); let r = roster.find(x => x.name === name);
     let avatarSize = size === "small" ? "32px" : "54px"; let fontSizeText = size === "small" ? "14px" : "16px";
     let avatarHtml = `<div class="avatar" style="width:${avatarSize}; height:${avatarSize}; display:flex; align-items:center; justify-content:center; font-size:${fontSizeText}; color:#aaa; border-color:${color};">圖</div>`;
     if(r && r.avatar && r.avatar.trim() !== "") { avatarHtml = `<div class="avatar" style="width:${avatarSize}; height:${avatarSize}; background-image:url('${r.avatar}'); background-size:${r.scale}%; background-position:${r.xPos}% ${r.yPos}%; border-color:${color};"></div>`; }
     let pillClass = size === "small" ? "player-pill small" : "player-pill";
-    return `<div class="${pillClass}" data-player="${name}" style="color:${color}; border-color:${color}; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 0 12px ${color}40;" onmouseover="hoverPlayer('${name}')" onmouseout="unhoverPlayer('${name}')">${avatarHtml} <span class="player-name-truncate" style="text-shadow: 0 0 8px ${color};">${name}</span></div>`;
+    return `<div class="${pillClass}" data-player="${escapeHtml(name)}" style="color:${color}; border-color:${color}; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 0 12px ${color}40;" onmouseover="hoverPlayer(this.dataset.player)" onmouseout="unhoverPlayer(this.dataset.player)">${avatarHtml} <span class="player-name-truncate" style="text-shadow: 0 0 8px ${color};">${escapeHtml(name)}</span></div>`;
 }
 function hoverPlayer(name) { let color = getPlayerColor(name); document.querySelectorAll('.player-pill').forEach(pill => { if(pill.getAttribute('data-player') === name) { pill.style.backgroundColor = color; pill.style.color = '#000'; pill.style.boxShadow = `0 0 25px ${color}`; } }); }
 function unhoverPlayer(name) { let color = getPlayerColor(name); document.querySelectorAll('.player-pill').forEach(pill => { if(pill.getAttribute('data-player') === name) { pill.style.backgroundColor = 'rgba(0,0,0,0.5)'; pill.style.color = color; pill.style.boxShadow = `inset 0 0 15px rgba(0,0,0,0.8), 0 0 12px ${color}40`; } }); }
@@ -712,7 +738,7 @@ function getPureAvatarHtml(name) {
 function renderPlayerBoxes() {
     let currentCount = parseInt(document.getElementById('playerCount').value);
     const container = document.getElementById('playerBoxesContainer'); container.innerHTML = ''; 
-    let optionsHtml = roster.map(r => `<option value="${r.name}">${r.name}</option>`).join('');
+    let optionsHtml = roster.map(r => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join('');
     
     for (let i = 0; i < currentCount; i++) {
         let safeDefault = roster[i] ? roster[i].name : (roster[0] ? roster[0].name : "");
@@ -813,7 +839,7 @@ function renderMatches() {
         let statusHtml = '<div class="match-status" style="color:#aaa; border-color:#aaa;">尚未開賽</div>'; let cardClass = "";
         
         if (m.s1 >= 4 && m.s2 >= 4) { statusHtml = `<div class="match-status" style="color:#e74c3c; border-color:#e74c3c; box-shadow:0 0 15px rgba(231,76,60,0.5);">⚠️ 分數異常</div>`; cardClass = "error";
-        } else if (m.s1 >= 4 || m.s2 >= 4) { let winner = m.s1 > m.s2 ? n1 : n2; let winColor = getPlayerColor(winner); statusHtml = `<div class="match-status" style="color:${winColor}; border-color:${winColor}; background:rgba(0,0,0,0.7); box-shadow:0 0 15px ${winColor}80;"><span class="player-name-truncate" style="max-width:8em;">${winner}</span> 獲勝 🏆</div>`; cardClass = "finished";
+        } else if (m.s1 >= 4 || m.s2 >= 4) { let winner = m.s1 > m.s2 ? n1 : n2; let winColor = getPlayerColor(winner); statusHtml = `<div class="match-status" style="color:${winColor}; border-color:${winColor}; background:rgba(0,0,0,0.7); box-shadow:0 0 15px ${winColor}80;"><span class="player-name-truncate" style="max-width:8em;">${escapeHtml(winner)}</span> 獲勝 🏆</div>`; cardClass = "finished";
         } else if (m.s1 > 0 || m.s2 > 0 || m.p1Penalties > 0 || m.p2Penalties > 0) { statusHtml = '<div class="match-status" style="color:#0ff; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.5);">🔥 比賽中</div>'; }
 
         let refHtml = ""; if (ref) { refHtml = `<div style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.5); padding: 4px 15px 4px 12px; border-radius: 30px; border: 2px solid rgba(241,196,15,0.4);"><span style="font-size: 20px; color: #f1c40f; font-weight: bold; letter-spacing: 2px;">⚖️ 裁判</span>${getPlayerPillHtml(ref, "small")}</div>`; }
@@ -895,6 +921,19 @@ function renderScoringModal() {
             <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(2, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
         </div>
     `;
+
+    // 本局已有人達 4 分：鎖住所有計分按鈕並顯示結果橫幅 (仍可用「修正上一筆」退回)
+    let finished = (m.s1 >= 4 || m.s2 >= 4);
+    document.querySelectorAll('#scoringPanelBody .win-btn').forEach(btn => { btn.disabled = finished; });
+    let banner = document.getElementById('matchFinishedBanner');
+    if (finished) {
+        banner.innerHTML = (m.s1 >= 4 && m.s2 >= 4)
+            ? '⚠️ 雙方都已達 4 分，分數異常，請按「修正上一筆」'
+            : `🏆 ${escapeHtml(m.s1 > m.s2 ? n1 : n2)} 獲勝，本局已結束 (如需修改請按「修正上一筆」)`;
+        banner.style.display = 'block';
+    } else {
+        banner.style.display = 'none';
+    }
 }
 
 window.handleActiveBeyClick = function() {
@@ -938,7 +977,7 @@ function getReorderCardHtml(playerNum, arrayIndex, realDeckIndex, deckObj, isSel
 
 function renderReorderAreas(n1, n2, r1, r2) {
     let buildArea = (pNum, name, rState, deckObj) => `
-        <h3 style="color:${getPlayerColor(name)}; text-align:center; margin-top:0;">${name}</h3>
+        <h3 style="color:${getPlayerColor(name)}; text-align:center; margin-top:0;">${escapeHtml(name)}</h3>
         <p style="text-align:center; color:#aaa; margin-top:-10px; font-size:16px;">點選卡片 ➔ 點另一張以互換</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom: 20px;">
             ${[0,1,2].map(i => getReorderCardHtml(pNum, i, rState[i], deckObj[rState[i]], reorderSelected?.p===pNum && reorderSelected?.i===i)).join('')}
@@ -1000,6 +1039,8 @@ function closeReorderDeckModal() { document.getElementById('reorderDeckModal').s
 
 function handleScoreAction(playerNum, actionType, points) {
     let m = appState.matches.find(x => x.id === currentScoringMatchId);
+    // 任一方已達 4 分即視為本局結束，不再接受計分 (需先按「修正上一筆」退回)
+    if (m.s1 >= 4 || m.s2 >= 4) return alert("⚠ 本局已有選手達成 4 分，無法再計分！\n如需修正請按「修正上一筆」。");
     let validLogs = m.logs.filter(l => l.action !== 'penalty');
     let currentRound = validLogs.length + 1;
     let p1ActiveIndex = m.p1DeckOrder[(currentRound - 1) % 3];
@@ -1015,8 +1056,8 @@ function handleScoreAction(playerNum, actionType, points) {
         p1DeckOrder: [...(m.p1DeckOrder || [0,1,2])], 
         p2DeckOrder: [...(m.p2DeckOrder || [0,1,2])],
         action: actionType, scorer: playerNum, points: points,
-        p1ActiveDeck: JSON.parse(JSON.stringify(r1.deck[p1ActiveIndex])),
-        p2ActiveDeck: JSON.parse(JSON.stringify(r2.deck[p2ActiveIndex]))
+        p1ActiveDeck: JSON.parse(JSON.stringify((r1 && r1.deck && r1.deck[p1ActiveIndex]) || null)),
+        p2ActiveDeck: JSON.parse(JSON.stringify((r2 && r2.deck && r2.deck[p2ActiveIndex]) || null))
     });
     
     if (actionType === 'penalty') {
@@ -1066,8 +1107,8 @@ function renderSummary() {
             if(p1W) { stats[n1].win++; stats[n2].loss++; } else if(p2W) { stats[n2].win++; stats[n1].loss++; }
         }
         let mark1 = (m.s1 > m.s2 && m.s1 >= 4 && m.s2 < 4) ? "🏆" : ""; let mark2 = (m.s2 > m.s1 && m.s2 >= 4 && m.s1 < 4) ? "🏆" : ""; let errorMark = (m.s1 >= 4 && m.s2 >= 4) ? " ⚠️" : "";
-        stats[n1].details.push(`<span class="match-box" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), ${getPlayerColor(n2)}; margin: 4px;"><span class="player-name-truncate" style="max-width:8em;">${n2}</span>(${m.s1}:${m.s2}) ${mark1}${errorMark}</span>`);
-        stats[n2].details.push(`<span class="match-box" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), ${getPlayerColor(n1)}; margin: 4px;"><span class="player-name-truncate" style="max-width:8em;">${n1}</span>(${m.s2}:${m.s1}) ${mark2}${errorMark}</span>`);
+        stats[n1].details.push(`<span class="match-box" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), ${getPlayerColor(n2)}; margin: 4px;"><span class="player-name-truncate" style="max-width:8em;">${escapeHtml(n2)}</span>(${m.s1}:${m.s2}) ${mark1}${errorMark}</span>`);
+        stats[n2].details.push(`<span class="match-box" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), ${getPlayerColor(n1)}; margin: 4px;"><span class="player-name-truncate" style="max-width:8em;">${escapeHtml(n1)}</span>(${m.s2}:${m.s1}) ${mark2}${errorMark}</span>`);
     });
 
     const tbody = document.getElementById('summaryBody'); tbody.innerHTML = '';
@@ -1106,7 +1147,8 @@ function renderSummary() {
 }
 
 function saveState() { localStorage.setItem('beyblade_app_state', JSON.stringify(appState)); }
-function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { appState = JSON.parse(saved); if(!appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); } } }
+// 讀取上次未完成的賽程；修正原本條件寫反 (!appState.matches && ...) 導致重新整理後永遠不還原的問題
+function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { try { appState = JSON.parse(saved); } catch(e) { return; } if(appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); } } }
 function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.players = []; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
 function escapeCSV(str) { if (str === null || str === undefined) return '""'; return `"${String(str).replace(/"/g, '""')}"`; }
 function exportToCSV() {
@@ -1156,15 +1198,18 @@ function archiveTournament() {
                 if (wDeck && wDeck.parts) {
                     Object.values(wDeck.parts).forEach(part => {
                         if(!part) return;
-                        if(!partStats[winner][part.clean_name]) partStats[winner][part.clean_name] = { cat: part.category, image: part.image, w:0, l:0, spin:0, burst:0, over:0, xtreme:0 };
-                        partStats[winner][part.clean_name].w++; partStats[winner][part.clean_name][log.action]++;
+                        // key 用「部位::名稱」，避免超越戰刃/輔助戰刃/軸心同名 (如 B、F、G) 被合併成同一筆
+                        let k = part.category + '::' + part.clean_name;
+                        if(!partStats[winner][k]) partStats[winner][k] = { name: part.clean_name, cat: part.category, image: part.image, w:0, l:0, spin:0, burst:0, over:0, xtreme:0 };
+                        partStats[winner][k].w++; partStats[winner][k][log.action]++;
                     });
                 }
                 if (lDeck && lDeck.parts) {
                     Object.values(lDeck.parts).forEach(part => {
                         if(!part) return;
-                        if(!partStats[loser][part.clean_name]) partStats[loser][part.clean_name] = { cat: part.category, image: part.image, w:0, l:0, spin:0, burst:0, over:0, xtreme:0 };
-                        partStats[loser][part.clean_name].l++;
+                        let k = part.category + '::' + part.clean_name; // 同上：以「部位::名稱」當 key
+                        if(!partStats[loser][k]) partStats[loser][k] = { name: part.clean_name, cat: part.category, image: part.image, w:0, l:0, spin:0, burst:0, over:0, xtreme:0 };
+                        partStats[loser][k].l++;
                     });
                 }
             }
@@ -1195,7 +1240,7 @@ window.openPartStatsModal = function() {
     let playersSet = new Set();
     Object.values(historyObj).forEach(tour => { if(tour.partStats) { Object.keys(tour.partStats).forEach(p => playersSet.add(p)); } });
     let sel = document.getElementById('partStatsPlayerSelect');
-    sel.innerHTML = Array.from(playersSet).sort().map(p => `<option value="${p}">${p}</option>`).join('');
+    sel.innerHTML = Array.from(playersSet).sort().map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
     if(playersSet.size === 0) sel.innerHTML = `<option value="">尚無紀錄</option>`;
     
     renderPartStatsTable(); document.getElementById('partStatsModal').style.display = 'block';
@@ -1211,16 +1256,19 @@ window.renderPartStatsTable = function() {
     let agg = {};
     Object.values(historyObj).forEach(tour => {
         if(tour.partStats && tour.partStats[pName]) {
-            Object.keys(tour.partStats[pName]).forEach(partName => {
-                let s = tour.partStats[pName][partName];
-                if(!agg[partName]) agg[partName] = { cat: s.cat, image: s.image, w: 0, l: 0, spin: 0, burst: 0, over: 0, xtreme: 0 };
-                let t = agg[partName];
+            Object.keys(tour.partStats[pName]).forEach(rawKey => {
+                let s = tour.partStats[pName][rawKey];
+                // 新紀錄 key 為「部位::名稱」且帶 name 欄位；舊紀錄 key 就是零件名稱，兩種格式統一以 部位::名稱 彙總
+                let partName = s.name || String(rawKey).split('::').pop();
+                let aggKey = (s.cat || '?') + '::' + partName;
+                if(!agg[aggKey]) agg[aggKey] = { name: partName, cat: s.cat, image: s.image, w: 0, l: 0, spin: 0, burst: 0, over: 0, xtreme: 0 };
+                let t = agg[aggKey];
                 t.w += (s.w||0); t.l += (s.l||0); t.spin += (s.spin||0); t.burst += (s.burst||0); t.over += (s.over||0); t.xtreme += (s.xtreme||0);
             });
         }
     });
 
-    let parts = Object.keys(agg).map(k => ({ name: k, ...agg[k] }));
+    let parts = Object.keys(agg).map(k => ({ ...agg[k] })); // 零件名稱已存在 agg[k].name
     parts.sort((a,b) => {
         let rateA = (a.w+a.l)>0 ? a.w/(a.w+a.l) : 0; let rateB = (b.w+b.l)>0 ? b.w/(b.w+b.l) : 0;
         if(rateB !== rateA) return rateB - rateA; return (b.w+b.l) - (a.w+a.l);
@@ -1305,7 +1353,7 @@ function renderHistory() {
     players.forEach((p) => {
         let d = aggregate[p]; let net = d.g - d.ls; let rate = d.played > 0 ? Math.round((d.w / d.played) * 100) : 0; let penaltyFreq = d.played > 0 ? ((d.penalty / d.played) * 100).toFixed(1) : 0; 
         tbody.innerHTML += `<tr>
-            <td onmousemove="showRadar(event, '${p}', ${d.spin}, ${d.burst}, ${d.over}, ${d.xtreme})" onmouseleave="hideRadar()">${getPlayerPillHtml(p)}</td>
+            <td data-player="${escapeHtml(p)}" onmousemove="showRadar(event, this.dataset.player, ${d.spin}, ${d.burst}, ${d.over}, ${d.xtreme})" onmouseleave="hideRadar()">${getPlayerPillHtml(p)}</td>
             <td style="font-weight:bold;">${d.played}</td><td class="win-color" style="font-weight:bold;">${d.w}</td><td class="loss-color" style="font-weight:bold;">${d.l}</td>
             <td style="color:#0ff; font-weight:bold; font-size:28px;">${rate}%</td><td>${d.g}</td><td>${d.ls}</td><td style="color:${net>0?'#2ecc71':(net<0?'#e74c3c':'#c5c6c7')}; font-weight:bold;">${net}</td>
             <td style="color:#e74c3c; font-weight:bold; font-size:24px;">${penaltyFreq}%</td>
@@ -1434,7 +1482,7 @@ window.saveBuilderToPlayer = function() {
 };
 
 window.renderScoringActiveBey = function(p, beyIndex) {
-    if (p.deck && p.deck[beyIndex] && p.deck[beyIndex].parts && p.deck[beyIndex].parts.TopPart) {
+    if (p && p.deck && p.deck[beyIndex] && p.deck[beyIndex].parts && p.deck[beyIndex].parts.TopPart) {
          return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
                    <div class="mini-icon-wrapper">${getDeckCoverHtml(p.deck[beyIndex])}</div>
                    <div style="font-size:18px; color:#f1c40f; line-height:1.2; text-align:center; font-weight:bold; margin-top:5px; text-shadow: 0 0 5px rgba(241,196,15,0.5);">${getDeckFullName(p.deck[beyIndex])}</div>
@@ -1478,7 +1526,8 @@ async function loadArsenalDatabase() {
             let defaultCat = categoryMap[rawCat]; if (!defaultCat) continue;
             for (const [id, item] of Object.entries(obj)) {
                 let rawNameTW = ((item.name || item.catalog_title) && ((item.name || item.catalog_title)['zh-TW'] || (item.name || item.catalog_title)['ja-JP'] || (item.name || item.catalog_title).en_name)) || "";
-                if (rawNameTW.includes("蒼龍勇氣") && rawNameTW.includes("闇黑") && !rawNameTW.includes("蒼龍勇氣S")) rawNameTW = rawNameTW.replace("蒼龍勇氣", "蒼龍勇氣S");
+                // 闇黑版原名缺少 S，補成「蒼龍勇氣 S」(帶空格，與其他版本同名才會合併成同一零件的不同版本)
+                if (rawNameTW.includes("蒼龍勇氣") && rawNameTW.includes("闇黑") && !/蒼龍勇氣\s*S/.test(rawNameTW)) rawNameTW = rawNameTW.replace("蒼龍勇氣", "蒼龍勇氣 S");
                 let shortCat = getArsenalCatFromId(id, defaultCat);
                 if (/軸心套組|軸心組|加贈活動|限定軸心|rental|PRD-939542-04/i.test(rawNameTW) || /rental|PRD-939542-04/i.test(id)) continue; 
                 if (shortCat === 'Ratchet' && /一體/i.test(rawNameTW)) continue;
@@ -1487,7 +1536,8 @@ async function loadArsenalDatabase() {
                 if (shortCat === 'MainBlade' && arsenalSetStructureMap[instId]['MetalBlade']) continue; 
                 
                 let cleanName = cleanArsenalPartName(rawNameTW, instId, shortCat);
-                if (cleanName === "機密/特殊聯名") continue; 
+                if (cleanName === "機密/特殊聯名") continue;
+                if (isArsenalPlaceholderPart(shortCat, rawNameTW, cleanName)) continue; // 過濾占位用的假零件 
 
                 let jsonTags = (item.tags && Array.isArray(item.tags)) ? item.tags.map(t => String(t).toUpperCase()) : [];
                 let isExplicitUX = jsonTags.includes('UX'); let isExplicitCX = jsonTags.includes('CX');
@@ -1534,21 +1584,38 @@ async function loadArsenalDatabase() {
     ['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'Bit'].forEach(cat => { if(arsenalPartsDb[cat]) arsenalPartsDb[cat].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' })); });
     if (arsenalPartsDb['Ratchet']) {
         arsenalPartsDb['Ratchet'].sort((a, b) => {
-            let parse = (n) => { let m = String(n).match(/(\d+)-(50|60|70|80|X5|85)/i); return m ? {p: parseInt(m[1]), h: (m[2].toUpperCase()==='X5'?85:parseInt(m[2]))} : {p:99, h:999}; };
+            // 固鎖名稱格式為「刃數-高度」(例 4-60)；刃數 M 型視為 10 排在數字之後；高度不限 50/60/70/80，非標準格式排最後
+            let parse = (n) => { let m = String(n).match(/^([0-9]+|M)-(\d{2}|X5)$/i); return m ? {p: (m[1].toUpperCase()==='M' ? 10 : parseInt(m[1])), h: (m[2].toUpperCase()==='X5' ? 85 : parseInt(m[2]))} : {p:99, h:999}; };
             let pA = parse(a.clean_name); let pB = parse(b.clean_name); return pA.h !== pB.h ? pA.h - pB.h : pA.p - pB.p; 
         });
     }
     arsenalPartsDb.TopPart = [...arsenalPartsDb.Blade, ...arsenalPartsDb.MainBlade, ...arsenalPartsDb.MetalBlade].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
 }
 
+// 判斷是否為「占位用假零件」：資料庫為了讓商品有完整零件欄位，會替只含單一零件的商品補上其他部位的空殼資料
+function isArsenalPlaceholderPart(shortCat, rawName, cleanName) {
+    // 1. 「加贈軸心活動」商品只有軸心是真零件，同商品的戰刃/固鎖是占位資料
+    if (shortCat !== 'Bit' && /加贈軸心活動/.test(rawName)) return true;
+    // 2. 固鎖只接受「刃數-高度」格式 (例: 4-60、M-85)，其餘 (UF、K、LO、商品名稱) 都是占位資料
+    if (shortCat === 'Ratchet' && !/^[0-9A-Z]{1,2}-\d{2}$/i.test(cleanName)) return true;
+    // 3. 軸心名稱為英文縮寫，含中文代表是商品名稱占位 (例: 惡魔紅鐮 版本 2.0)
+    if (shortCat === 'Bit' && /[一-龥]/.test(cleanName)) return true;
+    // 4. 戰刃名稱只有 1~3 個英文字母 (K、LO、UF) 是軸心占位資料
+    if (shortCat === 'Blade' && /^[A-Za-z]{1,3}$/.test(cleanName)) return true;
+    return false;
+}
 function getArsenalCatFromId(id, defaultCat) { let p = id.split('-')[0].toUpperCase(); return { 'BL':'Blade', 'MB':'MainBlade', 'ME':'MetalBlade', 'OV':'OverBlade', 'AB':'AssistBlade', 'LC':'LockChip', 'RC':'Ratchet', 'RT':'Ratchet', 'BT':'Bit' }[p] || defaultCat; }
 function getArsenalInstId(id, item) { let p = id.split('-'); if (p.length >= 2 && ['BL','MB','ME','OV','AB','LC','RC','RT','BT'].includes(p[0].toUpperCase())) return p.slice(1).join('-'); let base = item.base_set_id || item.set_id || "UNKNOWN"; let m = id.match(/-\d{2}$/); return (m && !base.endsWith(m[0])) ? base + m[0] : base; }
 function cleanArsenalPartName(rawName, instId, shortCat) {
     if (!rawName) return instId; let name = String(rawName).trim(); if (name === "■" || name === "(機密/特殊聯名)") return `機密/特殊聯名`;
     let cleaned = name.replace(/(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[A-Za-z0-9\-]+\s*/ig, ''); 
     if (['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'LockChip', 'TopPart'].includes(shortCat)) cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
+    // 聯名/特殊塗裝後綴：釣魚魂 Wonder 版、FC 球隊版 (如 FC 巴塞隆納版)、鍍金/銀/銅版，皆視為原零件的異色版本
+    cleaned = cleaned.replace(/\s*釣魚魂\s*Wonder\s*版?/ig, '').replace(/\s*FC\s*[一-龥]+版?/ig, '').replace(/\s*鍍[金銀銅]版?/g, '');
     cleaned = cleaned.replace(/DMM\s*(抽獎|スクラッチ).*?[賞獎]\s*/ig, '').replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '').replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版本?)?/ig, '').replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版本?)/ig, '').replace(/\s+[A-Za-z0-9\u4e00-\u9fa5\uFF10-\uFF19]+(Ver\.|バージョン|版本?)/ig, '').replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '').replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|連擊型|上升攻擊型)[\)）]/ig, '').replace(/中收錄.*$/ig, '').replace(/ランダムブースター.*$/ig, '').replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig, '').replace(/\s*(紋章|ロックチップ)/ig, '').replace(/\s*(メタル|メイン|オーバー|アシスト)ブレード/ig, '');
-    if (cleaned.includes('福音戰士')) cleaned = cleaned.replace(/\s+([A-Z])$/i, '$1'); return cleaned.trim() || `機密/特殊聯名`; 
+    if (cleaned.includes('福音戰士')) cleaned = cleaned.replace(/\s+([A-Z])$/i, '$1'); // 合併連續空白 (移除後綴後會殘留雙空格)
+    cleaned = cleaned.replace(/\s{2,}/g, ' ');
+    return cleaned.trim() || `機密/特殊聯名`; 
 }
 
 function getDeckCoverHtml(deck) {
@@ -1636,9 +1703,9 @@ window.applyArsenalFilter = function(f = currentFilterType) {
     if(['TopPart','Blade','MainBlade','MetalBlade','OverBlade','AssistBlade','Bit'].includes(selectingPartCategory)) { if(currentSortType==='NEW_TO_OLD') list.sort((a,b)=>b.earliestRelease.localeCompare(a.earliestRelease)); else if(currentSortType==='DEFAULT') list.sort((a,b)=>a.clean_name.localeCompare(b.clean_name,'en',{numeric:true,sensitivity:'base'})); }
     let html = "";
     if (selectingPartCategory === 'Ratchet') {
-        let g={}; list.forEach(p => { let m=p.clean_name.match(/^(\d+)-/); let b = m?parseInt(m[1]):99; if(!g[b]) g[b]=[]; g[b].push(p); });
+        let g={}; list.forEach(p => { let m=p.clean_name.match(/^([0-9]+|M)-/i); let b = m ? (m[1].toUpperCase()==='M' ? 10 : parseInt(m[1])) : 99; /* M 型歸為 10 組 */ if(!g[b]) g[b]=[]; g[b].push(p); });
         Object.keys(g).sort((a,b)=>a-b).forEach(b => {
-            html += `<div style="width:100%; border-bottom:1px solid #45a29e; margin:15px 0 5px; color:#66fcf1; font-weight:bold; font-size:22px; text-align:left;">${b==99?"特殊":`${b} 刃`}固鎖</div><div class="grid-inner">`;
+            html += `<div style="width:100%; border-bottom:1px solid #45a29e; margin:15px 0 5px; color:#66fcf1; font-weight:bold; font-size:22px; text-align:left;">${b==99?"特殊":(b==10?"M 型":`${b} 刃`)}固鎖</div><div class="grid-inner">`;
             g[b].forEach(p => { let idx=arsenalPartsDb['Ratchet'].indexOf(p); html += `<div class="grid-item" onclick="handleArsenalGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleArsenalImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
             html += `</div>`;
         });
