@@ -221,6 +221,25 @@
         .deck-name { font-size: 20px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241,196,15,0.5); margin-top: 15px; line-height: 1.3; }
         .deck-badge { position: absolute; top: 10px; left: 10px; background: #45a29e; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 16px; z-index: 10; }
 
+        /* 牌組卡片拖曳排序 */
+        .deck-card[data-index] { touch-action: none; user-select: none; -webkit-user-select: none; }
+        .deck-card[data-index] img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+        .deck-card.dragging { transition: none; z-index: 5000; opacity: 0.92; cursor: grabbing; border-color: #f1c40f; box-shadow: 0 20px 45px rgba(0,0,0,0.85); } /* 跟著游標的殘影 */
+        .deck-card.drag-origin { opacity: 0.3; } /* 被拖曳的原卡片留在原位 */
+        .deck-card.drop-before::before, .deck-card.drop-after::after { content: ''; position: absolute; top: 0; bottom: 0; width: 7px; background: #2ecc71; border-radius: 4px; box-shadow: 0 0 14px #2ecc71; }
+        .deck-card.drop-before::before { left: -14px; }
+        .deck-card.drop-after::after { right: -14px; }
+        .deck-card.drop-swap { border-color: #f1c40f; box-shadow: 0 0 28px rgba(241,196,15,0.9); }
+        .deck-grip { position: absolute; top: 10px; right: 12px; color: #45a29e; font-size: 15px; opacity: 0.75; letter-spacing: 1px; pointer-events: none; }
+        .deck-drag-hint { text-align: center; color: #aaa; font-size: 18px; margin: -5px 0 20px 0; }
+        /* 比賽模式分頁 (牌組編輯器) 與選手卡上的模式狀態小標籤 */
+        .builder-mode-tab { margin: 0; padding: 12px 28px; font-size: 24px; background: rgba(0,0,0,0.7); border: 3px solid var(--mc); color: var(--mc); border-radius: 14px; opacity: 0.6; transition: 0.2s; }
+        .builder-mode-tab:hover { opacity: 1; }
+        .builder-mode-tab.active { background: var(--mc); color: #000; opacity: 1; box-shadow: 0 0 22px var(--mc); }
+        .setup-group { display: inline-flex; align-items: center; gap: 10px; margin-left: 20px; white-space: nowrap; } /* 標籤與選單綁在一起，換行時不會拆開 */
+        .roster-mode-chips { display: flex; gap: 4px; justify-content: center; flex-wrap: nowrap; margin-top: 8px; }
+        .roster-mode-chips button { margin: 0; padding: 3px 6px; font-size: 13px; white-space: nowrap; border-radius: 8px; background: rgba(0,0,0,0.7); border: 2px solid var(--mc); color: var(--mc); }
+        .roster-mode-chips button.current { background: var(--mc); color: #000; font-weight: bold; }
         .deck-img { width: 180px; height: 180px; object-fit: contain; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
         .stack-container { width: 180px; height: 180px; position: relative; margin: 0 auto 10px auto; }
         .stack-base { position: absolute; width: 140px; height: 140px; top: 10px; left: 10px; z-index: 1; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.8)); }
@@ -277,10 +296,14 @@
                 <option value="2">2 人</option><option value="3">3 人</option><option value="4">4 人</option><option value="5" selected>5 人</option>
                 <option value="6">6 人</option><option value="7">7 人</option><option value="8">8 人</option>
             </select>
-            <label style="margin-left: 20px;">賽制：</label>
+            <span class="setup-group"><label>比賽模式：</label>
+            <select id="ruleMode" onchange="syncRuleModeUI()" title="基本賽：官方規則 ／ Cost 賽：自製 Cost 表 ／ 極限盤賽：極限盤場地">
+                <option value="basic">🏆 基本賽</option><option value="cost">💰 Cost 賽</option><option value="xtreme">🌀 極限盤賽</option>
+            </select></span>
+            <span class="setup-group"><label>輪數：</label>
             <select id="roundCount">
                 <option value="1" selected>打 1 輪</option><option value="2">打 2 輪</option><option value="3">打 3 輪</option>
-            </select>
+            </select></span>
             <button class="btn-purple" onclick="openRosterModal()" style="margin:0 0 0 auto;">👤 選手名單與裝備庫</button>
         </div>
         <label style="font-size: 24px; color: #c5c6c7;"><b>請從名單選擇出賽選手：</b></label>
@@ -295,7 +318,7 @@
 
     <div class="flex-container">
         <div class="box">
-            <h2>📅 賽程對局區 (自動防丟失)</h2>
+            <h2>📅 賽程對局區 (自動防丟失) <span id="ruleModeBadge" style="font-size:24px;"></span></h2>
             <div id="scheduleContainer" class="schedule-grid">
                 <div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>
             </div>
@@ -313,6 +336,13 @@
     <div class="box full-width-box" style="margin-top: 30px;">
         <h2 style="color: #f1c40f; border-bottom: 3px dashed rgba(241,196,15,0.3); text-shadow: 0 0 12px rgba(241,196,15,0.5);">📚 歷史生涯戰績與大數據勝率庫</h2>
         <p style="color:#aaa; font-size:20px; margin-top:-10px;">*將滑鼠移至選手膠囊上，即可分析其「戰鬥風格雷達圖與專屬評價」</p>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+            <label style="font-size:22px; color:#f1c40f; font-weight:bold;">比賽模式篩選：</label>
+            <select id="historyModeFilter" onchange="renderHistory()" style="padding: 8px 15px; font-size: 21px; background: rgba(0,0,0,0.8); border: 2px solid #45a29e; color: #0ff; border-radius: 8px;">
+                <option value="all">全部模式</option><option value="basic">🏆 基本賽</option><option value="cost">💰 Cost 賽</option><option value="xtreme">🌀 極限盤賽</option>
+            </select>
+            <span style="color:#777; font-size:18px;">(舊紀錄皆視為基本賽；此篩選同時作用於戰績表、勝率圖與 CSV 匯出)</span>
+        </div>
         
         <div style="background: transparent; padding: 0; margin-bottom: 45px; overflow-x: auto;">
             <table id="historyTable" style="margin-top:0;">
@@ -365,6 +395,10 @@
             <div style="text-align:center; margin-bottom: 20px;">
                 <label style="color:#f1c40f; font-size:24px; font-weight:bold;">選擇分析選手：</label>
                 <select id="partStatsPlayerSelect" onchange="renderPartStatsTable()" style="font-size:24px; padding:10px 20px; width:300px; background:#111; color:#fff; border-color:#b056df;"></select>
+                <label style="color:#f1c40f; font-size:24px; font-weight:bold; margin-left:25px;">比賽模式：</label>
+                <select id="partStatsModeFilter" onchange="renderPartStatsTable()" style="font-size:24px; padding:10px 20px; width:230px; background:#111; color:#fff; border-color:#b056df;">
+                    <option value="all">全部模式</option><option value="basic">🏆 基本賽</option><option value="cost">💰 Cost 賽</option><option value="xtreme">🌀 極限盤賽</option>
+                </select>
             </div>
             <p style="text-align:center; color:#aaa; font-size:18px; margin-top:-10px;">*勝負判定為出戰該回合的「得分/被得分」，犯規失誤不納入單回合成敗計算。</p>
             <div style="overflow-y:auto; max-height: 60vh;">
@@ -464,12 +498,15 @@
                 <div id="builderPlayerAvatar" style="margin: 0 15px; transform:scale(1.1); display:inline-block; vertical-align:middle;"></div>
                 <span id="builderPlayerName" style="font-size:36px; text-shadow: 0 0 15px currentColor; vertical-align:middle;">尚未選擇</span>
             </h2>
-            <p style="color:#aaa; margin:15px 0 25px 0; font-size: 20px;">所有的配置都會直接綁定儲存於此選手的專屬裝備庫中。</p>
+            <p style="color:#aaa; margin:15px 0 25px 0; font-size: 20px;">各比賽模式的牌組分開儲存，皆綁定於此選手的專屬裝備庫中。</p>
             <button class="btn-green" onclick="saveBuilderToPlayer()" style="font-size:24px; padding:12px 40px; box-shadow: 0 0 20px #2ecc71;">✅ 儲存並返回選手名單</button>
             <button class="btn-danger" onclick="document.getElementById('builderModal').style.display='none'; document.getElementById('rosterModal').style.display='block';" style="font-size:24px; padding:12px 40px;">❌ 取消變更</button>
         </div>
         
-        <h2 style="color: #66fcf1; border-bottom: 2px dashed rgba(102, 252, 241, 0.3);">⚔️ 先發 3on3 牌組</h2>
+        <div id="builderModeTabs" style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; margin-bottom:12px;"></div>
+        <div id="builderModeHint" style="text-align:center; color:#aaa; font-size:18px; min-height:34px; margin-bottom:15px;"></div>
+        <h2 style="color: #66fcf1; border-bottom: 2px dashed rgba(102, 252, 241, 0.3);">⚔️ 先發 3on3 牌組 <span id="builderModeTag" style="font-size:24px;"></span></h2>
+        <p class="deck-drag-hint">💡 按住牌組卡片左右拖曳即可調整順序；拖到另一區 (先發/備戰) 的卡片上則互換位置</p>
         <div class="deck-overview-container" id="mainDeckOverview"></div>
 
         <h2 style="margin-top: 40px; border-bottom: 2px dashed rgba(241, 196, 15, 0.3); color: #f1c40f;">🛡️ 備戰區 (Reserve)</h2>
@@ -541,6 +578,10 @@
 // 9. UX 一體式戰刃 (消逝路西法、野牛豪勇、惡魔冥界、榮耀武神、彈丸獅鷲) 內建固鎖：不需也不能再裝固鎖；
 //    名單由資料庫的「固鎖一體型戰刃」固鎖欄位自動推導 (isRatchetFreeTop)，之後新增的同類戰刃會自動套用
 // 10. 每個零件選擇區 (上蓋/紋章/超越戰刃/輔助戰刃/固鎖/軸心) 第一格新增「無」，點選即清除該欄位 (clearArsenalSlot)
+// 11. 3on3 牌組編輯：先發/備戰牌組卡片可用滑鼠或觸控左右拖曳換順序 (拖到另一區的卡片上則互換位置)
+// 12. 同一位選手的牌組依「比賽模式」分開 (基本賽 / Cost 賽 / 極限盤賽)，存於 p.deckSets；
+//     建立賽事時選擇比賽模式 (appState.ruleMode)，計分與變陣只讀該模式牌組；
+//     歸檔紀錄帶 ruleMode，歷史戰績與配件勝率可依模式篩選 (舊紀錄一律視為基本賽)
 // ================== 核心系統變數 ==================
 const defaultColors = ['#00f3ff', '#ff003c', '#00ff66', '#f1c40f', '#bc13fe', '#ff7700', '#00ffcc', '#ff00aa'];
 const schedulesConfig = {
@@ -553,7 +594,7 @@ for(let n=6; n<=8; n++){ schedulesConfig[n] = []; for(let i=0; i<n; i++){ for(le
 
 let roster = [];
 let currentEditIndex = -1;
-let appState = { id: null, tournamentName: "", timeString: "", players: [], matches: [] };
+let appState = { id: null, tournamentName: "", timeString: "", players: [], matches: [], ruleMode: 'basic' };
 let careerChartInstance = null;
 let radarChartInstance = null;
 let currentScoringMatchId = null;
@@ -567,7 +608,7 @@ Chart.defaults.font.size = 32;
 
 window.onload = async function() { 
     await loadArsenalDatabase(); 
-    initRoster(); migrateRatchetFreeDecks(); /* 清掉舊存檔中「內建固鎖戰刃」誤裝的固鎖 */ 
+    initRoster(); migrateRatchetFreeDecks(); /* 清掉舊存檔中「內建固鎖戰刃」誤裝的固鎖 */ initDeckDrag(); 
     loadState(); 
     if(!appState.matches || appState.matches.length === 0) { document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); }
     renderHistory();
@@ -606,18 +647,77 @@ function createEmptyDeck() {
     return [ { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} } ];
 }
 
+// ================== 比賽模式 (基本賽 / Cost 賽 / 極限盤賽) ==================
+// 注意：deck.mode ('standard'/'cx1'/'cx2') 是「零件結構」，與這裡的「比賽模式」是兩回事，變數一律用 ruleMode 區分
+const RULE_MODES = {
+    basic:  { label: '基本賽',   short: '基本',   icon: '🏆', color: '#45a29e', desc: '依官方規則配置牌組' },
+    cost:   { label: 'Cost 賽',  short: 'Cost',   icon: '💰', color: '#f1c40f', desc: '依自製 Cost 表與規定的 Cost 上限配置牌組' },
+    xtreme: { label: '極限盤賽', short: '極限盤', icon: '🌀', color: '#b056df', desc: '極限盤場地專用配置' }
+};
+const RULE_MODE_KEYS = ['basic', 'cost', 'xtreme'];
+// 未知或缺漏的比賽模式 (例如舊版存檔、舊歷史紀錄) 一律視為基本賽
+function normalizeRuleMode(m) { return RULE_MODES[m] ? m : 'basic'; }
+function getRuleModeLabel(m) { return RULE_MODES[normalizeRuleMode(m)].label; }
+// 篩選器顯示用：選「全部」不加註，選特定模式時回傳「在「Cost 賽」」之類的前綴
+function getRuleModeFilterNote(f) { return (f && f !== 'all') ? `在「${getRuleModeLabel(f)}」` : ''; }
+function getHistoryModeFilter() { const el = document.getElementById('historyModeFilter'); return el ? el.value : 'all'; }
+function tourMatchesMode(tour, f) { return !f || f === 'all' || normalizeRuleMode(tour && tour.ruleMode) === f; }
+function createEmptyDeckSets() { return { basic: createEmptyDeck(), cost: createEmptyDeck(), xtreme: createEmptyDeck() }; }
+// 先發 3 顆都至少有上蓋與軸心才算「準備就緒」
+function isDeckSetReady(decks) { return Array.isArray(decks) && decks.length >= 3 && decks.slice(0, 3).every(d => d && d.parts && d.parts.TopPart && d.parts.Bit); }
+// 牌組中是否已放入任何零件 (用來區分「完全沒用過的模式」與「配置到一半」)
+function hasAnyPart(decks) { return Array.isArray(decks) && decks.some(d => d && d.parts && Object.values(d.parts).some(Boolean)); }
+function getPlayerDeck(p, mode) { return (p && p.deckSets && p.deckSets[normalizeRuleMode(mode)]) || []; }
+// 目前生效的比賽模式：賽程進行中以賽事記錄的為準；尚未開賽則看上方的選單
+function getActiveRuleMode() {
+    if (appState.matches && appState.matches.length > 0) return normalizeRuleMode(appState.ruleMode);
+    const sel = document.getElementById('ruleMode');
+    return normalizeRuleMode(sel ? sel.value : 'basic');
+}
+// 進行中賽事使用的牌組 (計分、變陣都走這裡，確保只讀該賽事比賽模式的牌組)
+function getMatchDeck(p) { return getPlayerDeck(p, appState.ruleMode); }
+// 賽程已建立後鎖定比賽模式選單 (中途改模式會讓計分讀到不同牌組)，並在賽程標題顯示目前模式
+function syncRuleModeUI() {
+    const sel = document.getElementById('ruleMode'); const badge = document.getElementById('ruleModeBadge');
+    if (!sel) return;
+    const active = !!(appState.matches && appState.matches.length > 0);
+    if (active) sel.value = normalizeRuleMode(appState.ruleMode);
+    sel.disabled = active;
+    sel.title = active ? '賽程進行中，無法變更比賽模式 (請先結算或重置賽局)' : '';
+    if (badge) {
+        const m = RULE_MODES[normalizeRuleMode(sel.value)];
+        badge.innerText = active ? `【${m.icon} ${m.label}】` : ''; badge.style.color = m.color;
+    }
+}
+// 舊版只有單一 p.deck (視為基本賽牌組)；改成依比賽模式分開的 p.deckSets，缺的模式補空牌組，並確保每組至少 3 個先發位
+function migrateDeckSets(p) {
+    if (!p.deckSets || typeof p.deckSets !== 'object') p.deckSets = {};
+    if (Array.isArray(p.deck)) { if (!Array.isArray(p.deckSets.basic)) p.deckSets.basic = p.deck; delete p.deck; }
+    RULE_MODE_KEYS.forEach(k => {
+        let arr = Array.isArray(p.deckSets[k]) ? p.deckSets[k] : [];
+        arr = arr.map(d => (d && d.parts) ? d : { mode: 'standard', parts: {} });
+        while (arr.length < 3) arr.push({ mode: 'standard', parts: {} });
+        p.deckSets[k] = arr;
+    });
+}
+
 function initRoster() {
-    roster = JSON.parse(localStorage.getItem('beyblade_roster'));
+    let rawRoster = localStorage.getItem('beyblade_roster');
+    roster = JSON.parse(rawRoster);
+    // 首次升級成「依比賽模式分開牌組」之前，先把舊格式原樣備份一份 (只備份一次，萬一需要還原)
+    if (roster && roster.some(p => p && !p.deckSets) && !localStorage.getItem('beyblade_roster_backup_pre_deckSets')) {
+        try { localStorage.setItem('beyblade_roster_backup_pre_deckSets', rawRoster); } catch (e) {}
+    }
     if (!roster || roster.length === 0) {
         roster = [
-            { id: 1, name: "選手A", avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[0], deck: createEmptyDeck() },
-            { id: 2, name: "選手B", avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[1], deck: createEmptyDeck() }
+            { id: 1, name: "選手A", avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[0], deckSets: createEmptyDeckSets() },
+            { id: 2, name: "選手B", avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[1], deckSets: createEmptyDeckSets() }
         ];
     } else {
         roster.forEach((p, idx) => { 
             if(p.xPos === undefined) p.xPos = 50; if(p.yPos === undefined) p.yPos = 50; 
             if(p.scale === undefined) p.scale = 100; if(p.color === undefined) p.color = defaultColors[idx % defaultColors.length];
-            if(!p.deck) p.deck = createEmptyDeck(); 
+            migrateDeckSets(p); // 舊版單一 deck → deckSets.basic 
         });
     }
     saveRoster();
@@ -625,7 +725,7 @@ function initRoster() {
 // 舊存檔可能在一體式戰刃 (如惡魔冥界) 上仍留有固鎖，載入圖鑑後一次清除，避免牌組名稱多出固鎖
 function migrateRatchetFreeDecks() {
     let changed = false;
-    roster.forEach(p => (p.deck || []).forEach(d => {
+    roster.forEach(p => [].concat(...Object.values(p.deckSets || {})).forEach(d => {
         if (d && d.parts && d.parts.Ratchet && isRatchetFreeTop(d.parts.TopPart)) { d.parts.Ratchet = null; changed = true; }
     }));
     if (changed) saveRoster();
@@ -644,9 +744,12 @@ function renderRosterList() {
         let leftBtn = index === 0 ? `<button disabled title="已在最左側">◀</button>` : `<button onclick="moveRosterLeft(${index})" title="向左移動">◀</button>`;
         let rightBtn = index === roster.length - 1 ? `<button disabled title="已在最右側">▶</button>` : `<button onclick="moveRosterRight(${index})" title="向右移動">▶</button>`;
 
-        let isDeckReady = p.deck && p.deck.length >= 3 && p.deck.slice(0, 3).every(d => d.parts && d.parts.TopPart && d.parts.Bit);
+        let curMode = getActiveRuleMode(); // 目前選擇的比賽模式
+        let isDeckReady = isDeckSetReady(getPlayerDeck(p, curMode));
+        // 每個比賽模式各一顆小標籤：顯示是否就緒，點下去直接編輯該模式牌組
+        let modeChipsHtml = RULE_MODE_KEYS.map(k => `<button class="${k === curMode ? 'current' : ''}" style="--mc:${RULE_MODES[k].color};" onclick="openDeckBuilder(${index}, '${k}')" title="編輯${RULE_MODES[k].label}牌組">${RULE_MODES[k].short} ${isDeckSetReady(getPlayerDeck(p, k)) ? '✅' : '⚠️'}</button>`).join('');
         let deckBtnColor = isDeckReady ? '#2ecc71' : '#e74c3c';
-        let deckBtnText = isDeckReady ? '✅ 牌組已準備就緒' : '⚠️ 配置 3on3 牌組';
+        let deckBtnText = isDeckReady ? `✅ ${RULE_MODES[curMode].label}牌組已就緒` : `⚠️ 配置${RULE_MODES[curMode].label} 3on3 牌組`;
 
         container.innerHTML += `
             <div class="roster-card" style="border-color:${p.color}; box-shadow: inset 0 0 20px ${p.color}40, 0 15px 35px rgba(0,0,0,0.8);">
@@ -660,7 +763,8 @@ function renderRosterList() {
                     <input type="color" value="${p.color}" onchange="updateRosterAttr(${index}, 'color', this.value)" style="width: 50px; height: 50px; border-color: ${p.color};" title="變更代表色">
                     <span style="position:absolute; right: -5px; bottom: -5px; font-size: 14px; color: #000; background: rgba(255,255,255,0.85); border: 2px solid #000; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; box-shadow: 0 0 5px rgba(0,0,0,0.5);">✎</span>
                 </div>
-                <button onclick="openDeckBuilder(${index})" style="width:100%; margin:0; padding:10px; font-size:18px; border:2px solid ${deckBtnColor}; background:rgba(0,0,0,0.8); color:${deckBtnColor}; border-radius:12px; transition:0.3s;" onmouseover="this.style.background='${deckBtnColor}'; this.style.color='#000';" onmouseout="this.style.background='rgba(0,0,0,0.8)'; this.style.color='${deckBtnColor}';">${deckBtnText}</button>
+                <button onclick="openDeckBuilder(${index}, '${curMode}')" style="width:100%; margin:0; padding:10px; font-size:18px; border:2px solid ${deckBtnColor}; background:rgba(0,0,0,0.8); color:${deckBtnColor}; border-radius:12px; transition:0.3s;" onmouseover="this.style.background='${deckBtnColor}'; this.style.color='#000';" onmouseout="this.style.background='rgba(0,0,0,0.8)'; this.style.color='${deckBtnColor}';">${deckBtnText}</button>
+                <div class="roster-mode-chips">${modeChipsHtml}</div>
                 <div class="card-arrows">${leftBtn}${rightBtn}</div>
             </div>`;
     });
@@ -688,7 +792,7 @@ function updateAvatarPreview() {
     if(url !== "") { previewDiv.style.backgroundImage = `url('${url}')`; previewDiv.style.backgroundSize = `${scale}%`; previewDiv.style.backgroundPosition = `${x}% ${y}%`; previewDiv.innerText = ""; } else { previewDiv.style.backgroundImage = "none"; previewDiv.innerHTML = `<span style="line-height:170px; font-size:24px; color:#aaa;">無圖片</span>`; }
 }
 function saveAvatarEdit() { if(currentEditIndex === -1) return; roster[currentEditIndex].scale = document.getElementById('editScale').value; roster[currentEditIndex].xPos = document.getElementById('editX').value; roster[currentEditIndex].yPos = document.getElementById('editY').value; roster[currentEditIndex].avatar = document.getElementById('editAvatarUrl').value.trim(); saveRoster(); renderRosterList(); closeAvatarEditModal(); }
-function addNewRosterPlayer() { roster.push({ id: Date.now(), name: `新選手${roster.length+1}`, avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[roster.length % defaultColors.length], deck: createEmptyDeck() }); saveRoster(); renderRosterList(); setTimeout(() => { const c = document.getElementById('rosterListContainer').querySelectorAll('.roster-card'); if(c.length>0) c[c.length-1].scrollIntoView({ behavior: 'smooth', inline: 'center' }); }, 100); }
+function addNewRosterPlayer() { roster.push({ id: Date.now(), name: `新選手${roster.length+1}`, avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[roster.length % defaultColors.length], deckSets: createEmptyDeckSets() }); saveRoster(); renderRosterList(); setTimeout(() => { const c = document.getElementById('rosterListContainer').querySelectorAll('.roster-card'); if(c.length>0) c[c.length-1].scrollIntoView({ behavior: 'smooth', inline: 'center' }); }, 100); }
 // 刪除選手：若該選手正在進行中的賽程裡，計分面板會找不到選手資料而報錯，所以直接擋下
 function deleteRosterPlayer(index) {
     if (appState.matches && appState.matches.length > 0 && appState.players.includes(roster[index].name)) {
@@ -714,11 +818,15 @@ function updateRosterName(index, newName) {
 
 function formatDeckString(d) { return getDeckFullName(d); }
 
-function openDeckBuilder(index) {
+function openDeckBuilder(index, mode) {
     currentDeckEditIndex = index;
     let p = roster[index];
-    if (p.deck && p.deck.length > 0 && p.deck[0].parts) { allDecks = JSON.parse(JSON.stringify(p.deck)); } 
-    else { allDecks = createEmptyDeck(); }
+    // 三種比賽模式的牌組都複製一份到暫存區 (按「儲存」才寫回選手)，allDecks 永遠指向目前分頁的牌組
+    builderSets = {};
+    RULE_MODE_KEYS.forEach(k => { builderSets[k] = JSON.parse(JSON.stringify(getPlayerDeck(p, k))); if (builderSets[k].length < 3) builderSets[k] = createEmptyDeck(); });
+    builderRuleMode = normalizeRuleMode(mode || getActiveRuleMode());
+    allDecks = builderSets[builderRuleMode]; 
+    // (舊的單一牌組 else 分支已由 builderSets 取代)
     document.getElementById('rosterModal').style.display = 'none';
     
     document.getElementById('builderPlayerAvatar').innerHTML = getPureAvatarHtml(p.name);
@@ -783,12 +891,13 @@ function generateNewSchedule() {
     if(appState.players.some(p => !p || p.trim() === "")) return alert('有空白的選手選擇，請確認！');
     if(new Set(appState.players).size !== appState.players.length) return alert('賽事名單內有重複的選手！請確認每位選手都是獨一無二的。');
 
+    const ruleMode = normalizeRuleMode(document.getElementById('ruleMode').value); // 本場賽事的比賽模式
     let missingDecks = appState.players.filter(pName => {
         let r = roster.find(x => x.name === pName);
-        return !(r.deck && r.deck.length >= 3 && r.deck.slice(0, 3).every(d => d.parts && d.parts.TopPart && d.parts.Bit));
+        return !isDeckSetReady(getPlayerDeck(r, ruleMode));
     });
     if(missingDecks.length > 0) {
-        if(!confirm(`⚠️ 以下選手的 3on3 牌組尚未配置完成：\n${missingDecks.join(', ')}\n\n是否仍然要強制開賽？(計分面板的陀螺資訊將會留空)`)) return;
+        if(!confirm(`⚠️ 以下選手的【${getRuleModeLabel(ruleMode)}】3on3 牌組尚未配置完成：\n${missingDecks.join(', ')}\n\n是否仍然要強制開賽？(計分面板的陀螺資訊將會留空)`)) return;
     }
 
     let inputName = document.getElementById('tournamentName').value.trim();
@@ -796,7 +905,7 @@ function generateNewSchedule() {
     let history = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
     let finalName = inputName; let counter = 1;
     while (Object.values(history).some(h => h.name === finalName)) { counter++; finalName = `${inputName} (${counter})`; }
-    document.getElementById('tournamentName').value = finalName; appState.tournamentName = finalName;
+    document.getElementById('tournamentName').value = finalName; appState.tournamentName = finalName; appState.ruleMode = ruleMode;
 
     let baseConfig = schedulesConfig[currentCount]; let rounds = parseInt(document.getElementById('roundCount').value);
     let allMatches = []; let lastMatch = null;
@@ -830,7 +939,7 @@ function generateNewSchedule() {
     });
     
     let d = new Date(); appState.timeString = `${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-    appState.id = `TRN_${Date.now()}`; saveState(); renderMatches();
+    appState.id = `TRN_${Date.now()}`; saveState(); renderMatches(); syncRuleModeUI();
 }
 
 function renderMatches() {
@@ -962,10 +1071,10 @@ function openReorderDeckModal() {
     let r1 = roster.find(x => x.name === n1); let r2 = roster.find(x => x.name === n2);
 
     reorderState.p1 = [...(m.p1DeckOrder || [0, 1, 2])];
-    r1.deck.forEach((_, idx) => { if(!reorderState.p1.includes(idx)) reorderState.p1.push(idx); });
+    getMatchDeck(r1).forEach((_, idx) => { if(!reorderState.p1.includes(idx)) reorderState.p1.push(idx); });
 
     reorderState.p2 = [...(m.p2DeckOrder || [0, 1, 2])];
-    r2.deck.forEach((_, idx) => { if(!reorderState.p2.includes(idx)) reorderState.p2.push(idx); });
+    getMatchDeck(r2).forEach((_, idx) => { if(!reorderState.p2.includes(idx)) reorderState.p2.push(idx); });
 
     reorderSelected = null;
     renderReorderAreas(n1, n2, r1, r2);
@@ -1000,8 +1109,8 @@ function renderReorderAreas(n1, n2, r1, r2) {
         </div>` : ''}
     `;
 
-    document.getElementById('reorderP1Area').innerHTML = buildArea(1, n1, reorderState.p1, r1.deck);
-    document.getElementById('reorderP2Area').innerHTML = buildArea(2, n2, reorderState.p2, r2.deck);
+    document.getElementById('reorderP1Area').innerHTML = buildArea(1, n1, reorderState.p1, getMatchDeck(r1));
+    document.getElementById('reorderP2Area').innerHTML = buildArea(2, n2, reorderState.p2, getMatchDeck(r2));
 }
 
 window.handleReorderClick = function(playerNum, arrayIndex) {
@@ -1034,8 +1143,8 @@ function applyReorderDeck() {
         return false;
     };
 
-    if(checkMissing(reorderState.p1, r1.deck)) return document.getElementById('reorderErrorMsg').innerText = "❌ 選手 1 有空缺的先發位，請確保出戰陀螺已有完整配裝！";
-    if(checkMissing(reorderState.p2, r2.deck)) return document.getElementById('reorderErrorMsg').innerText = "❌ 選手 2 有空缺的先發位，請確保出戰陀螺已有完整配裝！";
+    if(checkMissing(reorderState.p1, getMatchDeck(r1))) return document.getElementById('reorderErrorMsg').innerText = "❌ 選手 1 有空缺的先發位，請確保出戰陀螺已有完整配裝！";
+    if(checkMissing(reorderState.p2, getMatchDeck(r2))) return document.getElementById('reorderErrorMsg').innerText = "❌ 選手 2 有空缺的先發位，請確保出戰陀螺已有完整配裝！";
 
     m.p1DeckOrder = reorderState.p1.slice(0, 3);
     m.p2DeckOrder = reorderState.p2.slice(0, 3);
@@ -1067,8 +1176,8 @@ function handleScoreAction(playerNum, actionType, points) {
         p1DeckOrder: [...(m.p1DeckOrder || [0,1,2])], 
         p2DeckOrder: [...(m.p2DeckOrder || [0,1,2])],
         action: actionType, scorer: playerNum, points: points,
-        p1ActiveDeck: JSON.parse(JSON.stringify((r1 && r1.deck && r1.deck[p1ActiveIndex]) || null)),
-        p2ActiveDeck: JSON.parse(JSON.stringify((r2 && r2.deck && r2.deck[p2ActiveIndex]) || null))
+        p1ActiveDeck: JSON.parse(JSON.stringify((r1 && getMatchDeck(r1)[p1ActiveIndex]) || null)),
+        p2ActiveDeck: JSON.parse(JSON.stringify((r2 && getMatchDeck(r2)[p2ActiveIndex]) || null))
     });
     
     if (actionType === 'penalty') {
@@ -1159,13 +1268,13 @@ function renderSummary() {
 
 function saveState() { localStorage.setItem('beyblade_app_state', JSON.stringify(appState)); }
 // 讀取上次未完成的賽程；修正原本條件寫反 (!appState.matches && ...) 導致重新整理後永遠不還原的問題
-function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { try { appState = JSON.parse(saved); } catch(e) { return; } if(appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); } } }
-function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.players = []; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
+function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { try { appState = JSON.parse(saved); } catch(e) { return; } if(appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); syncRuleModeUI(); } } }
+function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.ruleMode = 'basic'; syncRuleModeUI(); appState.players = []; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
 function escapeCSV(str) { if (str === null || str === undefined) return '""'; return `"${String(str).replace(/"/g, '""')}"`; }
 function exportToCSV() {
     if(appState.matches.length === 0) return alert("目前沒有賽事資料可匯出！");
     let name = appState.tournamentName || "未命名賽事"; let csv = "\uFEFF"; 
-    csv += `賽事名稱：,${escapeCSV(name)}\n賽事時間：,${escapeCSV(appState.timeString)}\n\n`; 
+    csv += `賽事名稱：,${escapeCSV(name)}\n賽事時間：,${escapeCSV(appState.timeString)}\n比賽模式：,${escapeCSV(getRuleModeLabel(appState.ruleMode))}\n\n`; 
     csv += "排名,選手名稱,勝場,敗場,得分,失分,淨分,勝率,犯規頻率,轉停次數,爆裂次數,擊飛次數,極限次數\n";
     let stats = {}; appState.players.forEach(p => stats[p] = { w:0, l:0, g:0, ls:0, spin:0, burst:0, over:0, xtreme:0, penalty:0 });
     appState.matches.forEach(m => {
@@ -1227,7 +1336,7 @@ function archiveTournament() {
         });
     });
 
-    history[appState.id] = { name: document.getElementById('tournamentName').value.trim() || "未命名賽事", time: appState.timeString, results: stats, partStats: partStats };
+    history[appState.id] = { name: document.getElementById('tournamentName').value.trim() || "未命名賽事", time: appState.timeString, ruleMode: normalizeRuleMode(appState.ruleMode), results: stats, partStats: partStats };
     localStorage.setItem('beyblade_history', JSON.stringify(history)); renderHistory();
     const sortedPlayers = [...appState.players].sort((a, b) => { let netA = stats[a].g - stats[a].ls, netB = stats[b].g - stats[b].ls; if(stats[b].w !== stats[a].w) return stats[b].w - stats[a].w; return netB - netA; });
     showPodium(sortedPlayers.slice(0, 3));
@@ -1266,7 +1375,7 @@ window.renderPartStatsTable = function() {
     let historyObj = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
     let agg = {};
     Object.values(historyObj).forEach(tour => {
-        if(tour.partStats && tour.partStats[pName]) {
+        if(tour.partStats && tour.partStats[pName] && tourMatchesMode(tour, document.getElementById('partStatsModeFilter').value)) {
             Object.keys(tour.partStats[pName]).forEach(rawKey => {
                 let s = tour.partStats[pName][rawKey];
                 // 新紀錄 key 為「部位::名稱」且帶 name 欄位；舊紀錄 key 就是零件名稱，兩種格式統一以 部位::名稱 彙總
@@ -1291,7 +1400,7 @@ window.renderPartStatsTable = function() {
         let played = p.w + p.l; let rate = played > 0 ? Math.round((p.w/played)*100) : 0;
         html += `<tr>
             <td><img src="${p.image}" style="width:70px; height:70px; object-fit:contain; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.8));"></td>
-            <td style="font-weight:bold; color:#fff;">${p.name}</td><td style="color:#aaa;">${catMap[p.cat] || p.cat}</td>
+            <td style="font-weight:bold; color:#fff;">${escapeHtml(p.name)}</td><td style="color:#aaa;">${catMap[p.cat] || p.cat}</td>
             <td style="font-weight:bold; font-size:20px;">${played}</td>
             <td class="win-color" style="font-weight:bold; font-size:20px;">${p.w}</td><td class="loss-color" style="font-weight:bold; font-size:20px;">${p.l}</td>
             <td style="color:#0ff; font-weight:bold; font-size:28px;">${rate}%</td>
@@ -1299,7 +1408,7 @@ window.renderPartStatsTable = function() {
             <td style="color:#e74c3c; font-size:20px;">${p.over}</td><td style="color:#b056df; font-size:20px; font-weight:bold;">${p.xtreme}</td>
         </tr>`;
     });
-    if(parts.length === 0) html = `<tr><td colspan="11" style="color:#aaa; padding:30px;">該選手尚未產生有效的得分對戰紀錄。</td></tr>`;
+    if(parts.length === 0) html = `<tr><td colspan="11" style="color:#aaa; padding:30px;">該選手${getRuleModeFilterNote(document.getElementById('partStatsModeFilter').value)}尚未產生有效的得分對戰紀錄。</td></tr>`;
     tbody.innerHTML = html;
 };
 
@@ -1347,7 +1456,8 @@ function hideRadar() { document.getElementById('radarTooltip').style.display = '
 
 function renderHistory() {
     let historyObj = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
-    let fullHistoryArray = Object.values(historyObj).sort((a,b) => new Date(a.time) - new Date(b.time));
+    let modeFilter = getHistoryModeFilter(); // 比賽模式篩選：all / basic / cost / xtreme
+    let fullHistoryArray = Object.values(historyObj).filter(t => tourMatchesMode(t, modeFilter)).sort((a,b) => new Date(a.time) - new Date(b.time));
     
     let aggregate = {};
     fullHistoryArray.forEach((tour) => {
@@ -1359,7 +1469,7 @@ function renderHistory() {
     });
 
     const tbody = document.getElementById('historyBody'); tbody.innerHTML = ''; let players = Object.keys(aggregate);
-    if(players.length === 0) { tbody.innerHTML = '<tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">尚無歷史歸檔紀錄</td></tr>'; if(careerChartInstance) careerChartInstance.destroy(); return; }
+    if(players.length === 0) { tbody.innerHTML = '<tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">' + (modeFilter === 'all' ? '尚無歷史歸檔紀錄' : '此比賽模式尚無歷史歸檔紀錄') + '</td></tr>'; if(careerChartInstance) careerChartInstance.destroy(); return; }
     players.sort((a, b) => aggregate[b].w - aggregate[a].w); 
     players.forEach((p) => {
         let d = aggregate[p]; let net = d.g - d.ls; let rate = d.played > 0 ? Math.round((d.w / d.played) * 100) : 0; let penaltyFreq = d.played > 0 ? ((d.penalty / d.played) * 100).toFixed(1) : 0; 
@@ -1375,7 +1485,8 @@ function renderHistory() {
     let chartLimitSelect = document.getElementById('chartLimit'); let chartOrderSelect = document.getElementById('chartOrder');
     let chartLimit = chartLimitSelect ? chartLimitSelect.value : 'all'; let chartOrder = chartOrderSelect ? chartOrderSelect.value : 'asc';
     let chartTours = [...fullHistoryArray]; if (chartLimit !== 'all') { chartTours = chartTours.slice(-parseInt(chartLimit)); } if (chartOrder === 'desc') { chartTours.reverse(); }
-    let xLabels = chartTours.map((tour, idx) => tour.name !== "未命名賽事" ? tour.name : `賽事 ${idx+1}`);
+    // 顯示「全部模式」時，非基本賽的賽事在名稱後加上模式標記，避免不同模式的勝率混在一起看不出來
+    let xLabels = chartTours.map((tour, idx) => { let base = tour.name !== "未命名賽事" ? tour.name : `賽事 ${idx+1}`; let rm = normalizeRuleMode(tour.ruleMode); return (modeFilter === 'all' && rm !== 'basic') ? `${base} [${RULE_MODES[rm].short}]` : base; });
     let datasets = players.map(p => {
         let color = getPlayerColor(p); let rates = chartTours.map(tour => { let r = tour.results[p]; if (!r) return null; let tourPlayed = r.w + r.l; return tourPlayed > 0 ? Math.round((r.w / tourPlayed) * 100) : null; });
         return { label: p, data: rates, borderColor: color, backgroundColor: color, borderWidth: 4, pointRadius: 8, tension: 0.2, spanGaps: true };
@@ -1393,7 +1504,7 @@ function clearHistory() { if(confirm('⚠ 警告：確定要刪除所有的生�
 window.exportHistoryCSV = function() {
     let historyObj = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
     let aggregate = {};
-    Object.values(historyObj).forEach((tour) => {
+    Object.values(historyObj).filter(t => tourMatchesMode(t, getHistoryModeFilter())).forEach((tour) => {
         Object.keys(tour.results).forEach(p => {
             if(!aggregate[p]) aggregate[p] = { played:0, w:0, l:0, g:0, ls:0, spin:0, burst:0, over:0, xtreme:0, penalty:0 };
             let r = tour.results[p]; aggregate[p].played += (r.w + r.l); aggregate[p].w += r.w; aggregate[p].l += r.l; aggregate[p].g += r.g; aggregate[p].ls += r.ls;
@@ -1411,7 +1522,7 @@ window.exportHistoryCSV = function() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
     const link = document.createElement("a"); 
     link.href = URL.createObjectURL(blob); 
-    link.download = `歷史生涯戰績表_${new Date().getTime()}.csv`; 
+    link.download = `歷史生涯戰績表${getHistoryModeFilter() === 'all' ? '' : '_' + getRuleModeLabel(getHistoryModeFilter())}_${new Date().getTime()}.csv`; 
     link.click();
 };
 
@@ -1467,40 +1578,50 @@ window.handleArsenalImgError = function(img) {
     else if (!img.dataset.triedFallback) { img.dataset.triedFallback = "true"; img.src = ARSENAL_FALLBACK_IMG; }
 };
 
-window.saveBuilderToPlayer = function() {
-    if (currentDeckEditIndex === -1) return;
-    let starters = allDecks.slice(0, 3);
-    let validCount = starters.filter(d => d.parts && d.parts.TopPart && d.parts.Bit).length;
-    if (validCount < 3) {
-        if(!confirm("⚠️ 您的【先發 3 顆陀螺】尚未配置完成（核心上蓋與軸心為最低要求）！\n確定要強制儲存嗎？")) return;
-    }
-    
+// 檢查單一比賽模式的牌組：先發 3 顆是否配置完成、零件是否重複；使用者選擇取消時回傳 false
+function confirmDeckSetBeforeSave(decks, modeLabel) {
+    let validCount = decks.slice(0, 3).filter(d => d.parts && d.parts.TopPart && d.parts.Bit).length;
+    if (validCount < 3 && !confirm(`⚠️ 【${modeLabel}】的先發 3 顆陀螺尚未配置完成（核心上蓋與軸心為最低要求）！\n確定要強制儲存嗎？`)) return false;
+
     let usedParts = []; let hasDuplicate = false;
     for (let i = 0; i < 3; i++) {
-        let deck = allDecks[i]; if (!deck || !deck.parts) continue;
+        let deck = decks[i]; if (!deck || !deck.parts) continue;
         ['TopPart', 'LockChip', 'OverBlade', 'MainBlade', 'MetalBlade', 'AssistBlade', 'Ratchet', 'Bit'].forEach(cat => {
             if (deck.parts[cat]) {
-                // 優化1：加入部位前綴，避免同名不同部位（如 H輔助戰刃 與 H軸心）衝突
+                // 加入部位前綴，避免同名不同部位（如 H輔助戰刃 與 H軸心）衝突
                 let partKey = cat + '_' + deck.parts[cat].clean_name;
                 if (usedParts.includes(partKey)) hasDuplicate = true;
                 usedParts.push(partKey);
             }
         });
     }
-    if (hasDuplicate) if (!confirm("⚠️ 警告：您的【先發 3 顆陀螺】中有重複使用的零件，違反官方賽制！\n確定仍要強制儲存嗎？")) return;
-    
-    roster[currentDeckEditIndex].deck = JSON.parse(JSON.stringify(allDecks));
-    saveRoster(); if(typeof updateSetupUI === 'function') updateSetupUI(); 
+    if (hasDuplicate && !confirm(`⚠️ 警告：【${modeLabel}】的先發 3 顆陀螺中有重複使用的零件，違反官方賽制！\n確定仍要強制儲存嗎？`)) return false;
+    return true;
+}
+
+window.saveBuilderToPlayer = function() {
+    if (currentDeckEditIndex === -1 || !builderSets) return;
+    // 只檢查「有放過零件」的比賽模式；完全沒配置過的模式視為尚未使用，不跳警告
+    for (const k of RULE_MODE_KEYS) {
+        if (!hasAnyPart(builderSets[k])) continue;
+        if (!confirmDeckSetBeforeSave(builderSets[k], RULE_MODES[k].label)) { if (k !== builderRuleMode) switchBuilderMode(k); return; }
+    }
+
+    let p = roster[currentDeckEditIndex];
+    p.deckSets = JSON.parse(JSON.stringify(builderSets)); delete p.deck;
+    saveRoster(); if(typeof updateSetupUI === 'function') updateSetupUI();
     document.getElementById('builderModal').style.display = 'none';
     document.getElementById('rosterModal').style.display = 'block';
     if(typeof renderRosterList === 'function') renderRosterList();
 };
 
+// 計分面板顯示的出戰陀螺：讀的是「本場賽事比賽模式」的牌組
 window.renderScoringActiveBey = function(p, beyIndex) {
-    if (p && p.deck && p.deck[beyIndex] && p.deck[beyIndex].parts && p.deck[beyIndex].parts.TopPart) {
+    let deckObj = p ? getMatchDeck(p)[beyIndex] : null;
+    if (deckObj && deckObj.parts && deckObj.parts.TopPart) {
          return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                   <div class="mini-icon-wrapper">${getDeckCoverHtml(p.deck[beyIndex])}</div>
-                   <div style="font-size:18px; color:#f1c40f; line-height:1.2; text-align:center; font-weight:bold; margin-top:5px; text-shadow: 0 0 5px rgba(241,196,15,0.5);">${getDeckFullName(p.deck[beyIndex])}</div>
+                   <div class="mini-icon-wrapper">${getDeckCoverHtml(deckObj)}</div>
+                   <div style="font-size:18px; color:#f1c40f; line-height:1.2; text-align:center; font-weight:bold; margin-top:5px; text-shadow: 0 0 5px rgba(241,196,15,0.5);">${getDeckFullName(deckObj)}</div>
                  </div>`;
     }
     return `<div style="font-size:18px; color:#777; margin-top:15px;">(尚未配置)</div>`;
@@ -1668,13 +1789,46 @@ function getDeckFullName(deck) {
     else if (deck.mode === 'cx2') return `${deck.parts.LockChip?.clean_name||""}${deck.parts.TopPart.clean_name}${deck.parts.OverBlade?.clean_name||""}${deck.parts.AssistBlade?.clean_name||""} ${rb}`.trim();
 }
 
+// ---------- 比賽模式分頁 ----------
+let builderSets = null;        // 編輯中的暫存：{ basic: [...], cost: [...], xtreme: [...] }，按「儲存」才寫回選手
+let builderRuleMode = 'basic'; // 目前編輯的分頁
+
+function renderBuilderModeTabs() {
+    const box = document.getElementById('builderModeTabs'); if (!box || !builderSets) return;
+    box.innerHTML = RULE_MODE_KEYS.map(k => {
+        const m = RULE_MODES[k];
+        return `<button class="builder-mode-tab${k === builderRuleMode ? ' active' : ''}" style="--mc:${m.color};" onclick="switchBuilderMode('${k}')">${m.icon} ${m.label} ${isDeckSetReady(builderSets[k]) ? '✅' : '⚠️'}</button>`;
+    }).join('');
+    const cur = RULE_MODES[builderRuleMode];
+    const tag = document.getElementById('builderModeTag'); tag.innerText = `【${cur.label}】`; tag.style.color = cur.color;
+    // 目前分頁還是空的、其他分頁已有配置時，提供一鍵複製 (之後再微調即可)
+    let hint = `<span>${cur.icon} ${cur.desc}</span>`;
+    if (!hasAnyPart(allDecks)) {
+        hint += RULE_MODE_KEYS.filter(k => k !== builderRuleMode && hasAnyPart(builderSets[k])).map(k =>
+            `<button class="btn-blue" style="margin:0 0 0 12px; padding:4px 14px; font-size:16px;" onclick="copyDeckSetFrom('${k}')">📋 複製「${RULE_MODES[k].label}」的牌組</button>`).join('');
+    }
+    document.getElementById('builderModeHint').innerHTML = hint;
+}
+window.switchBuilderMode = function(k) {
+    if (!builderSets || !RULE_MODES[k] || k === builderRuleMode) return;
+    builderRuleMode = k; allDecks = builderSets[k]; renderDeckOverview();
+};
+window.copyDeckSetFrom = function(k) {
+    if (!builderSets || !builderSets[k] || k === builderRuleMode) return;
+    if (hasAnyPart(allDecks) && !confirm(`目前【${RULE_MODES[builderRuleMode].label}】已有配置，複製會覆蓋掉，確定嗎？`)) return;
+    builderSets[builderRuleMode] = JSON.parse(JSON.stringify(builderSets[k])); allDecks = builderSets[builderRuleMode];
+    renderDeckOverview();
+};
+
 window.renderDeckOverview = function() {
+    renderBuilderModeTabs();
     const mainContainer = document.getElementById('mainDeckOverview'); const reserveContainer = document.getElementById('reserveDeckOverview');
     mainContainer.innerHTML = ''; reserveContainer.innerHTML = '';
     allDecks.forEach((deck, index) => {
         let fullName = getDeckFullName(deck); let badgeColor = index < 3 ? '#45a29e' : '#f1c40f';
-        let cardHtml = `<div class="deck-card" onclick="openEditor(${index})">
+        let cardHtml = `<div class="deck-card" data-index="${index}" onclick="openEditor(${index})">
                 <div class="deck-badge" style="background:${badgeColor}; color:#000;">${index < 3 ? `先發 ${index + 1}` : `備戰 ${index - 2}`}</div>
+                <div class="deck-grip" title="按住拖曳可調整順序">⇄ 拖曳</div>
                 ${getDeckCoverHtml(deck)}<div class="deck-name">${fullName}</div>
                 <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
                     <button class="btn-blue" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); openSwapModal(${index})">🔄 替換</button>
@@ -1683,6 +1837,125 @@ window.renderDeckOverview = function() {
         if (index < 3) mainContainer.innerHTML += cardHtml; else reserveContainer.innerHTML += cardHtml;
     });
 };
+
+// ---------- 牌組卡片拖曳排序 (Pointer Events：滑鼠、觸控、手寫筆通用) ----------
+// 同一區拖曳 → 改變順序 (綠色直線標示插入位置)；拖到另一區的卡片上 → 與該卡互換 (黃框標示)
+let deckDrag = null;            // 拖曳中的暫存狀態：{ card, from, startX, startY, pointerId, active, target }
+let deckDragJustEnded = false;  // 剛拖完時瀏覽器仍會補發 click，用這個旗標擋掉，避免誤開編輯視窗
+
+function getDeckCardsIn(box) { return Array.from(box.querySelectorAll('.deck-card[data-index]')); }
+function clearDeckDropMarks() { document.querySelectorAll('.deck-card.drop-before, .deck-card.drop-after, .deck-card.drop-swap').forEach(c => c.classList.remove('drop-before', 'drop-after', 'drop-swap')); }
+
+function initDeckDrag() {
+    ['mainDeckOverview', 'reserveDeckOverview'].forEach(id => {
+        const box = document.getElementById(id); if (!box) return;
+        box.addEventListener('pointerdown', onDeckPointerDown);
+        box.addEventListener('dragstart', e => e.preventDefault()); // 禁止瀏覽器原生的圖片拖曳，避免干擾
+        // 捕獲階段攔截：拖曳結束後的 click 不要傳到卡片的 onclick
+        box.addEventListener('click', e => { if (deckDragJustEnded) { e.stopPropagation(); e.preventDefault(); } }, true);
+    });
+}
+
+function onDeckPointerDown(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.target.closest('button')) return; // 🔄 替換 / ❌ 刪除 按鈕不觸發拖曳
+    const card = e.target.closest('.deck-card[data-index]'); if (!card) return;
+    deckDrag = { card, from: parseInt(card.dataset.index, 10), startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY,
+                 pointerId: e.pointerId, active: false, target: null, raf: null, ghost: null };
+    document.addEventListener('pointermove', onDeckPointerMove);
+    document.addEventListener('pointerup', onDeckPointerUp);
+    document.addEventListener('pointercancel', onDeckPointerCancel);
+}
+
+function onDeckPointerMove(e) {
+    const s = deckDrag; if (!s || e.pointerId !== s.pointerId) return;
+    if (!s.active) {
+        if (Math.hypot(e.clientX - s.startX, e.clientY - s.startY) < 8) return; // 位移很小視為一般點擊，不進入拖曳
+        s.active = true;
+        // 建立殘影：複製卡片、固定在原本的螢幕位置，之後只依游標位移移動
+        const r = s.card.getBoundingClientRect(); const ghost = s.card.cloneNode(true);
+        ghost.removeAttribute('data-index'); ghost.removeAttribute('onclick'); ghost.classList.add('dragging');
+        Object.assign(ghost.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', boxSizing: 'border-box', margin: '0', pointerEvents: 'none' });
+        document.body.appendChild(ghost); s.ghost = ghost; s.card.classList.add('drag-origin');
+    }
+    e.preventDefault();
+    s.lastX = e.clientX; s.lastY = e.clientY;
+    deckDragApply(s);
+    if (!s.raf) s.raf = requestAnimationFrame(deckDragAutoScroll); // 開始監看是否靠近視窗邊緣
+}
+
+// 依游標位置更新殘影位置與落點 (落點用各卡片「目前」的螢幕座標計算，頁面捲動後也正確)
+function deckDragApply(s) {
+    s.ghost.style.transform = `translate(${s.lastX - s.startX}px, ${s.lastY - s.startY}px) scale(1.04)`;
+    updateDeckDropTarget(s.lastX, s.lastY);
+}
+// 游標停在視窗上/下緣 80px 內時持續捲動編輯器 (每個畫面更新週期捲 18px)，讓先發區與備戰區不在同一畫面時也能拖過去
+function deckDragAutoScroll() {
+    const s = deckDrag; if (!s || !s.active) return;
+    const sc = document.getElementById('builderModal'); let v = 0;
+    if (s.lastY < 80) v = -18; else if (s.lastY > window.innerHeight - 80) v = 18;
+    if (v) { const before = sc.scrollTop; sc.scrollTop += v; if (sc.scrollTop !== before) deckDragApply(s); }
+    s.raf = requestAnimationFrame(deckDragAutoScroll);
+}
+
+// 依指標位置計算落點：只用各卡片的座標比對，不依賴 elementFromPoint (拖曳中的卡片本身會跟著游標移動)
+function updateDeckDropTarget(x, y) {
+    const s = deckDrag; clearDeckDropMarks(); s.target = null;
+    const fromMain = s.from < 3;
+    const sameBox = document.getElementById(fromMain ? 'mainDeckOverview' : 'reserveDeckOverview');
+    const otherBox = document.getElementById(fromMain ? 'reserveDeckOverview' : 'mainDeckOverview');
+
+    // 1) 指標落在另一區的某張卡片上 → 互換
+    for (const c of getDeckCardsIn(otherBox)) {
+        const r = c.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) { c.classList.add('drop-swap'); s.target = { type: 'swap', index: parseInt(c.dataset.index, 10) }; return; }
+    }
+    // 2) 同一區 → 找距離最近的卡片，依指標在該卡左半/右半決定插在前面或後面；離開該區太遠則視為取消
+    const box = sameBox.getBoundingClientRect(); const pad = 70;
+    if (x < box.left - pad || x > box.right + pad || y < box.top - pad || y > box.bottom + pad) return;
+    let best = null, bestD = Infinity;
+    getDeckCardsIn(sameBox).forEach(c => {
+        if (c === s.card) return;
+        const r = c.getBoundingClientRect(); const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
+        if (d < bestD) { bestD = d; best = c; }
+    });
+    if (!best) return;
+    const r = best.getBoundingClientRect(); const t = parseInt(best.dataset.index, 10); const before = x < r.left + r.width / 2;
+    let pos = before ? t : t + 1;   // 插入位置 (以原陣列的索引計)
+    if (s.from < pos) pos -= 1;     // 先把被拖的卡片抽走，後面的索引會少 1
+    if (pos === s.from) return;     // 放回原位，不需標示
+    best.classList.add(before ? 'drop-before' : 'drop-after');
+    s.target = { type: 'move', index: pos };
+}
+
+function endDeckDrag() {
+    document.removeEventListener('pointermove', onDeckPointerMove);
+    document.removeEventListener('pointerup', onDeckPointerUp);
+    document.removeEventListener('pointercancel', onDeckPointerCancel);
+    if (deckDrag) {
+        if (deckDrag.raf) cancelAnimationFrame(deckDrag.raf);
+        if (deckDrag.ghost) deckDrag.ghost.remove();
+        deckDrag.card.classList.remove('drag-origin');
+    }
+    clearDeckDropMarks(); deckDrag = null;
+}
+
+function onDeckPointerUp(e) {
+    const s = deckDrag; if (!s || e.pointerId !== s.pointerId) return;
+    const { active, target, from } = s;
+    endDeckDrag();
+    if (!active) return; // 沒有位移 → 一般點擊，交給卡片的 onclick 開啟編輯
+    deckDragJustEnded = true; setTimeout(() => { deckDragJustEnded = false; }, 60);
+    if (target && target.type === 'swap') { const t = allDecks[from]; allDecks[from] = allDecks[target.index]; allDecks[target.index] = t; }
+    else if (target && target.type === 'move') { const moved = allDecks.splice(from, 1)[0]; allDecks.splice(target.index, 0, moved); }
+    renderDeckOverview(); // 重新繪製：有落點就套用新順序，沒落點則卡片彈回原位
+}
+
+function onDeckPointerCancel(e) {
+    const s = deckDrag; if (!s || e.pointerId !== s.pointerId) return;
+    const wasActive = s.active; endDeckDrag();
+    if (wasActive) { deckDragJustEnded = true; setTimeout(() => { deckDragJustEnded = false; }, 60); renderDeckOverview(); }
+}
 
 window.openEditor = function(index) {
     editingDeckIndex = index;
