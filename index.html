@@ -278,6 +278,119 @@
         .filter-btn:hover { border-color:#f1c40f; color:#fff;}
         .filter-btn.active { background: #f1c40f; border-color: #f1c40f; color: #000; font-weight: bold; }
         
+
+        /* ================= Cost / Tier 表模組樣式 (原 cost_tier.html，全部限定在 .ct-root 內) ================= */
+/* 所有樣式都限定在 .ct-root 內，避免污染主頁面 */
+.ct-root{
+  /* 色彩與尺寸變數；--tw/--th 必須與下方匯出圖片的 LAYOUT 常數一致 */
+  --ct-bg:#0d0e14;--ct-panel:#171a26;--ct-line:#2a2e42;--ct-text:#e6e8f2;--ct-dim:#8b90a8;--ct-accent:#a78bfa;
+  --tw:64px;--th:74px;--gap:4px;--per-row:11;
+  color:var(--ct-text);background:var(--ct-bg);padding:12px;box-sizing:border-box;
+  font:14px/1.5 "PingFang TC","Microsoft JhengHei","Noto Sans TC","Noto Sans CJK TC",system-ui,sans-serif;
+}
+.ct-root *{box-sizing:border-box}
+/* index.html 的全域 button 有 margin / letter-spacing / 粗體，這裡先重置，後面的 ct- 規則仍可覆蓋 */
+.ct-root :where(button){margin:0;letter-spacing:normal;font-weight:400;text-shadow:none;transition:none}
+.ct-root input[type=color]{border-radius:3px !important;box-shadow:none !important;transform:none !important}
+
+/* ---- 工具列 ---- */
+.ct-toolbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.ct-btn{background:#232738;color:var(--ct-text);border:1px solid #333853;border-radius:6px;padding:5px 10px;cursor:pointer;font:inherit;font-size:13px}
+.ct-btn:hover{background:#2c3148}
+.ct-btn:disabled{opacity:.4;cursor:default}
+.ct-btn.primary{background:#6d4de0;border-color:#8466f0}
+.ct-btn.primary:hover{background:#7a5af0}
+.ct-btn.danger{color:#ff8a8a}
+.ct-toolbar .spacer{flex:1}
+.ct-status{color:var(--ct-dim);font-size:12px}
+.ct-notice{color:var(--ct-accent);font-size:12px}
+.ct-field{display:flex;align-items:center;gap:6px;color:var(--ct-dim);font-size:13px}
+.ct-field input{width:52px}
+.ct-root input[type=text],.ct-root input[type=number],.ct-root input[type=search],.ct-root select,.ct-root textarea{
+  background:#111320;color:var(--ct-text);border:1px solid #333853;border-radius:6px;padding:5px 8px;font:inherit;font-size:13px}
+
+/* ---- 看板（匯出圖片的樣式來源） ---- */
+.ct-board-wrap{overflow-x:auto;padding-bottom:4px}
+.ct-board{
+  /* 寬度 = 欄位標籤 72 + 內距 10 + 每列顆數 * (磚寬 64 + 間距 4) - 4 */
+  width:calc(72px + 10px + var(--per-row) * 68px - 4px);
+  background:#0a0b12;border-radius:6px;overflow:hidden;
+}
+.ct-head{background:#12152b;padding:10px 8px 8px;text-align:center}
+.ct-title,.ct-sub{display:block;width:100%;background:transparent !important;border:0 !important;text-align:center;padding:0 !important;outline:none}
+.ct-title{color:#a78bfa;font-weight:700 !important;font-size:22px !important;line-height:28px}
+.ct-sub{color:#6a7090;font-size:11px !important;line-height:16px}
+.ct-title:focus,.ct-sub:focus{box-shadow:0 1px 0 rgba(167,139,250,.5)}
+.ct-rows{display:flex;flex-direction:column;gap:2px}
+.ct-empty{padding:24px;text-align:center;color:var(--ct-dim)}
+
+.ct-row{display:flex;background:var(--rbg);min-height:84px}
+.ct-label{width:72px;flex:none;background:var(--rlbg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px}
+.ct-label-in{width:100%;background:transparent !important;border:0 !important;padding:0 !important;text-align:center;outline:none;
+  color:var(--rc);font-weight:700 !important;font-size:24px !important;line-height:30px}
+.ct-label-in:focus{box-shadow:0 1px 0 var(--rc)}
+.ct-label-tools{display:flex;gap:2px;align-items:center;opacity:0;transition:opacity .12s}
+.ct-row:hover .ct-label-tools,.ct-label:focus-within .ct-label-tools{opacity:1}
+@media (hover:none){.ct-label-tools{opacity:1}}
+.ct-label-tools button,.ct-grip{width:16px;height:16px;padding:0;border:0;background:rgba(255,255,255,.1);color:var(--ct-text);border-radius:3px;font-size:11px;line-height:16px;text-align:center;cursor:pointer}
+.ct-label-tools button:hover{background:rgba(255,255,255,.22)}
+.ct-grip{cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
+.ct-label-tools input[type=color]{width:16px;height:16px;padding:0 !important;border:0 !important;background:none !important;cursor:pointer}
+.ct-cells{flex:1;display:flex;flex-wrap:wrap;gap:var(--gap);padding:5px;align-content:flex-start}
+.ct-cells:empty::before,.ct-pool-list:empty::before{
+  content:attr(data-hint);color:rgba(255,255,255,.2);font-size:12px;align-self:center;padding-left:6px}
+
+/* ---- 陀螺磚 ---- */
+.ct-tile{width:var(--tw);height:var(--th);flex:none;position:relative;overflow:hidden;border-radius:6px;
+  background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);
+  display:flex;flex-direction:column;align-items:center;cursor:grab;
+  user-select:none;-webkit-user-select:none;touch-action:none}
+.ct-tile img{width:58px;height:58px;margin-top:2px;object-fit:cover;pointer-events:none;-webkit-user-drag:none;border-radius:4px}
+.ct-noimg{width:58px;height:58px;margin-top:2px;border-radius:4px;background:rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ct-dim)}
+.ct-nm{position:absolute;left:0;right:0;bottom:2px;height:12px;line-height:12px;text-align:center;
+  font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.ct-tile.ct-used{opacity:.35}
+.ct-tile.ct-dragging{opacity:.25}
+
+/* ---- 拖曳中的殘影與插入標記 ---- */
+.ct-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.92;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+.ct-ghost-row{background:#2c3148;border:1px solid var(--ct-accent);border-radius:6px;padding:4px 10px;font-weight:700;font-size:14px;color:#e6e8f2;white-space:nowrap}
+.ct-marker{position:fixed;z-index:9998;pointer-events:none;background:var(--ct-accent);border-radius:2px;box-shadow:0 0 6px var(--ct-accent);width:3px}
+.ct-marker.h{height:3px;width:auto}
+.ct-drop-hot{outline:2px dashed rgba(167,139,250,.7);outline-offset:-2px}
+.ct-drag-active,.ct-drag-active *{cursor:grabbing !important}
+
+/* ---- 下方面板（未分配 / 圖鑑） ---- */
+.ct-panel{margin-top:12px;background:var(--ct-panel);border:1px solid var(--ct-line);border-radius:10px;overflow:hidden}
+.ct-tabs{display:flex;background:#12141f;border-bottom:1px solid var(--ct-line)}
+.ct-tabs button{background:transparent;border:0;border-bottom:2px solid transparent;color:var(--ct-dim);padding:8px 14px;font:inherit;cursor:pointer}
+.ct-tabs button.on{color:var(--ct-text);border-bottom-color:var(--ct-accent)}
+.ct-tabs b{font-weight:400;color:var(--ct-dim);margin-left:4px;font-size:12px}
+.ct-pane{padding:10px}
+.ct-pane[hidden]{display:none}
+.ct-pane-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.ct-pool-list,.ct-cat-list{display:flex;flex-wrap:wrap;gap:var(--gap);min-height:84px;padding:6px;border-radius:8px;background:rgba(0,0,0,.18);align-content:flex-start}
+.ct-cat-list{max-height:380px;overflow-y:auto}
+
+/* ---- 編輯陀螺對話框 ---- */
+.ct-dialog{background:var(--ct-panel);color:var(--ct-text);border:1px solid var(--ct-line);border-radius:10px;padding:16px;width:min(420px,92vw)}
+.ct-dialog::backdrop{background:rgba(0,0,0,.6)}
+.ct-dialog h3{margin:0 0 10px;font-size:16px}
+.ct-dialog label{display:block;margin:8px 0 2px;color:var(--ct-dim);font-size:12px}
+.ct-dialog textarea,.ct-dialog input[type=text]{width:100%}
+.ct-dlg-hint{color:var(--ct-dim);font-size:12px;margin-top:2px}
+.ct-dlg-preview{margin-top:8px;display:flex;align-items:center;gap:8px;min-height:20px}
+.ct-dlg-preview img{width:58px;height:58px;object-fit:cover;border-radius:4px;background:rgba(255,255,255,.06)}
+.ct-dlg-btns{display:flex;gap:6px;margin-top:14px}
+.ct-dlg-btns .spacer{flex:1}
+
+        /* Cost 賽：上限欄位與牌組卡片上的 Cost 標籤 */
+        #costLimit { width: 130px; padding: 15px; font-size: 24px; background: rgba(0,0,0,0.6); color: #fff; border: 2px solid #f1c40f; border-radius: 12px; }
+        #costLimit:focus { outline: none; box-shadow: 0 0 15px rgba(241,196,15,0.6); }
+        #costLimit:disabled { opacity: 0.6; }
+        .deck-cost { margin-top: 8px; font-size: 18px; font-weight: bold; color: #f1c40f; }
+        .deck-cost.warn { color: #e67e22; }
     </style>
 </head>
 <body>
@@ -300,11 +413,14 @@
             <select id="ruleMode" onchange="syncRuleModeUI()" title="基本賽：官方規則 ／ Cost 賽：自製 Cost 表 ／ 極限盤賽：極限盤場地">
                 <option value="basic">🏆 基本賽</option><option value="cost">💰 Cost 賽</option><option value="xtreme">🌀 極限盤賽</option>
             </select></span>
+            <span class="setup-group" id="costLimitGroup" style="display:none;"><label>Cost 上限：</label>
+            <input type="number" id="costLimit" min="0" step="any" placeholder="例如 12" title="每位選手先發 3 顆的 Cost 合計上限；存在這場賽事，開賽後鎖定"></span>
             <span class="setup-group"><label>輪數：</label>
             <select id="roundCount">
                 <option value="1" selected>打 1 輪</option><option value="2">打 2 輪</option><option value="3">打 3 輪</option>
             </select></span>
             <button class="btn-purple" onclick="openRosterModal()" style="margin:0 0 0 auto;">👤 選手名單與裝備庫</button>
+            <button class="btn-yellow" onclick="openCostTier()" style="margin:0;">📊 Cost / Tier 表</button>
         </div>
         <label style="font-size: 24px; color: #c5c6c7;"><b>請從名單選擇出賽選手：</b></label>
         <div id="playerBoxesContainer" class="player-inputs-container"></div>
@@ -386,6 +502,17 @@
             <div style="width: 100%; overflow-x: auto; padding-bottom: 15px;">
                 <div style="min-width: 1200px; height: 750px;"><canvas id="careerChart"></canvas></div>
             </div>
+        </div>
+    </div>
+
+    <div id="costTierModal" class="modal-overlay" style="z-index: 1070;">
+        <div class="modal-content" style="max-width: 1100px; background: rgba(10, 12, 18, 0.98); border: 3px solid #f1c40f; box-shadow: 0 0 40px rgba(241,196,15,0.35);">
+            <h2 style="color:#f1c40f; border-bottom: 3px dashed rgba(241,196,15,0.3); text-shadow: 0 0 15px rgba(241,196,15,0.5);">
+                📊 Cost / Tier 表
+                <button class="btn-danger" onclick="closeCostTier()" style="margin:0;">❌ 關閉</button>
+            </h2>
+            <p style="color:#aaa; font-size:18px; margin:0 0 15px 0;">欄位名稱是數字 (例如 9、8…0) 就是該欄零件的 Cost。到下方「圖鑑」分頁挑零件拖進欄位；核心上蓋 (戰刃) 一律計 Cost，其他部位 (固鎖、軸心…) 只有在表裡放了該種類才會計入。表格自動存在這個瀏覽器，建議定期按「匯出 JSON」備份。</p>
+            <div id="costTierRoot"></div>
         </div>
     </div>
 
@@ -565,6 +692,984 @@
         </div>
     </div>
 
+<!-- ===================== COST TIER MODULE (原 cost_tier.html) START ===================== -->
+<script>
+(function (global) {
+  'use strict';
+
+  /* ==========================================================================
+   * Cost / Tier 表編輯模組
+   *
+   * 資料模型（存在 localStorage[CONFIG.storageKey]）：
+   *   {
+   *     version: 1,
+   *     title: '表格標題', subtitle: '副標題', perRow: 11,   // perRow = 匯出圖片每列最多幾顆
+   *     rows:  [{ id, label, color, items: [itemId, ...] }],   // 欄位（由上到下）
+   *     pool:  [itemId, ...],                                  // 尚未分配欄位的陀螺
+   *     items: { itemId: { id, key, name, code, img, type } }  // 零件資料；key = 「種類::零件名」(例 Blade::蒼龍爆刃)，與牌組零件一致；
+ *                                                            // type = 零件種類 (Blade / Ratchet / Bit…)，自訂陀螺為空字串
+   *   }
+   * 欄位的 label 可以是任何文字；若是數字（例如 "9"）就會被當成該欄位的 Cost。
+   * ========================================================================== */
+
+  // ---------- 設定 ----------
+  // 圖鑑不再由模組自己讀 main_db.json：index.html 已把零件名稱清理好 (arsenalPartsDb)，
+  // 直接用 setCatalog() 餵進來，Cost 表裡的名稱才會和牌組裡的零件名稱完全一致。
+  var CONFIG = {
+    storageKey: 'beyblade_cost_table',
+    historyLimit: 30,      // 復原步數上限
+    catalogShowLimit: 300  // 圖鑑清單最多顯示幾筆（避免 DOM 太重）
+  };
+
+  // 匯出圖片與畫面共用的版面常數（單位 px，與 CSS 變數對應）
+  var LAYOUT = { TW: 64, TH: 74, GAP: 4, PAD: 5, LABEL_W: 72, ROW_GAP: 2, HEAD_H: 66, SCALE: 2 };
+
+  var FONT_FAMILY = '"PingFang TC","Microsoft JhengHei","Noto Sans TC","Noto Sans CJK TC",system-ui,sans-serif';
+
+  // 預設欄位 9~0 的顏色（取自範例圖）與新增欄位時輪流使用的色盤
+  var DEFAULT_COLORS = { 9: '#ff4d4f', 8: '#c84bff', 7: '#ff9f1a', 6: '#ff6b8a', 5: '#e6d51c', 4: '#ff4fb8', 3: '#8fa3bf', 2: '#ff8c3a', 1: '#8dff3a', 0: '#2fb4ff' };
+  var PALETTE = ['#ff4d4f', '#c84bff', '#ff9f1a', '#ff6b8a', '#e6d51c', '#ff4fb8', '#8fa3bf', '#ff8c3a', '#8dff3a', '#2fb4ff'];
+  var BASE_BG = '#0d0e14'; // 欄位底色是「欄位顏色」與這個深色的混合
+
+  // ---------- 模組內部狀態 ----------
+  var state = null;            // 目前的表
+  var undoStack = [], redoStack = [];
+  var listeners = [];
+  var root = null, els = {};   // 掛載後的根節點與常用元素
+  var catalog = [];            // 圖鑑清單（記憶體內，不存 localStorage）
+  var drag = null;             // 進行中的拖曳狀態
+  var saveTimer = null, noticeTimer = null;
+  var dlgState = null;         // 編輯陀螺對話框的暫存狀態
+  var imgCache = {};           // 匯出圖片時的圖片快取
+  var shortcutBound = false;
+
+  // ---------- 小工具 ----------
+  function uid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+  var HEX_RE = /^#[0-9a-fA-F]{6}$/;
+  function hexToRgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); }).join('');
+  }
+  // 以比例 t 混合 a 與 b（t=1 全是 a）
+  function mix(a, b, t) {
+    var A = hexToRgb(a), B = hexToRgb(b);
+    return rgbToHex(A[0] * t + B[0] * (1 - t), A[1] * t + B[1] * (1 - t), A[2] * t + B[2] * (1 - t));
+  }
+  function rowColors(color) { return { bg: mix(color, BASE_BG, 0.2), labelBg: mix(color, BASE_BG, 0.3) }; }
+  function isNumLabel(s) { return /^-?\d+(\.\d+)?$/.test(String(s).trim()); }
+
+  // 依文字寬度縮小字級，讓陀螺名稱塞進磚底（畫面與匯出共用同一套算法）
+  var _mctx = document.createElement('canvas').getContext('2d');
+  function fitFontSize(text, maxW, base, min) {
+    var s = base;
+    while (s > min) {
+      _mctx.font = '700 ' + s + 'px ' + FONT_FAMILY;
+      if (_mctx.measureText(text).width <= maxW) break;
+      s -= 0.5;
+    }
+    return s;
+  }
+
+  // ---------- 資料：預設值、驗證、讀寫 ----------
+  function defaultState() {
+    var rows = [];
+    for (var n = 9; n >= 0; n--) rows.push({ id: uid('r'), label: String(n), color: DEFAULT_COLORS[n], items: [] });
+    return { version: 1, title: 'Cost 表', subtitle: '', perRow: 11, rows: rows, pool: [], items: {} };
+  }
+
+  // 把任意來源的資料整理成合法的表（匯入 JSON、讀 localStorage、復原都會經過）
+  function sanitize(raw) {
+    var base = defaultState();
+    if (!raw || typeof raw !== 'object') return base;
+    var s = {
+      version: 1,
+      title: typeof raw.title === 'string' ? raw.title : base.title,
+      subtitle: typeof raw.subtitle === 'string' ? raw.subtitle : '',
+      perRow: clamp(parseInt(raw.perRow, 10) || 11, 4, 20),
+      rows: [], pool: [], items: {}
+    };
+    var srcItems = raw.items && typeof raw.items === 'object' ? raw.items : {};
+    Object.keys(srcItems).forEach(function (id) {
+      var it = srcItems[id];
+      if (it && typeof it === 'object' && typeof it.name === 'string') {
+        s.items[id] = { id: id, key: String(it.key || ('custom:' + id)), name: it.name, code: String(it.code || ''), img: typeof it.img === 'string' ? it.img : '', type: typeof it.type === 'string' ? it.type : '' };
+      }
+    });
+    var seen = {};
+    function takeIds(list) {
+      var out = [];
+      (Array.isArray(list) ? list : []).forEach(function (id) {
+        if (s.items[id] && !seen[id]) { seen[id] = true; out.push(id); }
+      });
+      return out;
+    }
+    var srcRows = Array.isArray(raw.rows) ? raw.rows : base.rows;
+    srcRows.forEach(function (r, i) {
+      if (!r || typeof r !== 'object') return;
+      s.rows.push({
+        id: r.id ? String(r.id) : uid('r'),
+        label: r.label == null ? '' : String(r.label),
+        color: HEX_RE.test(r.color) ? r.color : PALETTE[i % PALETTE.length],
+        items: takeIds(r.items)
+      });
+    });
+    s.pool = takeIds(raw.pool);
+    // 沒被任何欄位或未分配區引用的陀螺，一律放回未分配
+    Object.keys(s.items).forEach(function (id) { if (!seen[id]) s.pool.push(id); });
+    return s;
+  }
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(CONFIG.storageKey);
+      if (raw) return sanitize(JSON.parse(raw));
+    } catch (e) { console.warn('[CostTier] 讀取存檔失敗，改用預設表', e); }
+    return defaultState();
+  }
+  function ensureState() { if (!state) state = loadState(); return state; }
+
+  function saveNow() {
+    clearTimeout(saveTimer);
+    try {
+      localStorage.setItem(CONFIG.storageKey, JSON.stringify(state));
+      setStatus('已自動儲存 ' + new Date().toLocaleTimeString('zh-TW', { hour12: false }));
+    } catch (e) {
+      setStatus('儲存失敗（' + e.name + '，可能是圖片太多、超出瀏覽器儲存空間）', true);
+    }
+  }
+  function scheduleSave() {
+    setStatus('儲存中…');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 300);
+  }
+  function setStatus(msg) { if (els.status) els.status.textContent = msg; }
+  function setNotice(msg) {
+    if (!els.notice) return;
+    els.notice.textContent = msg;
+    clearTimeout(noticeTimer);
+    if (msg) noticeTimer = setTimeout(function () { els.notice.textContent = ''; }, 5000);
+  }
+
+  // ---------- 變更與復原 ----------
+  // 所有「結構性」修改都走 commit：自動記錄復原點、重畫、存檔、通知。
+  // fn 可直接修改傳入的 state，或回傳一個全新的 state 取代它。
+  function commit(fn) {
+    var before = JSON.stringify(state);
+    var r = fn(state);
+    if (r) state = r;
+    var after = JSON.stringify(state);
+    if (before === after) return;          // 沒有實際變動就不記錄
+    undoStack.push(before);
+    if (undoStack.length > CONFIG.historyLimit) undoStack.shift();
+    redoStack.length = 0;
+    afterChange();
+  }
+  function afterChange() {
+    if (root) render();
+    scheduleSave();
+    notify();
+  }
+  function undo() {
+    if (!undoStack.length) return;
+    redoStack.push(JSON.stringify(state));
+    state = sanitize(JSON.parse(undoStack.pop()));
+    afterChange();
+  }
+  function redo() {
+    if (!redoStack.length) return;
+    undoStack.push(JSON.stringify(state));
+    state = sanitize(JSON.parse(redoStack.pop()));
+    afterChange();
+  }
+  function notify() {
+    var snap = getTable();
+    listeners.forEach(function (fn) { try { fn(snap); } catch (e) { console.error(e); } });
+  }
+
+  // ---------- 資料操作 ----------
+  function rowById(s, id) { for (var i = 0; i < s.rows.length; i++) if (s.rows[i].id === id) return s.rows[i]; return null; }
+  function removeEverywhere(s, id) {
+    var i = s.pool.indexOf(id); if (i >= 0) s.pool.splice(i, 1);
+    s.rows.forEach(function (r) { var j = r.items.indexOf(id); if (j >= 0) r.items.splice(j, 1); });
+  }
+  // 把 id 放到 list 中 beforeId 之前；beforeId 為空就放最後
+  function insertBefore(list, id, beforeId) {
+    var pos = beforeId ? list.indexOf(beforeId) : -1;
+    if (pos < 0) list.push(id); else list.splice(pos, 0, id);
+  }
+  function ensureItemFromCatalog(s, c) {
+    for (var id in s.items) if (s.items[id].key === c.key) { if (!s.items[id].type) s.items[id].type = c.type || ''; return id; }   // 已在表中就沿用，避免重複 (順便補上缺少的零件種類)
+    var nid = uid('i');
+    s.items[nid] = { id: nid, key: c.key, name: c.display, code: c.code, img: c.img, type: c.type || '' };
+    return nid;
+  }
+  // 新增欄位時的預設名稱：若現有欄位都是數字且是加在最下面，就接續遞減
+  function nextLabel(s, index) {
+    if (index === s.rows.length && s.rows.length && s.rows.every(function (r) { return isNumLabel(r.label); })) {
+      var min = Math.min.apply(null, s.rows.map(function (r) { return Number(r.label); }));
+      if (min > 0) return String(min - 1);
+    }
+    return '新欄位';
+  }
+  function addRow(index) {
+    commit(function (s) {
+      s.rows.splice(index, 0, { id: uid('r'), label: nextLabel(s, index), color: PALETTE[s.rows.length % PALETTE.length], items: [] });
+    });
+  }
+  function deleteRow(rowId) {
+    var n = 0;
+    commit(function (s) {
+      var r = rowById(s, rowId); if (!r) return;
+      n = r.items.length;
+      r.items.forEach(function (id) { s.pool.push(id); });   // 欄位裡的陀螺退回未分配，不會遺失
+      s.rows.splice(s.rows.indexOf(r), 1);
+    });
+    setNotice('已刪除欄位' + (n ? '，' + n + ' 個陀螺已移回「未分配」' : '') + '（Ctrl+Z 可復原）');
+  }
+
+  // ---------- 渲染 ----------
+  function initialOf(name) { var m = String(name).match(/[一-鿿]|[A-Za-z0-9]/g); return m ? m[m.length > 5 ? 5 : m.length - 1] : '?'; }
+
+  function tileHtml(it, extraCls, extraAttr) {
+    var inner = it.img
+      ? '<img src="' + esc(it.img) + '" alt="" draggable="false">'
+      : '<div class="ct-noimg">' + esc(initialOf(it.name)) + '</div>';
+    return '<div class="ct-tile' + (extraCls || '') + '" ' + extraAttr + ' title="' + esc(it.name) + '">' + inner +
+      '<span class="ct-nm" style="font-size:' + fitFontSize(it.name, 58, 9, 5.5) + 'px">' + esc(it.name) + '</span></div>';
+  }
+  function itemTile(id) { return tileHtml(state.items[id], '', 'data-kind="item" data-id="' + id + '"'); }
+
+  function renderRows() {
+    els.rows.innerHTML = state.rows.length ? state.rows.map(function (r) {
+      var c = rowColors(r.color);
+      return '<div class="ct-row" data-row-id="' + r.id + '" style="--rc:' + r.color + ';--rbg:' + c.bg + ';--rlbg:' + c.labelBg + '">' +
+        '<div class="ct-label">' +
+          // 欄位名稱太長時自動縮小字級（上限 24px，與匯出圖片的算法一致），inline 的 !important 才蓋得過 CSS 的 !important
+          '<input type="text" class="ct-label-in" data-act="label" value="' + esc(r.label) + '" maxlength="10" aria-label="欄位名稱" style="font-size:' + fitFontSize(r.label, LAYOUT.LABEL_W - 8, 24, 9) + 'px !important">' +
+          '<div class="ct-label-tools">' +
+            '<span class="ct-grip" title="拖動調整欄位順序">⠿</span>' +
+            '<input type="color" data-act="color" value="' + r.color + '" title="欄位顏色">' +
+            '<button type="button" data-act="add-below" title="在下方新增欄位">＋</button>' +
+            '<button type="button" data-act="del-row" title="刪除欄位">×</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ct-cells" data-hint="拖曳陀螺到這裡">' + r.items.map(itemTile).join('') + '</div>' +
+      '</div>';
+    }).join('') : '<div class="ct-empty">尚無欄位，按上方「＋新增欄位」建立</div>';
+  }
+
+  function renderPool() {
+    var q = els.poolQ.value.trim().toLowerCase();
+    var ids = state.pool.filter(function (id) { return !q || state.items[id].name.toLowerCase().indexOf(q) >= 0; });
+    els.poolList.innerHTML = ids.map(itemTile).join('');
+    els.poolCount.textContent = state.pool.length;
+  }
+
+  function renderCatalog() {
+    var q = els.catQ.value.trim().toLowerCase(), t = els.catType.value;
+    var used = {};
+    Object.keys(state.items).forEach(function (id) { used[state.items[id].key] = true; });
+    var list = catalog.filter(function (c) {
+      return (!t || c.type === t) && (!q || (c.display + ' ' + c.code).toLowerCase().indexOf(q) >= 0);
+    });
+    els.catList.innerHTML = list.slice(0, CONFIG.catalogShowLimit).map(function (c) {
+      return tileHtml({ name: c.display, img: c.img }, used[c.key] ? ' ct-used' : '', 'data-kind="cat" data-ck="' + c._i + '"');
+    }).join('');
+    els.catCount.textContent = catalog.length;
+    var msg = catalog.length ? '共 ' + catalog.length + ' 筆，符合 ' + list.length + ' 筆' + (list.length > CONFIG.catalogShowLimit ? '（僅顯示前 ' + CONFIG.catalogShowLimit + ' 筆，請用搜尋縮小）' : '') + '。點一下加入「未分配」，或直接拖進欄位；灰掉的已在表中。' : els.catMsg.getAttribute('data-base') || '';
+    els.catMsg.textContent = msg;
+  }
+
+  function render() {
+    root.style.setProperty('--per-row', state.perRow);
+    els.title.value = state.title;
+    els.sub.value = state.subtitle;
+    els.perRow.value = state.perRow;
+    els.undo.disabled = !undoStack.length;
+    els.redo.disabled = !redoStack.length;
+    renderRows(); renderPool(); renderCatalog();
+  }
+
+  // ---------- 圖鑑（零件清單由 index.html 的兵工廠資料庫提供） ----------
+  // 傳入格式：[{ key:'Blade::蒼龍爆刃', name:'蒼龍爆刃', img:'圖片網址', type:'Blade', typeLabel:'戰刃' }, ...]
+  // key 必須是「種類::零件名」，牌組裡的零件才對得上 (見 index.html 的 evalCostSet)。
+  function setCatalog(list) {
+    var seen = {};
+    catalog = [];
+    (Array.isArray(list) ? list : []).forEach(function (c) {
+      if (!c || !c.key || seen[c.key]) return;
+      seen[c.key] = true;
+      var name = String(c.display || c.name || c.key);
+      catalog.push({ key: String(c.key), name: name, display: name, code: String(c.code || ''), img: typeof c.img === 'string' ? c.img : '',
+                     type: String(c.type || ''), typeLabel: String(c.typeLabel || c.type || '') });
+    });
+    catalog.forEach(function (c, i) { c._i = i; });
+    if (root) { rebuildTypeOptions(); renderCatalog(); }
+  }
+  // 依圖鑑重建「種類」下拉選單並保留目前選擇；第一次建立時預設選「戰刃」(最常拿來定 Cost 的零件)
+  function rebuildTypeOptions() {
+    var labels = {}, order = [];
+    catalog.forEach(function (c) { if (c.type && !labels[c.type]) { labels[c.type] = c.typeLabel; order.push(c.type); } });
+    var cur = els.catType.value;
+    els.catType.innerHTML = '<option value="">全部種類</option>' + order.map(function (t) { return '<option value="' + esc(t) + '">' + esc(labels[t]) + '</option>'; }).join('');
+    els.catType.value = (cur && labels[cur]) ? cur : (labels.Blade ? 'Blade' : '');
+    els.catType.hidden = !order.length;
+  }
+
+  // ---------- 拖曳（Pointer Events：滑鼠與觸控通用） ----------
+  function bindDrag() {
+    root.addEventListener('pointerdown', function (e) {
+      if (drag) return;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('input,textarea,select,button,dialog')) return;
+      var grip = e.target.closest('.ct-grip');
+      var tile = grip ? null : e.target.closest('.ct-tile');
+      if (!grip && !tile) return;
+      drag = {
+        type: grip ? 'row' : 'tile',
+        src: grip ? grip.closest('.ct-row') : tile,
+        x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY,
+        started: false, ghost: null, marker: null, hot: null, drop: null, raf: 0
+      };
+      document.addEventListener('pointermove', onDragMove);
+      document.addEventListener('pointerup', onDragUp);
+      document.addEventListener('pointercancel', onDragCancel);
+      document.addEventListener('keydown', onDragKey);
+    });
+  }
+  function unbindDrag() {
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragUp);
+    document.removeEventListener('pointercancel', onDragCancel);
+    document.removeEventListener('keydown', onDragKey);
+  }
+  function onDragMove(e) {
+    if (!drag) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    // 移動超過 6px 才算開始拖曳，避免點一下就誤觸
+    if (!drag.started && Math.hypot(drag.x - drag.x0, drag.y - drag.y0) > 6) startDrag();
+  }
+  function startDrag() {
+    drag.started = true;
+    var r = drag.src.getBoundingClientRect(), g;
+    if (drag.type === 'tile') {
+      g = drag.src.cloneNode(true);
+      g.classList.add('ct-ghost');
+      g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    } else {
+      g = document.createElement('div');
+      g.className = 'ct-ghost ct-ghost-row';
+      g.textContent = '欄位 ' + (drag.src.querySelector('.ct-label-in').value || '');
+    }
+    document.body.appendChild(g);   // 掛在 body：modal 有 backdrop-filter，會讓 fixed 定位變成相對於 modal
+    drag.ghost = g; drag.gw = g.offsetWidth; drag.gh = g.offsetHeight;
+    drag.src.classList.add('ct-dragging');
+    var m = document.createElement('div');
+    m.className = 'ct-marker' + (drag.type === 'row' ? ' h' : '');
+    m.style.display = 'none';
+    document.body.appendChild(m); drag.marker = m;
+    root.classList.add('ct-drag-active');
+    drag.raf = requestAnimationFrame(dragTick);
+  }
+  // 每個影格：靠近視窗上下緣時自動捲動，並更新落點
+  function dragTick() {
+    if (!drag || !drag.started) return;
+    var vh = window.innerHeight, dy = 0;
+    if (drag.y < 70) dy = -Math.ceil((70 - drag.y) / 4);
+    else if (drag.y > vh - 70) dy = Math.ceil((drag.y - (vh - 70)) / 4);
+    if (dy) { var sc = root.closest('.modal-overlay'); if (sc) sc.scrollTop += dy; else window.scrollBy(0, dy); }   // 在 modal 裡要捲 modal 本身
+    updateDropTarget();
+    drag.raf = requestAnimationFrame(dragTick);
+  }
+  // 找出指標下方的落點（欄位 / 未分配區）與插入位置
+  function updateDropTarget() {
+    var d = drag;
+    d.ghost.style.left = (d.x - d.gw / 2) + 'px';
+    d.ghost.style.top = (d.y - d.gh / 2) + 'px';
+    if (d.hot) { d.hot.classList.remove('ct-drop-hot'); d.hot = null; }
+    var el = document.elementFromPoint(d.x, d.y);   // 殘影 pointer-events:none，不會擋住
+    if (d.type === 'tile') {
+      var zone = null;
+      if (el) {
+        zone = el.closest('.ct-cells, .ct-pool-list');
+        if (!zone) {
+          var row = el.closest('.ct-row');
+          if (row) zone = row.querySelector('.ct-cells');
+          else {
+            var pp = el.closest('.ct-pane[data-pane="pool"]');
+            if (pp) zone = pp.querySelector('.ct-pool-list');
+          }
+        }
+      }
+      if (!zone) { d.drop = null; d.marker.style.display = 'none'; return; }
+      var before = findBefore(zone, d.x, d.y, d.src);
+      d.drop = { zone: zone, before: before };
+      zone.classList.add('ct-drop-hot'); d.hot = zone;
+      placeTileMarker(zone, before, d.src);
+    } else {
+      var rows = Array.prototype.filter.call(els.rows.querySelectorAll(':scope > .ct-row'), function (r) { return r !== d.src; });
+      var b = null;
+      for (var i = 0; i < rows.length; i++) {
+        var rr = rows[i].getBoundingClientRect();
+        if (d.y < rr.top + rr.height / 2) { b = rows[i]; break; }
+      }
+      d.drop = { before: b };
+      var bw = els.board.getBoundingClientRect(), y;
+      if (b) y = b.getBoundingClientRect().top - 2;
+      else if (rows.length) y = rows[rows.length - 1].getBoundingClientRect().bottom;
+      else y = bw.top;
+      d.marker.style.display = 'block';
+      d.marker.style.left = bw.left + 'px'; d.marker.style.width = bw.width + 'px'; d.marker.style.top = y + 'px';
+    }
+  }
+  // 依指標位置決定要插在哪一顆磚「之前」（不含正在拖的那顆）；回傳該磚元素或 null（放最後）
+  function findBefore(zone, x, y, src) {
+    var tiles = Array.prototype.filter.call(zone.querySelectorAll(':scope > .ct-tile'), function (t) { return t !== src; });
+    for (var i = 0; i < tiles.length; i++) {
+      var r = tiles[i].getBoundingClientRect();
+      if (y < r.top) return tiles[i];                              // 指標在這一列上方
+      if (y <= r.bottom && x < r.left + r.width / 2) return tiles[i]; // 同一列且在左半
+    }
+    return null;
+  }
+  function placeTileMarker(zone, before, src) {
+    var m = drag.marker, left, top, h = LAYOUT.TH;
+    var tiles = Array.prototype.filter.call(zone.querySelectorAll(':scope > .ct-tile'), function (t) { return t !== src; });
+    if (before) { var r = before.getBoundingClientRect(); left = r.left - 3; top = r.top; h = r.height; }
+    else if (tiles.length) { var l = tiles[tiles.length - 1].getBoundingClientRect(); left = l.right + 1; top = l.top; h = l.height; }
+    else { var z = zone.getBoundingClientRect(); left = z.left + 5; top = z.top + 5; }
+    m.style.display = 'block';
+    m.style.left = left + 'px'; m.style.top = top + 'px'; m.style.height = h + 'px';
+  }
+  function endDrag() {
+    var d = drag; drag = null;
+    unbindDrag();
+    if (!d) return null;
+    cancelAnimationFrame(d.raf);
+    if (d.ghost) d.ghost.remove();
+    if (d.marker) d.marker.remove();
+    if (d.hot) d.hot.classList.remove('ct-drop-hot');
+    d.src.classList.remove('ct-dragging');
+    root.classList.remove('ct-drag-active');
+    return d;
+  }
+  function onDragUp(e) {
+    if (!drag) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    if (drag.started) updateDropTarget();   // 以放開當下的位置為準
+    var d = endDrag();
+    if (!d.started) {
+      // 沒有移動 = 一般點擊：點圖鑑的磚就加入未分配
+      if (d.type === 'tile' && d.src.getAttribute('data-kind') === 'cat') quickAddCatalog(d.src);
+      return;
+    }
+    if (!d.drop) return;   // 放在無效區域：取消
+    if (d.type === 'tile') applyTileDrop(d);
+    else applyRowDrop(d);
+  }
+  function onDragCancel() { endDrag(); }
+  function onDragKey(e) { if (e.key === 'Escape') endDrag(); }
+
+  function applyTileDrop(d) {
+    var src = d.src, kind = src.getAttribute('data-kind');
+    var zone = d.drop.zone, rowEl = zone.closest('.ct-row');
+    var rowId = rowEl ? rowEl.getAttribute('data-row-id') : null;   // null 表示放到未分配區
+    var beforeId = d.drop.before ? d.drop.before.getAttribute('data-id') : null;
+    var ck = src.getAttribute('data-ck'), id = src.getAttribute('data-id');
+    commit(function (s) {
+      var itemId = kind === 'cat' ? ensureItemFromCatalog(s, catalog[+ck]) : id;
+      if (!s.items[itemId]) return;
+      removeEverywhere(s, itemId);
+      var list = rowId ? (rowById(s, rowId) || {}).items : s.pool;
+      if (!list) list = s.pool;
+      insertBefore(list, itemId, beforeId);
+    });
+  }
+  function applyRowDrop(d) {
+    var rid = d.src.getAttribute('data-row-id');
+    var beforeRid = d.drop.before ? d.drop.before.getAttribute('data-row-id') : null;
+    commit(function (s) {
+      var r = rowById(s, rid); if (!r) return;
+      s.rows.splice(s.rows.indexOf(r), 1);
+      var pos = beforeRid ? s.rows.indexOf(rowById(s, beforeRid)) : -1;
+      if (pos < 0) s.rows.push(r); else s.rows.splice(pos, 0, r);
+    });
+  }
+  function quickAddCatalog(tileEl) {
+    var c = catalog[+tileEl.getAttribute('data-ck')];
+    if (!c) return;
+    var exists = false;
+    Object.keys(state.items).forEach(function (id) { if (state.items[id].key === c.key) exists = true; });
+    if (exists) { setNotice('「' + c.display + '」已在表中'); return; }
+    commit(function (s) {
+      var id = ensureItemFromCatalog(s, c);
+      s.pool.push(id);
+    });
+    setNotice('已加入「未分配」：' + c.display);
+  }
+
+  // ---------- 編輯 / 新增陀螺對話框 ----------
+  function openItemDialog(id) {
+    var it = id ? state.items[id] : null;
+    dlgState = { id: id, img: it ? it.img : '', fileData: '' };
+    els.dlgTitle.textContent = it ? '編輯陀螺' : '新增自訂陀螺';
+    els.dlgName.value = it ? it.name : '';
+    els.dlgName.rows = it ? 1 : 4;
+    els.dlgNameLabel.textContent = it ? '名稱' : '名稱（每行一個，可一次新增多個）';
+    els.dlgHint.textContent = it ? '' : '一次新增多個時不會套用圖片。';
+    els.dlgUrl.value = it && it.img && !/^data:/.test(it.img) ? it.img : '';
+    els.dlgFile.value = '';
+    els.dlgDel.hidden = !it;
+    refreshDlgPreview();
+    els.dlg.showModal();
+    els.dlgName.focus();
+  }
+  function refreshDlgPreview() {
+    var src = dlgState.fileData || els.dlgUrl.value.trim() || dlgState.img;
+    els.dlgPreview.innerHTML = src ? '<img src="' + esc(src) + '" alt=""><button type="button" class="ct-btn" data-act="dlg-clear-img">移除圖片</button>' : '<span class="ct-dlg-hint">尚未設定圖片（顯示文字縮寫）</span>';
+  }
+  // 圖片先裁成置中正方形、縮到 128px 再轉成 data URL，避免 localStorage 爆量
+  function resizeImage(file, size) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () {
+        var c = document.createElement('canvas'); c.width = c.height = size;
+        var s = Math.min(im.width, im.height);
+        c.getContext('2d').drawImage(im, (im.width - s) / 2, (im.height - s) / 2, s, s, 0, 0, size, size);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/webp', 0.85));
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); reject(new Error('無法讀取圖片')); };
+      im.src = url;
+    });
+  }
+  function confirmItemDialog() {
+    var lines = els.dlgName.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+    if (!lines.length) { els.dlgName.focus(); return; }
+    var img = dlgState.fileData || els.dlgUrl.value.trim() || dlgState.img || '';
+    var id = dlgState.id;
+    commit(function (s) {
+      if (id) {
+        var it = s.items[id]; if (!it) return;
+        it.name = lines[0]; it.img = img;
+      } else {
+        lines.forEach(function (nm) {
+          var nid = uid('i');
+          s.items[nid] = { id: nid, key: 'custom:' + nid, name: nm, code: '', img: lines.length === 1 ? img : '', type: '' };
+          s.pool.push(nid);
+        });
+      }
+    });
+    els.dlg.close();
+  }
+
+  // ---------- 匯出：圖片 / JSON / 匯入 ----------
+  function download(blob, filename) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  }
+  function fileStamp() {
+    var d = new Date(), p = function (n) { return ('0' + n).slice(-2); };
+    return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate());
+  }
+  function safeName(s) { return (s || 'cost-table').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40); }
+
+  function loadImg(src) {
+    if (!imgCache[src]) {
+      imgCache[src] = new Promise(function (resolve) {
+        var im = new Image();
+        // 非 data URL 必須走 CORS，否則 canvas 會被污染而無法匯出；載入失敗就略過該張圖
+        if (!/^data:/.test(src)) im.crossOrigin = 'anonymous';
+        var t = setTimeout(function () { resolve(null); }, 8000);
+        im.onload = function () { clearTimeout(t); resolve(im); };
+        im.onerror = function () { clearTimeout(t); resolve(null); };
+        im.src = src;
+      });
+    }
+    return imgCache[src];
+  }
+  function roundRectPath(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  // 直接用 canvas 重畫整張表（不依賴外部函式庫），版面與畫面上的看板一致
+  async function exportPng() {
+    ensureState();
+    setNotice('產生圖片中…');
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    var L = LAYOUT, S = L.SCALE, perRow = state.perRow;
+    var hasHead = !!(state.title || state.subtitle), headH = hasHead ? L.HEAD_H : 0;
+    var W = L.LABEL_W + L.PAD * 2 + perRow * (L.TW + L.GAP) - L.GAP;
+    var layout = state.rows.map(function (r) {
+      var lines = Math.max(1, Math.ceil(r.items.length / perRow));
+      return { r: r, h: Math.max(lines * (L.TH + L.GAP) - L.GAP + L.PAD * 2, L.TH + L.PAD * 2) };
+    });
+    var H = headH + layout.reduce(function (a, x) { return a + x.h; }, 0) + Math.max(0, layout.length - 1) * L.ROW_GAP;
+
+    // 先把所有圖片載入（失敗的只計數，不中斷）
+    var ids = []; state.rows.forEach(function (r) { r.items.forEach(function (id) { ids.push(id); }); });
+    var imgs = {}, failed = 0;
+    await Promise.all(ids.map(function (id) {
+      var src = state.items[id].img;
+      if (!src) return null;
+      return loadImg(src).then(function (im) { if (im) imgs[id] = im; else failed++; });
+    }));
+
+    var cv = document.createElement('canvas');
+    cv.width = Math.round(W * S); cv.height = Math.round(Math.max(H, 1) * S);
+    var ctx = cv.getContext('2d');
+    ctx.scale(S, S);
+    ctx.fillStyle = '#0a0b12'; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    if (hasHead) {
+      ctx.fillStyle = '#12152b'; ctx.fillRect(0, 0, W, headH);
+      ctx.fillStyle = '#a78bfa'; ctx.font = '700 22px ' + FONT_FAMILY;
+      ctx.fillText(state.title, W / 2, state.subtitle ? 27 : headH / 2);
+      if (state.subtitle) { ctx.fillStyle = '#6a7090'; ctx.font = '11px ' + FONT_FAMILY; ctx.fillText(state.subtitle, W / 2, 49); }
+    }
+
+    var y = headH;
+    layout.forEach(function (row, ri) {
+      var r = row.r, c = rowColors(r.color);
+      ctx.fillStyle = c.labelBg; ctx.fillRect(0, y, L.LABEL_W, row.h);
+      ctx.fillStyle = c.bg; ctx.fillRect(L.LABEL_W, y, W - L.LABEL_W, row.h);
+      // 欄位名稱
+      ctx.fillStyle = r.color;
+      var fs = fitFontSize(r.label, L.LABEL_W - 8, 24, 9);
+      ctx.font = '700 ' + fs + 'px ' + FONT_FAMILY;
+      ctx.fillText(r.label, L.LABEL_W / 2, y + row.h / 2);
+      // 陀螺磚
+      r.items.forEach(function (id, i) {
+        var it = state.items[id];
+        var x = L.LABEL_W + L.PAD + (i % perRow) * (L.TW + L.GAP);
+        var ty = y + L.PAD + Math.floor(i / perRow) * (L.TH + L.GAP);
+        roundRectPath(ctx, x, ty, L.TW, L.TH, 6);
+        ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1;
+        roundRectPath(ctx, x + 0.5, ty + 0.5, L.TW - 1, L.TH - 1, 6); ctx.stroke();
+        // 圖片（置中裁成正方形，與畫面上 object-fit:cover 一致）
+        ctx.save();
+        roundRectPath(ctx, x + 3, ty + 3, 58, 58, 4); ctx.clip();
+        if (imgs[id]) {
+          var im = imgs[id], sz = Math.min(im.width, im.height);
+          ctx.drawImage(im, (im.width - sz) / 2, (im.height - sz) / 2, sz, sz, x + 3, ty + 3, 58, 58);
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(x + 3, ty + 3, 58, 58);
+          ctx.fillStyle = '#8b90a8'; ctx.font = '22px ' + FONT_FAMILY;
+          ctx.fillText(initialOf(it.name), x + L.TW / 2, ty + 32);
+        }
+        ctx.restore();
+        // 名稱
+        ctx.fillStyle = '#fff';
+        var nfs = fitFontSize(it.name, 58, 9, 5.5);
+        ctx.font = '700 ' + nfs + 'px ' + FONT_FAMILY;
+        ctx.fillText(it.name, x + L.TW / 2, ty + L.TH - 9, 58);
+      });
+      y += row.h + L.ROW_GAP;
+    });
+
+    return new Promise(function (resolve) {
+      cv.toBlob(function (blob) {
+        if (!blob) { setNotice('匯出失敗：瀏覽器無法產生圖片'); resolve(null); return; }
+        download(blob, safeName(state.title) + '-' + fileStamp() + '.png');
+        setNotice(failed ? '已匯出，但有 ' + failed + ' 張圖片因跨來源限制無法繪入（請改用 http server 開啟，或把圖片上傳為自訂圖片）' : '已匯出圖片');
+        resolve(blob);
+      }, 'image/png');
+    });
+  }
+  function exportJson() {
+    download(new Blob([JSON.stringify(state, null, 1)], { type: 'application/json' }), safeName(state.title) + '-' + fileStamp() + '.json');
+    setNotice('已匯出 JSON 備份');
+  }
+  function importJsonFile(file) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      try {
+        var j = JSON.parse(fr.result);
+        if (!j || !Array.isArray(j.rows) || typeof j.items !== 'object') throw new Error('格式不符');
+        commit(function () { return sanitize(j); });
+        setNotice('已匯入（Ctrl+Z 可復原）');
+      } catch (e) { setNotice('匯入失敗：' + e.message); }
+    };
+    fr.readAsText(file);
+  }
+  // ---------- 對外 API（Cost 賽驗證使用） ----------
+  function getTable() { return JSON.parse(JSON.stringify(ensureState())); }
+  function normKey(s) { return String(s).toLowerCase().replace(/[\s\-_]+/g, ''); }
+  // 以名稱 / 圖鑑編號 / key 查陀螺；先精確比對，再退而求其次做「名稱包含」比對
+  // exact 為 true 時只做精確比對 (名稱 / key / 編號)，不做「名稱包含」的模糊比對；Cost 賽驗證一律用 exact，避免短名字誤配
+  function lookup(q, exact) {
+    var s = ensureState();
+    if (q == null || q === '') return null;
+    var nq = normKey(q), found = null, loose = null;
+    Object.keys(s.items).forEach(function (id) {
+      var it = s.items[id];
+      if (found) return;
+      if (normKey(it.name) === nq || normKey(it.key) === nq || (it.code && normKey(it.code) === nq)) found = it;
+      else if (!exact && !loose && nq.length >= 2 && normKey(it.name).indexOf(nq) >= 0) loose = it;
+    });
+    var item = found || loose;
+    if (!item) return null;
+    var rowLabel = null;
+    s.rows.forEach(function (r) { if (r.items.indexOf(item.id) >= 0) rowLabel = r.label; });
+    return { item: JSON.parse(JSON.stringify(item)), row: rowLabel, cost: rowLabel != null && isNumLabel(rowLabel) ? Number(rowLabel) : null };
+  }
+  function getCost(q) { var r = lookup(q); return r ? r.cost : null; }
+  // 項目的零件種類：優先用 type 欄位，舊資料沒有就從 key 的「種類::」前綴推回來
+  function itemType(it) { return it.type || (String(it.key).indexOf('::') > 0 ? String(it.key).split('::')[0] : ''); }
+  // 目前「已分配到欄位」的陀螺涵蓋哪些零件種類 (例 ['Blade', 'Bit'])；自訂陀螺 (沒有種類) 不計入。
+  // Cost 賽依這份清單決定「核心上蓋以外」哪些部位要計 Cost。
+  function getCountedTypes() {
+    var s = ensureState(), seen = {}, out = [];
+    s.rows.forEach(function (r) {
+      r.items.forEach(function (id) {
+        var t = itemType(s.items[id]);
+        if (t && !seen[t]) { seen[t] = true; out.push(t); }
+      });
+    });
+    return out;
+  }
+
+  // Cost 賽配置驗證：傳入一組陀螺（名稱或編號的陣列）與 Cost 上限，回傳總 Cost 與逐顆明細。
+  //   total     已知 Cost 的總和
+  //   details   [{ query, name, row, cost, status }]；status 為 ok | unknown（表中找不到）| unassigned（還沒分到欄位）| nonnumeric（欄位名稱不是數字）
+  //   problems  status 不是 ok 的項目（這些不計入 total，呼叫端應提示使用者補表）
+  //   limit     傳入的上限（沒傳或不是數字就是 null，此時 over / remaining 也是 null）
+  //   over      total 是否超過上限；problems 非空時 total 可能偏低，因此 valid 另外給
+  //   valid     沒有 problems 且沒有超過上限才為 true
+  //   opts.exact  為 true 時查詢只做精確比對 (Cost 賽驗證用)
+  function check(list, limit, opts) {
+    var details = (Array.isArray(list) ? list : []).map(function (q) {
+      var r = lookup(q, opts && opts.exact), status = 'ok';
+      if (!r) status = 'unknown';
+      else if (r.row == null) status = 'unassigned';
+      else if (r.cost == null) status = 'nonnumeric';
+      return { query: q, name: r ? r.item.name : null, row: r ? r.row : null, cost: status === 'ok' ? r.cost : null, status: status };
+    });
+    var total = details.reduce(function (a, d) { return a + (d.cost || 0); }, 0);
+    var lim = (limit === null || limit === undefined || limit === '' || isNaN(Number(limit))) ? null : Number(limit);
+    var problems = details.filter(function (d) { return d.status !== 'ok'; });
+    var over = lim == null ? null : total > lim;
+    return { total: total, limit: lim, over: over, remaining: lim == null ? null : lim - total, details: details, problems: problems, valid: !problems.length && !over };
+  }
+
+  // ---------- 掛載 ----------
+  var SKELETON =
+    '<div class="ct-toolbar">' +
+      '<button type="button" class="ct-btn primary" data-act="add-row">＋新增欄位</button>' +
+      '<button type="button" class="ct-btn" data-act="undo" title="Ctrl+Z">復原</button>' +
+      '<button type="button" class="ct-btn" data-act="redo" title="Ctrl+Shift+Z">重做</button>' +
+      '<label class="ct-field">每列顆數<input type="number" min="4" max="20" data-bind="perRow"></label>' +
+      '<span class="spacer"></span>' +
+      '<button type="button" class="ct-btn primary" data-act="export-png">匯出圖片</button>' +
+      '<button type="button" class="ct-btn" data-act="export-json">匯出 JSON</button>' +
+      '<button type="button" class="ct-btn" data-act="import-json">匯入 JSON</button>' +
+      '<button type="button" class="ct-btn danger" data-act="reset">清空重來</button>' +
+      '<input type="file" accept=".json,application/json" hidden data-role="import-file">' +
+    '</div>' +
+    '<div class="ct-toolbar"><span class="ct-status"></span><span class="ct-notice"></span></div>' +
+    '<div class="ct-board-wrap"><div class="ct-board">' +
+      '<div class="ct-head">' +
+        '<input type="text" class="ct-title" data-bind="title" placeholder="標題（例如 11/22 Cost 表）" aria-label="表格標題">' +
+        '<input type="text" class="ct-sub" data-bind="subtitle" placeholder="副標題（選填）" aria-label="副標題">' +
+      '</div>' +
+      '<div class="ct-rows"></div>' +
+    '</div></div>' +
+    '<div class="ct-panel">' +
+      '<div class="ct-tabs">' +
+        '<button type="button" class="on" data-act="tab" data-tab="pool">未分配<b data-role="pool-count">0</b></button>' +
+        '<button type="button" data-act="tab" data-tab="cat">圖鑑<b data-role="cat-count">0</b></button>' +
+      '</div>' +
+      '<div class="ct-pane" data-pane="pool">' +
+        '<div class="ct-pane-bar">' +
+          '<input type="search" data-role="pool-q" placeholder="搜尋未分配的陀螺">' +
+          '<button type="button" class="ct-btn" data-act="new-item">＋新增自訂陀螺</button>' +
+          '<span class="ct-dlg-hint">拖回這裡 = 從表中移除（不會刪除陀螺）；連點兩下可編輯名稱與圖片</span>' +
+        '</div>' +
+        '<div class="ct-pool-list" data-hint="未分配的陀螺會顯示在這裡"></div>' +
+      '</div>' +
+      '<div class="ct-pane" data-pane="cat" hidden>' +
+        '<div class="ct-pane-bar">' +
+          '<input type="search" data-role="cat-q" placeholder="搜尋圖鑑">' +
+          '<select data-role="cat-type" hidden></select>' +
+        '</div>' +
+        '<div class="ct-dlg-hint" data-role="cat-msg" style="margin-bottom:6px"></div>' +
+        '<div class="ct-cat-list"></div>' +
+      '</div>' +
+    '</div>' +
+    '<dialog class="ct-dialog">' +
+      '<h3 data-role="dlg-title"></h3>' +
+      '<label data-role="dlg-name-label">名稱</label>' +
+      '<textarea rows="1" data-role="dlg-name"></textarea>' +
+      '<div class="ct-dlg-hint" data-role="dlg-hint"></div>' +
+      '<label>圖片（上傳）</label><input type="file" accept="image/*" data-role="dlg-file">' +
+      '<label>或圖片網址 / 相對路徑</label><input type="text" data-role="dlg-url" placeholder="例如 img/ux15.png">' +
+      '<div class="ct-dlg-preview" data-role="dlg-preview"></div>' +
+      '<div class="ct-dlg-btns">' +
+        '<button type="button" class="ct-btn danger" data-act="dlg-del">刪除陀螺</button><span class="spacer"></span>' +
+        '<button type="button" class="ct-btn" data-act="dlg-cancel">取消</button>' +
+        '<button type="button" class="ct-btn primary" data-act="dlg-ok">確定</button>' +
+      '</div>' +
+    '</dialog>';
+
+  function q(sel) { return root.querySelector(sel); }
+
+  function mount(container) {
+    if (root) { if (root.parentNode !== container) container.appendChild(root); render(); return; }
+    ensureState();
+    root = document.createElement('div');
+    root.className = 'ct-root';
+    root.innerHTML = SKELETON;
+    container.appendChild(root);
+
+    els = {
+      status: q('.ct-status'), notice: q('.ct-notice'),
+      title: q('[data-bind="title"]'), sub: q('[data-bind="subtitle"]'), perRow: q('[data-bind="perRow"]'),
+      undo: q('[data-act="undo"]'), redo: q('[data-act="redo"]'),
+      board: q('.ct-board'), rows: q('.ct-rows'),
+      poolQ: q('[data-role="pool-q"]'), poolList: q('.ct-pool-list'), poolCount: q('[data-role="pool-count"]'),
+      catQ: q('[data-role="cat-q"]'), catType: q('[data-role="cat-type"]'), catList: q('.ct-cat-list'),
+      catCount: q('[data-role="cat-count"]'), catMsg: q('[data-role="cat-msg"]'),
+      importFile: q('[data-role="import-file"]'),
+      dlg: q('dialog'), dlgTitle: q('[data-role="dlg-title"]'), dlgName: q('[data-role="dlg-name"]'),
+      dlgNameLabel: q('[data-role="dlg-name-label"]'), dlgHint: q('[data-role="dlg-hint"]'),
+      dlgFile: q('[data-role="dlg-file"]'), dlgUrl: q('[data-role="dlg-url"]'),
+      dlgPreview: q('[data-role="dlg-preview"]'), dlgDel: q('[data-act="dlg-del"]')
+    };
+    bindEvents();
+    bindDrag();
+    render();
+    // 圖片載入失敗：先改試 /app/ 路徑 (與兵工廠相同的備援)，仍失敗就改顯示文字縮寫
+    root.addEventListener('error', function (e) {
+      var im = e.target;
+      if (!im || im.tagName !== 'IMG' || !im.closest('.ct-tile')) return;
+      if (!im.dataset.triedApp && /\/site\//.test(im.src)) { im.dataset.triedApp = '1'; im.src = im.src.replace('/site/', '/app/'); return; }
+      var ph = document.createElement('div');
+      ph.className = 'ct-noimg'; ph.textContent = initialOf(im.closest('.ct-tile').getAttribute('title') || '');
+      im.replaceWith(ph);
+    }, true);
+    setStatus('已載入上次儲存的表');
+    els.catMsg.setAttribute('data-base', '零件圖鑑尚未載入：請確認以 http server 開啟網頁，且 main_db.json、hardcoded.json 讀取成功 (頁面上方會顯示讀取狀態)。');
+    rebuildTypeOptions(); renderCatalog();
+  }
+
+  function switchTab(name) {
+    root.querySelectorAll('.ct-tabs button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === name); });
+    root.querySelectorAll('.ct-pane').forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
+  }
+
+  function bindEvents() {
+    // 所有按鈕：事件代理
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-act]');
+      if (!b || !root.contains(b)) return;
+      var rowEl = b.closest('.ct-row'), rid = rowEl ? rowEl.getAttribute('data-row-id') : null;
+      switch (b.getAttribute('data-act')) {
+        case 'add-row': addRow(state.rows.length); break;
+        case 'add-below': addRow(state.rows.indexOf(rowById(state, rid)) + 1); break;
+        case 'del-row': deleteRow(rid); break;
+        case 'undo': undo(); break;
+        case 'redo': redo(); break;
+        case 'export-png': exportPng(); break;
+        case 'export-json': exportJson(); break;
+        case 'import-json': els.importFile.click(); break;
+        case 'reset':
+          if (confirm('清空整張表（欄位、陀螺、標題）並還原成預設？之後可用 Ctrl+Z 復原。')) commit(function () { return defaultState(); });
+          break;
+        case 'tab': switchTab(b.getAttribute('data-tab')); break;
+        case 'new-item': openItemDialog(null); break;
+        case 'dlg-cancel': els.dlg.close(); break;
+        case 'dlg-ok': confirmItemDialog(); break;
+        case 'dlg-clear-img': dlgState.img = ''; dlgState.fileData = ''; els.dlgUrl.value = ''; els.dlgFile.value = ''; refreshDlgPreview(); break;
+        case 'dlg-del':
+          if (dlgState && dlgState.id) { var id = dlgState.id; commit(function (s) { removeEverywhere(s, id); delete s.items[id]; }); }
+          els.dlg.close();
+          break;
+      }
+    });
+    // 文字類輸入：標題、欄位名稱、欄位顏色屬於「輕量修改」，只存檔不進復原堆疊
+    root.addEventListener('input', function (e) {
+      var t = e.target, bind = t.getAttribute('data-bind'), act = t.getAttribute('data-act');
+      if (bind === 'title' || bind === 'subtitle') { state[bind] = t.value; scheduleSave(); notify(); return; }
+      if (act === 'label' || act === 'color') {
+        var rowEl = t.closest('.ct-row'), r = rowById(state, rowEl.getAttribute('data-row-id'));
+        if (!r) return;
+        if (act === 'label') {
+          r.label = t.value;
+          // 輸入時即時縮放字級，讓畫面與匯出圖片一致
+          t.style.setProperty('font-size', fitFontSize(r.label, LAYOUT.LABEL_W - 8, 24, 9) + 'px', 'important');
+        } else {
+          r.color = t.value;
+          var c = rowColors(r.color);
+          rowEl.style.setProperty('--rc', r.color); rowEl.style.setProperty('--rbg', c.bg); rowEl.style.setProperty('--rlbg', c.labelBg);
+        }
+        scheduleSave(); notify();
+        return;
+      }
+      if (t === els.poolQ) renderPool();
+      if (t === els.catQ) renderCatalog();
+      if (t === els.dlgUrl) refreshDlgPreview();
+    });
+    root.addEventListener('change', function (e) {
+      var t = e.target;
+      if (t === els.perRow) { state.perRow = clamp(parseInt(t.value, 10) || 11, 4, 20); render(); scheduleSave(); notify(); }
+      else if (t === els.catType) renderCatalog();
+      else if (t === els.importFile && t.files[0]) { importJsonFile(t.files[0]); t.value = ''; }
+      else if (t === els.dlgFile && t.files[0]) {
+        resizeImage(t.files[0], 128).then(function (d) { dlgState.fileData = d; refreshDlgPreview(); })
+          .catch(function (err) { els.dlgHint.textContent = err.message; });
+      }
+    });
+    // 連點兩下陀螺 = 編輯
+    root.addEventListener('dblclick', function (e) {
+      var t = e.target.closest('.ct-tile[data-kind="item"]');
+      if (t) openItemDialog(t.getAttribute('data-id'));
+    });
+    // 快捷鍵：只在這個分頁可見、且不在輸入框內時生效
+    if (!shortcutBound) {
+      shortcutBound = true;
+      document.addEventListener('keydown', function (e) {
+        if (!root || root.offsetParent === null || drag) return;
+        if (e.target.closest && e.target.closest('input,textarea,select')) return;
+        if (!(e.ctrlKey || e.metaKey)) return;
+        var k = e.key.toLowerCase();
+        if (k === 'z' && !e.shiftKey) { undo(); e.preventDefault(); }
+        else if ((k === 'z' && e.shiftKey) || k === 'y') { redo(); e.preventDefault(); }
+      });
+      // 離開頁面前立刻存檔，避免 300ms 的延遲存檔來不及執行
+      window.addEventListener('pagehide', function () { if (state && root) saveNow(); });
+      document.addEventListener('visibilitychange', function () { if (document.hidden && state && root) saveNow(); });
+    }
+  }
+
+  // ---------- 對外介面 ----------
+  global.CostTier = {
+    mount: mount,
+    setCatalog: setCatalog,           // 餵入零件圖鑑 (由 index.html 在圖鑑載入完成後呼叫)
+    getCountedTypes: getCountedTypes, // 已分配到欄位的零件種類 (Cost 賽決定哪些部位要計 Cost)
+    getTable: getTable,
+    lookup: lookup,
+    getCost: getCost,
+    check: check,
+    onChange: function (fn) { if (typeof fn === 'function') listeners.push(fn); },
+    exportPng: exportPng,
+    // 以下僅供除錯 / 測試
+    _config: CONFIG
+  };
+})(window);
+</script>
+<!-- ===================== COST TIER MODULE END ===================== -->
 <script>
 // ================== 修改紀錄 (2026-11-22) ==================
 // 1. loadState：修正條件寫反，重新整理後會還原賽程與選手欄
@@ -582,6 +1687,12 @@
 // 12. 同一位選手的牌組依「比賽模式」分開 (基本賽 / Cost 賽 / 極限盤賽)，存於 p.deckSets；
 //     建立賽事時選擇比賽模式 (appState.ruleMode)，計分與變陣只讀該模式牌組；
 //     歸檔紀錄帶 ruleMode，歷史戰績與配件勝率可依模式篩選 (舊紀錄一律視為基本賽)
+// 13. 併入 Cost / Tier 表編輯器 (原 cost_tier.html，模組 window.CostTier)：設定列「📊 Cost / Tier 表」開啟；
+//     圖鑑直接取自兵工廠資料庫 (arsenalPartsDb)，表內零件以「種類::零件名」為 key，與牌組零件名稱完全一致。
+//     計算範圍：核心上蓋一律計 Cost；其他部位只有在 Cost 表裡放了該種類 (例如放了軸心) 才計。
+// 14. Cost 賽：設定列多一個「Cost 上限」(存在每場賽事 appState.costLimit，歸檔時一併記錄)；生成賽程時用 CostTier.check()
+//     驗證每位選手「先發 3 顆合計」；超標或有零件未列入 Cost 表會列出清單並詢問是否仍要開賽。
+//     牌組編輯器的 Cost 分頁會即時顯示每顆與合計 Cost。
 // ================== 核心系統變數 ==================
 const defaultColors = ['#00f3ff', '#ff003c', '#00ff66', '#f1c40f', '#bc13fe', '#ff7700', '#00ffcc', '#ff00aa'];
 const schedulesConfig = {
@@ -594,7 +1705,7 @@ for(let n=6; n<=8; n++){ schedulesConfig[n] = []; for(let i=0; i<n; i++){ for(le
 
 let roster = [];
 let currentEditIndex = -1;
-let appState = { id: null, tournamentName: "", timeString: "", players: [], matches: [], ruleMode: 'basic' };
+let appState = { id: null, tournamentName: "", timeString: "", players: [], matches: [], ruleMode: 'basic', costLimit: null };
 let careerChartInstance = null;
 let radarChartInstance = null;
 let currentScoringMatchId = null;
@@ -683,10 +1794,11 @@ function syncRuleModeUI() {
     const active = !!(appState.matches && appState.matches.length > 0);
     if (active) sel.value = normalizeRuleMode(appState.ruleMode);
     sel.disabled = active;
+    syncCostLimitUI(active);
     sel.title = active ? '賽程進行中，無法變更比賽模式 (請先結算或重置賽局)' : '';
     if (badge) {
         const m = RULE_MODES[normalizeRuleMode(sel.value)];
-        badge.innerText = active ? `【${m.icon} ${m.label}】` : ''; badge.style.color = m.color;
+        badge.innerText = active ? `【${m.icon} ${m.label}${(normalizeRuleMode(sel.value) === 'cost' && appState.costLimit != null) ? ' · 上限 ' + appState.costLimit : ''}】` : ''; badge.style.color = m.color;
     }
 }
 // 舊版只有單一 p.deck (視為基本賽牌組)；改成依比賽模式分開的 p.deckSets，缺的模式補空牌組，並確保每組至少 3 個先發位
@@ -892,6 +2004,12 @@ function generateNewSchedule() {
     if(new Set(appState.players).size !== appState.players.length) return alert('賽事名單內有重複的選手！請確認每位選手都是獨一無二的。');
 
     const ruleMode = normalizeRuleMode(document.getElementById('ruleMode').value); // 本場賽事的比賽模式
+    // Cost 賽：Cost 上限是必填 (沒填就不用往下問別的)
+    let costLimit = null;
+    if (ruleMode === 'cost') {
+        costLimit = readCostLimitInput();
+        if (costLimit === null) return alert('⚠ Cost 賽需要填寫「Cost 上限」！\n請在設定列的「Cost 上限」欄位輸入一個數字 (0 以上)。');
+    }
     let missingDecks = appState.players.filter(pName => {
         let r = roster.find(x => x.name === pName);
         return !isDeckSetReady(getPlayerDeck(r, ruleMode));
@@ -900,12 +2018,17 @@ function generateNewSchedule() {
         if(!confirm(`⚠️ 以下選手的【${getRuleModeLabel(ruleMode)}】3on3 牌組尚未配置完成：\n${missingDecks.join(', ')}\n\n是否仍然要強制開賽？(計分面板的陀螺資訊將會留空)`)) return;
     }
 
+    // Cost 賽：用 CostTier.check() 驗證每位選手的先發 3 顆合計
+    if (ruleMode === 'cost') {
+        const report = buildCostReport(appState.players, costLimit);
+        if (report.length > 0 && !confirm(`⚠️ 以下選手的 Cost 牌組不符合規定 (Cost 上限 ${fmtCost(costLimit)})：\n\n${report.join('\n\n')}\n\n是否仍然要強制開賽？`)) return;
+    }
     let inputName = document.getElementById('tournamentName').value.trim();
     if (inputName === "") { if (!confirm("未填寫賽事名稱，確定直接建立嗎？")) return; inputName = "未命名賽事"; }
     let history = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
     let finalName = inputName; let counter = 1;
     while (Object.values(history).some(h => h.name === finalName)) { counter++; finalName = `${inputName} (${counter})`; }
-    document.getElementById('tournamentName').value = finalName; appState.tournamentName = finalName; appState.ruleMode = ruleMode;
+    document.getElementById('tournamentName').value = finalName; appState.tournamentName = finalName; appState.ruleMode = ruleMode; appState.costLimit = ruleMode === 'cost' ? costLimit : null;
 
     let baseConfig = schedulesConfig[currentCount]; let rounds = parseInt(document.getElementById('roundCount').value);
     let allMatches = []; let lastMatch = null;
@@ -1269,12 +2392,12 @@ function renderSummary() {
 function saveState() { localStorage.setItem('beyblade_app_state', JSON.stringify(appState)); }
 // 讀取上次未完成的賽程；修正原本條件寫反 (!appState.matches && ...) 導致重新整理後永遠不還原的問題
 function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { try { appState = JSON.parse(saved); } catch(e) { return; } if(appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); syncRuleModeUI(); } } }
-function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.ruleMode = 'basic'; syncRuleModeUI(); appState.players = []; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
+function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.ruleMode = 'basic'; appState.costLimit = null; syncRuleModeUI(); appState.players = []; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
 function escapeCSV(str) { if (str === null || str === undefined) return '""'; return `"${String(str).replace(/"/g, '""')}"`; }
 function exportToCSV() {
     if(appState.matches.length === 0) return alert("目前沒有賽事資料可匯出！");
     let name = appState.tournamentName || "未命名賽事"; let csv = "\uFEFF"; 
-    csv += `賽事名稱：,${escapeCSV(name)}\n賽事時間：,${escapeCSV(appState.timeString)}\n比賽模式：,${escapeCSV(getRuleModeLabel(appState.ruleMode))}\n\n`; 
+    csv += `賽事名稱：,${escapeCSV(name)}\n賽事時間：,${escapeCSV(appState.timeString)}\n比賽模式：,${escapeCSV(getRuleModeLabel(appState.ruleMode))}\n${(normalizeRuleMode(appState.ruleMode) === 'cost' && appState.costLimit != null) ? 'Cost 上限：,' + appState.costLimit + '\n' : ''}\n`; 
     csv += "排名,選手名稱,勝場,敗場,得分,失分,淨分,勝率,犯規頻率,轉停次數,爆裂次數,擊飛次數,極限次數\n";
     let stats = {}; appState.players.forEach(p => stats[p] = { w:0, l:0, g:0, ls:0, spin:0, burst:0, over:0, xtreme:0, penalty:0 });
     appState.matches.forEach(m => {
@@ -1336,7 +2459,7 @@ function archiveTournament() {
         });
     });
 
-    history[appState.id] = { name: document.getElementById('tournamentName').value.trim() || "未命名賽事", time: appState.timeString, ruleMode: normalizeRuleMode(appState.ruleMode), results: stats, partStats: partStats };
+    history[appState.id] = { name: document.getElementById('tournamentName').value.trim() || "未命名賽事", time: appState.timeString, ruleMode: normalizeRuleMode(appState.ruleMode), costLimit: appState.costLimit == null ? null : appState.costLimit, results: stats, partStats: partStats };
     localStorage.setItem('beyblade_history', JSON.stringify(history)); renderHistory();
     const sortedPlayers = [...appState.players].sort((a, b) => { let netA = stats[a].g - stats[a].ls, netB = stats[b].g - stats[b].ls; if(stats[b].w !== stats[a].w) return stats[b].w - stats[a].w; return netB - netA; });
     showPodium(sortedPlayers.slice(0, 3));
@@ -1486,7 +2609,7 @@ function renderHistory() {
     let chartLimit = chartLimitSelect ? chartLimitSelect.value : 'all'; let chartOrder = chartOrderSelect ? chartOrderSelect.value : 'asc';
     let chartTours = [...fullHistoryArray]; if (chartLimit !== 'all') { chartTours = chartTours.slice(-parseInt(chartLimit)); } if (chartOrder === 'desc') { chartTours.reverse(); }
     // 顯示「全部模式」時，非基本賽的賽事在名稱後加上模式標記，避免不同模式的勝率混在一起看不出來
-    let xLabels = chartTours.map((tour, idx) => { let base = tour.name !== "未命名賽事" ? tour.name : `賽事 ${idx+1}`; let rm = normalizeRuleMode(tour.ruleMode); return (modeFilter === 'all' && rm !== 'basic') ? `${base} [${RULE_MODES[rm].short}]` : base; });
+    let xLabels = chartTours.map((tour, idx) => { let base = tour.name !== "未命名賽事" ? tour.name : `賽事 ${idx+1}`; let rm = normalizeRuleMode(tour.ruleMode); return (modeFilter === 'all' && rm !== 'basic') ? `${base} [${RULE_MODES[rm].short}${(rm === 'cost' && tour.costLimit != null) ? ' ' + tour.costLimit : ''}]` : base; });
     let datasets = players.map(p => {
         let color = getPlayerColor(p); let rates = chartTours.map(tour => { let r = tour.results[p]; if (!r) return null; let tourPlayed = r.w + r.l; return tourPlayed > 0 ? Math.round((r.w / tourPlayed) * 100) : null; });
         return { label: p, data: rates, borderColor: color, backgroundColor: color, borderWidth: 4, pointRadius: 8, tension: 0.2, spanGaps: true };
@@ -1558,6 +2681,117 @@ window.importHistoryBackup = function(event) {
     };
     reader.readAsText(file);
 };
+
+// ================== Cost 賽整合 (CostTier 模組 + Cost 上限 + 驗證) ==================
+const COST_CAT_LABELS = { Blade: '戰刃', MainBlade: '主戰刃', MetalBlade: '金屬戰刃', OverBlade: '超越戰刃', AssistBlade: '輔助戰刃', LockChip: '紋章', Ratchet: '固鎖', Bit: '軸心' };
+const COST_SLOTS = ['TopPart', 'LockChip', 'OverBlade', 'MainBlade', 'MetalBlade', 'AssistBlade', 'Ratchet', 'Bit']; // 牌組裡的零件欄位
+function fmtCost(n) { return String(Math.round(n * 100) / 100); }
+
+// 把兵工廠資料庫整理成 Cost 表可選的零件清單 (每個「種類 + 清理後名稱」一筆，與牌組零件的 category + clean_name 一一對應)
+function buildCostCatalog() {
+    const out = [];
+    Object.keys(COST_CAT_LABELS).forEach(cat => (arsenalPartsDb[cat] || []).forEach(g => {
+        out.push({ key: cat + '::' + g.clean_name, name: g.clean_name, img: g.variants[0].image, type: cat, typeLabel: COST_CAT_LABELS[cat] });
+    }));
+    return out;
+}
+
+window.openCostTier = function() {
+    document.getElementById('costTierModal').style.display = 'block';
+    CostTier.mount(document.getElementById('costTierRoot')); // 第一次開啟才建立畫面；之後只是重繪
+};
+window.closeCostTier = function() {
+    document.getElementById('costTierModal').style.display = 'none';
+    if (document.getElementById('builderModal').style.display === 'block' && builderRuleMode === 'cost') renderDeckOverview(); // 從牌組編輯器開啟時，關閉後刷新 Cost 顯示
+};
+// Cost 表有任何修改 (拖曳、改名、改欄位…) 就刷新牌組編輯器的 Cost 顯示
+if (window.CostTier) CostTier.onChange(() => {
+    if (document.getElementById('builderModal').style.display === 'block' && builderRuleMode === 'cost') renderDeckOverview();
+});
+
+// 讀取設定列的 Cost 上限：空白、非數字或負數都回傳 null
+function readCostLimitInput() {
+    const v = (document.getElementById('costLimit').value || '').trim();
+    if (v === '' || isNaN(Number(v)) || Number(v) < 0) return null;
+    return Number(v);
+}
+// 目前要拿來比對的 Cost 上限：賽事進行中以賽事記錄的為準，否則看設定列的欄位
+function getCostLimitForDisplay() {
+    if (appState.matches && appState.matches.length > 0 && normalizeRuleMode(appState.ruleMode) === 'cost') return appState.costLimit == null ? null : Number(appState.costLimit);
+    return readCostLimitInput();
+}
+// 比賽模式為 Cost 賽時才顯示 Cost 上限欄位；賽程進行中鎖定並顯示該場賽事的上限
+function syncCostLimitUI(active) {
+    const sel = document.getElementById('ruleMode'), grp = document.getElementById('costLimitGroup'), inp = document.getElementById('costLimit');
+    if (!sel || !grp || !inp) return;
+    grp.style.display = normalizeRuleMode(sel.value) === 'cost' ? '' : 'none';
+    if (active) inp.value = appState.costLimit == null ? '' : appState.costLimit;
+    inp.disabled = !!active;
+}
+
+// 計算一組牌組的 Cost (只取先發 3 顆)，直接呼叫 CostTier.check()：
+//   · 核心上蓋 (TopPart) 一律計入；其他部位只有 Cost 表放了該種類、或該零件本身就在表中才計入
+//   · 查詢用「種類::零件名」精確比對 (表中沒有這個 key 時，退回用零件名精確比對，相容手動新增的自訂陀螺)
+// 回傳 { res: CostTier.check 的結果, items: 查詢明細, perDeck: [每顆小計], problems: [有問題的零件] }
+function evalCostSet(decks, limit) {
+    const counted = new Set(CostTier.getCountedTypes());
+    const items = [];
+    (decks || []).slice(0, 3).forEach((d, di) => {
+        if (!d || !d.parts) return;
+        COST_SLOTS.forEach(slot => {
+            const p = d.parts[slot]; if (!p) return;
+            const key = p.category + '::' + p.clean_name;
+            if (items.some(x => x.deckIdx === di && x.key === key)) return; // 同一顆內相同零件只算一次 (避免 TopPart 與 MainBlade 欄位重複)
+            const inTable = !!CostTier.lookup(key, true);
+            if (slot !== 'TopPart' && !counted.has(p.category) && !inTable) return; // 這個部位不計 Cost
+            items.push({ deckIdx: di, slot, cat: p.category, name: p.clean_name, key, query: inTable ? key : p.clean_name });
+        });
+    });
+    const res = CostTier.check(items.map(x => x.query), limit, { exact: true });
+    const perDeck = [0, 0, 0], problems = [];
+    res.details.forEach((dt, k) => {
+        perDeck[items[k].deckIdx] += dt.cost || 0;
+        if (dt.status !== 'ok') problems.push({ item: items[k], status: dt.status, row: dt.row });
+    });
+    return { res, items, perDeck, problems };
+}
+function costProblemText(pr) {
+    const label = COST_CAT_LABELS[pr.item.cat] || pr.item.cat, who = `「${label} ${pr.item.name}」`;
+    if (pr.status === 'unassigned') return who + '在 Cost 表中但還沒分到欄位';
+    if (pr.status === 'nonnumeric') return who + `所在欄位「${pr.row}」不是數字`;
+    return who + '不在 Cost 表中';
+}
+// 開賽前驗證：回傳每位不合格選手的說明文字 (空陣列 = 全部合格)
+function buildCostReport(players, limit) {
+    const blocks = [];
+    players.forEach(pName => {
+        const r = roster.find(x => x.name === pName);
+        const ev = evalCostSet(getPlayerDeck(r, 'cost'), limit);
+        if (ev.res.valid) return;
+        const lines = [`【${pName}】先發合計 Cost ${fmtCost(ev.res.total)}` + (ev.res.over ? `，超過上限 ${fmtCost(ev.res.total - limit)}` : '')];
+        ev.problems.forEach(pr => lines.push('　· ' + costProblemText(pr)));
+        blocks.push(lines.join('\n'));
+    });
+    return blocks;
+}
+// 牌組卡片上的單顆 Cost 標籤 (只在 Cost 分頁顯示)
+function deckCostBadgeHtml(deck) {
+    if (!deck || !deck.parts || !deck.parts.TopPart || !window.CostTier) return '';
+    const ev = evalCostSet([deck], null);
+    const detail = ev.items.map((x, k) => `${COST_CAT_LABELS[x.cat] || x.cat} ${x.name}：${ev.res.details[k].status === 'ok' ? fmtCost(ev.res.details[k].cost) : '未列入'}`).join('\n');
+    const warn = ev.problems.length ? ` <span title="${escapeHtml(ev.problems.map(costProblemText).join('\n'))}">⚠️ ${ev.problems.length} 項未列入</span>` : '';
+    return `<div class="deck-cost${ev.problems.length ? ' warn' : ''}" title="${escapeHtml(detail)}">💰 Cost ${fmtCost(ev.perDeck[0])}${warn}</div>`;
+}
+// 牌組編輯器 Cost 分頁頂端的摘要：先發合計 / 上限
+function costSummaryHtml(decks) {
+    if (!window.CostTier) return '';
+    const limit = getCostLimitForDisplay(), ev = evalCostSet(decks, limit), r = ev.res;
+    let txt = `💰 先發合計 Cost ${fmtCost(r.total)} ／ ` + (limit == null ? '未設定上限 (在設定列填寫「Cost 上限」)' : `上限 ${fmtCost(limit)}`);
+    if (r.over) txt += `（超出 ${fmtCost(r.total - limit)}）`; else if (limit != null && !ev.problems.length) txt += `（剩 ${fmtCost(r.remaining)}）`;
+    if (ev.problems.length) txt += `　⚠️ ${ev.problems.length} 項零件未列入 Cost 表`;
+    const color = ev.problems.length ? '#f1c40f' : (r.over ? '#e74c3c' : '#2ecc71');
+    return ` <span style="color:${color}; font-weight:bold; margin-left:12px;">${txt}</span><button class="btn-yellow" style="margin:0 0 0 12px; padding:4px 14px; font-size:16px;" onclick="openCostTier()">📊 開啟 Cost 表</button>`;
+}
 
 // ================== 兵工廠專屬核心 JS ==================
 let arsenalPartsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
@@ -1730,6 +2964,7 @@ async function loadArsenalDatabase() {
     // 彙整內建固鎖的戰刃名稱，供 isRatchetFreeTop 對舊存檔零件做名稱比對
     arsenalPartsDb.Blade.forEach(g => { if (g.variants.some(v => v.ratchetFree)) arsenalRatchetFreeNames.add(g.clean_name); });
     arsenalPartsDb.TopPart = [...arsenalPartsDb.Blade, ...arsenalPartsDb.MainBlade, ...arsenalPartsDb.MetalBlade].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
+    if (window.CostTier) CostTier.setCatalog(buildCostCatalog()); // 圖鑑整理完成，交給 Cost 表模組當作可選零件清單
 }
 
 // 判斷是否為「占位用假零件」：資料庫為了讓商品有完整零件欄位，會替只含單一零件的商品補上其他部位的空殼資料
@@ -1803,6 +3038,7 @@ function renderBuilderModeTabs() {
     const tag = document.getElementById('builderModeTag'); tag.innerText = `【${cur.label}】`; tag.style.color = cur.color;
     // 目前分頁還是空的、其他分頁已有配置時，提供一鍵複製 (之後再微調即可)
     let hint = `<span>${cur.icon} ${cur.desc}</span>`;
+    if (builderRuleMode === 'cost') hint += costSummaryHtml(allDecks); // Cost 分頁：顯示先發合計與上限
     if (!hasAnyPart(allDecks)) {
         hint += RULE_MODE_KEYS.filter(k => k !== builderRuleMode && hasAnyPart(builderSets[k])).map(k =>
             `<button class="btn-blue" style="margin:0 0 0 12px; padding:4px 14px; font-size:16px;" onclick="copyDeckSetFrom('${k}')">📋 複製「${RULE_MODES[k].label}」的牌組</button>`).join('');
@@ -1829,7 +3065,7 @@ window.renderDeckOverview = function() {
         let cardHtml = `<div class="deck-card" data-index="${index}" onclick="openEditor(${index})">
                 <div class="deck-badge" style="background:${badgeColor}; color:#000;">${index < 3 ? `先發 ${index + 1}` : `備戰 ${index - 2}`}</div>
                 <div class="deck-grip" title="按住拖曳可調整順序">⇄ 拖曳</div>
-                ${getDeckCoverHtml(deck)}<div class="deck-name">${fullName}</div>
+                ${getDeckCoverHtml(deck)}<div class="deck-name">${fullName}</div>${builderRuleMode === 'cost' ? deckCostBadgeHtml(deck) : ''}
                 <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
                     <button class="btn-blue" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); openSwapModal(${index})">🔄 替換</button>
                     ${index >= 3 ? `<button class="btn-danger" style="padding: 6px 12px; font-size:16px;" onclick="event.stopPropagation(); deleteReserveDeck(${index})">❌ 刪除</button>` : ''}
