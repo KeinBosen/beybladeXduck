@@ -284,7 +284,7 @@
 .ct-root{
   /* 色彩與尺寸變數；--tw/--th 必須與下方匯出圖片的 LAYOUT 常數一致 */
   --ct-bg:#0d0e14;--ct-panel:#171a26;--ct-line:#2a2e42;--ct-text:#e6e8f2;--ct-dim:#8b90a8;--ct-accent:#a78bfa;
-  --tw:64px;--th:74px;--gap:4px;--per-row:11;
+  --tw:84px;--th:110px;--img:76px;--nmh:30px;--gap:4px;--per-row:11;   /* 實際值由 render() 依「磚塊大小」寫入 */
   color:var(--ct-text);background:var(--ct-bg);padding:12px;box-sizing:border-box;
   font:14px/1.5 "PingFang TC","Microsoft JhengHei","Noto Sans TC","Noto Sans CJK TC",system-ui,sans-serif;
 }
@@ -312,8 +312,8 @@
 /* ---- 看板（匯出圖片的樣式來源） ---- */
 .ct-board-wrap{overflow-x:auto;padding-bottom:4px}
 .ct-board{
-  /* 寬度 = 欄位標籤 72 + 內距 10 + 每列顆數 * (磚寬 64 + 間距 4) - 4 */
-  width:calc(72px + 10px + var(--per-row) * 68px - 4px);
+  /* 寬度 = 欄位標籤 72 + 內距 10 + 每列顆數 * (磚寬 + 間距 4) - 4 */
+  width:calc(72px + 10px + var(--per-row) * (var(--tw) + 4px) - 4px);
   background:#0a0b12;border-radius:6px;overflow:hidden;
 }
 .ct-head{background:#12152b;padding:10px 8px 8px;text-align:center}
@@ -324,7 +324,7 @@
 .ct-rows{display:flex;flex-direction:column;gap:2px}
 .ct-empty{padding:24px;text-align:center;color:var(--ct-dim)}
 
-.ct-row{display:flex;background:var(--rbg);min-height:84px}
+.ct-row{display:flex;background:var(--rbg);min-height:calc(var(--th) + 10px)}
 .ct-label{width:72px;flex:none;background:var(--rlbg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 2px}
 .ct-label-in{width:100%;background:transparent !important;border:0 !important;padding:0 !important;text-align:center;outline:none;
   color:var(--rc);font-weight:700 !important;font-size:24px !important;line-height:30px}
@@ -345,11 +345,18 @@
   background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);
   display:flex;flex-direction:column;align-items:center;cursor:grab;
   user-select:none;-webkit-user-select:none;touch-action:none}
-.ct-tile img{width:58px;height:58px;margin-top:2px;object-fit:cover;pointer-events:none;-webkit-user-drag:none;border-radius:4px}
-.ct-noimg{width:58px;height:58px;margin-top:2px;border-radius:4px;background:rgba(255,255,255,.06);
+.ct-tile img{width:var(--img);height:var(--img);margin-top:2px;object-fit:cover;pointer-events:none;-webkit-user-drag:none;border-radius:4px}
+.ct-noimg{width:var(--img);height:var(--img);margin-top:2px;border-radius:4px;background:rgba(255,255,255,.06);
   display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--ct-dim)}
-.ct-nm{position:absolute;left:0;right:0;bottom:2px;height:12px;line-height:12px;text-align:center;
-  font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+/* 名稱區：每一行是一個 <i> 區塊 (JS 已排好行與字級)，整塊垂直置中；匯出圖片用同一套排版 */
+.ct-nm{position:absolute;left:0;right:0;bottom:2px;height:var(--nmh);display:flex;flex-direction:column;justify-content:center;
+  text-align:center;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.ct-nm i{display:block;font-style:normal}
+/* 種類標籤：核心零件紫色、加價零件琥珀色 */
+.ct-badge{position:absolute;left:3px;top:3px;min-width:15px;height:15px;padding:0 2px;border-radius:4px;font-size:10px;line-height:15px;
+  text-align:center;font-weight:700;color:#fff;background:rgba(109,77,224,.92);pointer-events:none}
+.ct-badge.extra{background:rgba(217,150,20,.95);color:#201400}
+.ct-tile.ct-sel{outline:2px solid var(--ct-accent);outline-offset:-2px;background:rgba(167,139,250,.22)}
 .ct-tile.ct-used{opacity:.35}
 .ct-tile.ct-dragging{opacity:.25}
 
@@ -371,7 +378,11 @@
 .ct-pane[hidden]{display:none}
 .ct-pane-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
 .ct-pool-list,.ct-cat-list{display:flex;flex-wrap:wrap;gap:var(--gap);min-height:84px;padding:6px;border-radius:8px;background:rgba(0,0,0,.18);align-content:flex-start}
-.ct-cat-list{max-height:380px;overflow-y:auto}
+.ct-cat-list{max-height:460px;overflow-y:auto}
+.ct-filter{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px 0}
+.ct-banner{display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:8px 10px;border-radius:6px;background:#2a2540;border:1px solid #4b3f8a;color:#d9d2ff;font-size:13px}
+.ct-banner[hidden]{display:none}
+.ct-banner span{flex:1}
 
 /* ---- 編輯陀螺對話框 ---- */
 .ct-dialog{background:var(--ct-panel);color:var(--ct-text);border:1px solid var(--ct-line);border-radius:10px;padding:16px;width:min(420px,92vw)}
@@ -506,12 +517,12 @@
     </div>
 
     <div id="costTierModal" class="modal-overlay" style="z-index: 1070;">
-        <div class="modal-content" style="max-width: 1100px; background: rgba(10, 12, 18, 0.98); border: 3px solid #f1c40f; box-shadow: 0 0 40px rgba(241,196,15,0.35);">
+        <div class="modal-content" style="max-width: 1400px; background: rgba(10, 12, 18, 0.98); border: 3px solid #f1c40f; box-shadow: 0 0 40px rgba(241,196,15,0.35);">
             <h2 style="color:#f1c40f; border-bottom: 3px dashed rgba(241,196,15,0.3); text-shadow: 0 0 15px rgba(241,196,15,0.5);">
                 📊 Cost / Tier 表
                 <button class="btn-danger" onclick="closeCostTier()" style="margin:0;">❌ 關閉</button>
             </h2>
-            <p style="color:#aaa; font-size:18px; margin:0 0 15px 0;">欄位名稱是數字 (例如 9、8…0) 就是該欄零件的 Cost。到下方「圖鑑」分頁挑零件拖進欄位；核心上蓋 (戰刃) 一律計 Cost，其他部位 (固鎖、軸心…) 只有在表裡放了該種類才會計入。表格自動存在這個瀏覽器，建議定期按「匯出 JSON」備份。</p>
+            <p style="color:#aaa; font-size:18px; margin:0 0 15px 0;">欄位名稱是數字 (例如 9、8…0) 就是該欄零件的 Cost。核心上蓋 (戰刃、CX 的主戰刃與鋼鐵戰刃) 必須列入，Cost 為欄位數字；紋章、超越戰刃、輔助戰刃、固鎖、軸心是加價零件，放進表才會加 Cost，沒放算 0。一般零件已自動放在「未分配」，直接拖進欄位即可，聯名款到「圖鑑」分頁找；零件種類與分類篩選和裝備庫相同。表格自動存在這個瀏覽器，建議定期按「匯出 JSON」備份。</p>
             <div id="costTierRoot"></div>
         </div>
     </div>
@@ -704,12 +715,19 @@
    *   {
    *     version: 1,
    *     title: '表格標題', subtitle: '副標題', perRow: 11,   // perRow = 匯出圖片每列最多幾顆
+   *     size: 's' | 'm' | 'l',                                 // 磚塊尺寸 (畫面與匯出圖片共用)
    *     rows:  [{ id, label, color, items: [itemId, ...] }],   // 欄位（由上到下）
    *     pool:  [itemId, ...],                                  // 尚未分配欄位的陀螺
+   *     autoSeen: { key: true },                               // 已自動放進「未分配」(或已在表中) 的零件，避免刪掉後又被加回來
+   *     note: '',                                              // 一次性提示 (例如 CX 成品轉核心的說明)，使用者按「知道了」後清空
    *     items: { itemId: { id, key, name, code, img, type } }  // 零件資料；key = 「種類::零件名」(例 Blade::蒼龍爆刃)，與牌組零件一致；
  *                                                            // type = 零件種類 (Blade / Ratchet / Bit…)，自訂陀螺為空字串
    *   }
    * 欄位的 label 可以是任何文字；若是數字（例如 "9"）就會被當成該欄位的 Cost。
+   *
+   * Cost 計算規則 (Cost 賽驗證，見 check())：
+   *   核心零件 = 裝備庫的「核心上蓋」：戰刃 (BX/UX)、主戰刃 (CX)、鋼鐵戰刃 (CX)，必須列入表中，Cost 為欄位數字。
+   *   加價零件 = 紋章、超越戰刃、輔助戰刃、固鎖、軸心：有放進表中才加 Cost，沒放算 0。
    * ========================================================================== */
 
   // ---------- 設定 ----------
@@ -718,11 +736,36 @@
   var CONFIG = {
     storageKey: 'beyblade_cost_table',
     historyLimit: 30,      // 復原步數上限
-    catalogShowLimit: 300  // 圖鑑清單最多顯示幾筆（避免 DOM 太重）
+    catalogShowLimit: 400  // 圖鑑清單最多顯示幾筆（避免 DOM 太重）
   };
 
-  // 匯出圖片與畫面共用的版面常數（單位 px，與 CSS 變數對應）
-  var LAYOUT = { TW: 64, TH: 74, GAP: 4, PAD: 5, LABEL_W: 72, ROW_GAP: 2, HEAD_H: 66, SCALE: 2 };
+  // 核心零件種類 (必須列入 Cost 表)：與裝備庫的「核心上蓋」一致 = Blade (BX/UX 戰刃)、MainBlade (CX 主戰刃)、MetalBlade (CX 鋼鐵戰刃)。
+  // 其餘種類 (紋章、超越戰刃、輔助戰刃、固鎖、軸心) 是加價零件：有列入才加 Cost，沒列入算 0。
+  var CORE_TYPES = ['Blade', 'MainBlade', 'MetalBlade'];
+  var TYPE_LABELS = { Blade: '戰刃', MainBlade: '主戰刃', MetalBlade: '鋼鐵戰刃', OverBlade: '超越戰刃', LockChip: '紋章', AssistBlade: '輔助戰刃', Ratchet: '固鎖', Bit: '軸心' };
+  // 磚塊左上角的種類標籤 (戰刃是最常見的核心，不加標籤)
+  var TYPE_BADGE = { MainBlade: '主', MetalBlade: '鋼', OverBlade: '超', LockChip: '紋', AssistBlade: '輔', Ratchet: '固', Bit: '軸' };
+
+  // 磚塊三段尺寸 (畫面與匯出圖片共用，單位 px)：TW 磚寬、IMG 圖片邊長、NM_H 名稱區高度、FS 名稱基準字級、LINES 名稱最多幾行
+  var SIZES = {
+    s: { label: '小', TW: 64, IMG: 58, NM_H: 12, FS: 9, LINES: 1 },
+    m: { label: '中', TW: 84, IMG: 76, NM_H: 30, FS: 12, LINES: 2 },
+    l: { label: '大', TW: 108, IMG: 98, NM_H: 38, FS: 15, LINES: 2 }
+  };
+  Object.keys(SIZES).forEach(function (k) { SIZES[k].TH = SIZES[k].IMG + SIZES[k].NM_H + 4; });   // 磚高 = 圖 + 名稱區 + 上下留白
+
+  // 匯出圖片與畫面共用的版面常數（單位 px，與 CSS 對應）
+  var LAYOUT = { GAP: 4, PAD: 5, LABEL_W: 72, ROW_GAP: 2, HEAD_H: 66, SCALE: 2 };
+
+  // 顯示名稱縮寫規則：只影響畫面與匯出圖片的顯示，不會改動零件 key (牌組、歷史紀錄都靠 key 對應，不能動)。
+  // 要新增縮寫就在這裡加一行 [正規表示式, 取代文字或函式]。
+  var NAME_RULES = [
+    [/\s*版本\s*(\d+(?:\.\d+)?)/g, function (m, v) { return ' V' + v.replace(/\.0+$/, ''); }],   // 騎士重盾 版本 2.0 → 騎士重盾 V2
+    [/特別合體陀螺/g, '合體'],
+    [/新世紀福音戰士/g, 'EVA'],
+    [/上升攻擊型/g, '上攻'],
+    [/連擊型/g, '連擊']
+  ];
 
   var FONT_FAMILY = '"PingFang TC","Microsoft JhengHei","Noto Sans TC","Noto Sans CJK TC",system-ui,sans-serif';
 
@@ -742,6 +785,14 @@
   var dlgState = null;         // 編輯陀螺對話框的暫存狀態
   var imgCache = {};           // 匯出圖片時的圖片快取
   var shortcutBound = false;
+  var catByKey = {};           // 圖鑑 key → 圖鑑項目
+  var legacyMap = {};          // 舊版 CX 成品 key → 核心零件 key 陣列 (setCatalog 傳入，用來轉換舊表)
+  var imgAlt = function () { return []; };   // 圖片載入失敗時的備援網址 (由 index.html 設定，見 setImageFallback)
+  var filters = { q: '', type: '', cls: '', sort: 'new', collab: '' };   // 下方面板的篩選與排序 (type = 零件分類群組、cls = BX/UX/CX/BXG/EVE 或軸心類型)
+  var slotGroups = [], classFilters = [], bitFilters = [];   // 與裝備庫共用的分類定義，由 index.html 在 setCatalog 時傳入
+  var selCat = {}, selPool = {}, anchor = null;   // 目前選取：圖鑑用 key、未分配用 item id；anchor = Shift 連選的起點
+  var shownCat = [], shownPool = [];              // 最近一次畫面上顯示的順序 (批次動作依這個順序執行)
+  var labelCache = {};         // 名稱排版快取
 
   // ---------- 小工具 ----------
   function uid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -780,7 +831,7 @@
   function defaultState() {
     var rows = [];
     for (var n = 9; n >= 0; n--) rows.push({ id: uid('r'), label: String(n), color: DEFAULT_COLORS[n], items: [] });
-    return { version: 1, title: 'Cost 表', subtitle: '', perRow: 11, rows: rows, pool: [], items: {} };
+    return { version: 1, title: 'Cost 表', subtitle: '', perRow: 11, size: 'm', rows: rows, pool: [], items: {}, autoSeen: {}, note: '' };
   }
 
   // 把任意來源的資料整理成合法的表（匯入 JSON、讀 localStorage、復原都會經過）
@@ -792,13 +843,19 @@
       title: typeof raw.title === 'string' ? raw.title : base.title,
       subtitle: typeof raw.subtitle === 'string' ? raw.subtitle : '',
       perRow: clamp(parseInt(raw.perRow, 10) || 11, 4, 20),
-      rows: [], pool: [], items: {}
+      size: SIZES[raw.size] ? raw.size : 'm',
+      rows: [], pool: [], items: {}, autoSeen: {},
+      note: typeof raw.note === 'string' ? raw.note.slice(0, 800) : ''
     };
+    if (raw.autoSeen && typeof raw.autoSeen === 'object') {
+      Object.keys(raw.autoSeen).slice(0, 3000).forEach(function (k) { if (raw.autoSeen[k] === true) s.autoSeen[k] = true; });
+    }
     var srcItems = raw.items && typeof raw.items === 'object' ? raw.items : {};
     Object.keys(srcItems).forEach(function (id) {
       var it = srcItems[id];
       if (it && typeof it === 'object' && typeof it.name === 'string') {
-        s.items[id] = { id: id, key: String(it.key || ('custom:' + id)), name: it.name, code: String(it.code || ''), img: typeof it.img === 'string' ? it.img : '', type: typeof it.type === 'string' ? it.type : '' };
+        s.items[id] = { id: id, key: String(it.key || ('custom:' + id)), name: it.name, code: String(it.code || ''), img: typeof it.img === 'string' ? it.img : '',
+                        type: typeof it.type === 'string' ? it.type : '', edited: it.edited === true };
       }
     });
     var seen = {};
@@ -933,17 +990,81 @@
     setNotice('已刪除欄位' + (n ? '，' + n + ' 個陀螺已移回「未分配」' : '') + '（Ctrl+Z 可復原）');
   }
 
-  // ---------- 渲染 ----------
+  // ---------- 名稱：資料來源、縮寫、排版 ----------
   function initialOf(name) { var m = String(name).match(/[一-鿿]|[A-Za-z0-9]/g); return m ? m[m.length > 5 ? 5 : m.length - 1] : '?'; }
+  function sizeNow() { return SIZES[state.size] || SIZES.m; }
+  function isCore(t) { return CORE_TYPES.indexOf(t) >= 0; }
+  function keyType(key) { var i = String(key).indexOf('::'); return i > 0 ? String(key).slice(0, i) : ''; }
+  // 項目對應的圖鑑資料；自訂陀螺沒有。名稱、圖片以圖鑑為準 (資料庫更新或改成本機圖片時，舊表會跟著更新)，使用者手動編輯過的項目 (edited) 例外
+  function catOf(it) { return catByKey[it.key] || null; }
+  function nameOf(it) { var c = catOf(it); return (c && !it.edited) ? c.display : it.name; }
+  function imgOf(it) { var c = catOf(it); return (c && c.img && (!it.edited || !it.img)) ? c.img : it.img; }   // 手動指定過圖片 (edited 且 img 不空) 才不跟圖鑑；只改名稱的項目圖片仍跟圖鑑走 (改用本機圖片後會自動更新)
+  function typeOf(it) { var c = catOf(it); return (c && c.type) || it.type || keyType(it.key); }
+  function tileModel(it) { return { name: nameOf(it), img: imgOf(it), type: typeOf(it) }; }
 
-  function tileHtml(it, extraCls, extraAttr) {
-    var inner = it.img
-      ? '<img src="' + esc(it.img) + '" alt="" draggable="false">'
-      : '<div class="ct-noimg">' + esc(initialOf(it.name)) + '</div>';
-    return '<div class="ct-tile' + (extraCls || '') + '" ' + extraAttr + ' title="' + esc(it.name) + '">' + inner +
-      '<span class="ct-nm" style="font-size:' + fitFontSize(it.name, 58, 9, 5.5) + 'px">' + esc(it.name) + '</span></div>';
+  function shortenName(name) {
+    var s = String(name);
+    NAME_RULES.forEach(function (r) { s = s.replace(r[0], r[1]); });
+    return s.replace(/\s{2,}/g, ' ').trim();
   }
-  function itemTile(id) { return tileHtml(state.items[id], '', 'data-kind="item" data-id="' + id + '"'); }
+  // 超越戰刃 / 輔助戰刃的名稱只有一兩個字母 (F、T…)，加上種類才看得懂
+  function displayName(name, type) {
+    var nm = shortenName(name);
+    if ((type === 'OverBlade' || type === 'AssistBlade') && nm.length <= 2) nm = (type === 'OverBlade' ? '超越 ' : '輔助 ') + nm;
+    return nm;
+  }
+  function measureW(text, fs) { _mctx.font = '700 ' + fs + 'px ' + FONT_FAMILY; return _mctx.measureText(text).width; }
+  // 把文字切成可換行的單位：連續英數字元 (V2、A、2-60) 不拆開，中文逐字
+  function tokenize(s) { return String(s).match(/[A-Za-z0-9.+\-_'·\/]+|\s+|[\s\S]/g) || []; }
+  function wrapText(text, maxW, fs) {
+    var toks = [];
+    tokenize(text).forEach(function (t) {
+      if (!/^\s+$/.test(t) && measureW(t, fs) > maxW) t.split('').forEach(function (ch) { toks.push(ch); });   // 單一單位比一行還寬就逐字拆開
+      else toks.push(t);
+    });
+    var lines = [], cur = '';
+    toks.forEach(function (t) {
+      if (/^\s+$/.test(t)) { if (cur) cur += ' '; return; }
+      if (!cur || measureW(cur + t, fs) <= maxW) cur += t;
+      else { lines.push(cur.replace(/\s+$/, '')); cur = t; }
+    });
+    if (cur) lines.push(cur.replace(/\s+$/, ''));
+    return lines.length ? lines : [''];
+  }
+  // 名稱排成最多 maxLines 行：先用基準字級，放不下就逐步縮小，再放不下才截斷並加「…」
+  function layoutLabel(text, maxW, baseFs, minFs, maxLines) {
+    for (var fs = baseFs; fs >= minFs; fs -= 0.5) {
+      var lines = wrapText(text, maxW, fs);
+      if (lines.length <= maxLines) return { fs: fs, lines: lines };
+    }
+    var ls = wrapText(text, maxW, minFs).slice(0, maxLines), last = ls[maxLines - 1];
+    while (last.length > 1 && measureW(last + '…', minFs) > maxW) last = last.slice(0, -1);
+    ls[maxLines - 1] = last + '…';
+    return { fs: minFs, lines: ls };
+  }
+  // 畫面與匯出圖片共用的名稱排版：回傳 { fs 字級, lh 行高, lines 各行文字 }
+  function labelFor(name, type, sz) {
+    var ck = sz.TW + '|' + type + '|' + name;
+    if (labelCache[ck]) return labelCache[ck];
+    var disp = displayName(name, type), r;
+    if (sz.LINES === 1) r = { fs: fitFontSize(disp, sz.IMG, sz.FS, 5.5), lines: [disp], lh: sz.NM_H };
+    else { r = layoutLabel(disp, sz.TW - 6, sz.FS, sz.FS - 3, sz.LINES); r.lh = Math.round(r.fs * 1.18); }
+    labelCache[ck] = r;
+    return r;
+  }
+
+  // ---------- 渲染 ----------
+  function tipOf(v) { return (TYPE_LABELS[v.type] ? TYPE_LABELS[v.type] + '｜' : '') + v.name; }
+  function tileHtml(v, extraCls, extraAttr, lazy) {
+    var sz = sizeNow(), lab = labelFor(v.name, v.type, sz);
+    var inner = v.img
+      ? '<img src="' + esc(v.img) + '" alt="" draggable="false"' + (lazy ? ' loading="lazy"' : '') + '>'
+      : '<div class="ct-noimg">' + esc(initialOf(v.name)) + '</div>';
+    var badge = TYPE_BADGE[v.type] ? '<span class="ct-badge ' + (isCore(v.type) ? 'core' : 'extra') + '">' + TYPE_BADGE[v.type] + '</span>' : '';
+    return '<div class="ct-tile' + (extraCls || '') + '" ' + extraAttr + ' title="' + esc(tipOf(v)) + '">' + inner + badge +
+      '<span class="ct-nm" style="font-size:' + lab.fs + 'px;line-height:' + lab.lh + 'px">' + lab.lines.map(function (l) { return '<i>' + esc(l) + '</i>'; }).join('') + '</span></div>';
+  }
+  function itemTile(id) { return tileHtml(tileModel(state.items[id]), '', 'data-kind="item" data-id="' + id + '"', false); }
 
   function renderRows() {
     els.rows.innerHTML = state.rows.length ? state.rows.map(function (r) {
@@ -964,62 +1085,193 @@
     }).join('') : '<div class="ct-empty">尚無欄位，按上方「＋新增欄位」建立</div>';
   }
 
+  // ---------- 篩選與排序 (未分配區與圖鑑共用) ----------
+  // m 是「圖鑑項目」或自訂陀螺的簡化版：{ display, code, type, group, tags[], bitTypes[], rel, collab }
+  function metaOfItem(it) {
+    var c = catOf(it);
+    return c || { display: nameOf(it), code: it.code, type: typeOf(it), group: '', tags: [], bitTypes: [], rel: '', collab: false };
+  }
+  function matchFilters(m) {
+    var f = filters;
+    if (f.q && (m.display + ' ' + (m.code || '') + ' ' + (TYPE_LABELS[m.type] || '')).toLowerCase().indexOf(f.q) < 0) return false;
+    if (f.type === 'extra') { if (!m.group || m.group === 'TopPart') return false; }   // 加價零件 = 核心上蓋以外的所有分類
+    else if (f.type && m.group !== f.type) return false;
+    if (f.cls && (m.tags || []).indexOf(f.cls) < 0 && (m.bitTypes || []).indexOf(f.cls) < 0) return false;   // 與裝備庫相同：看零件的 tags，軸心另看攻/防/持/衡類型
+    if (f.collab === 'regular' && m.collab) return false;
+    if (f.collab === 'collab' && !m.collab) return false;
+    return true;
+  }
+  function compareMeta(a, b) {
+    var f = filters.sort, ra = a.rel || '', rb = b.rel || '', d = 0;
+    if (f === 'new') d = ra && rb ? (ra < rb ? 1 : ra > rb ? -1 : 0) : (ra ? -1 : rb ? 1 : 0);        // 沒有發售日的排最後
+    else if (f === 'old') d = ra && rb ? (ra < rb ? -1 : ra > rb ? 1 : 0) : (ra ? -1 : rb ? 1 : 0);
+    return d || String(a.display).localeCompare(String(b.display), 'zh-Hant');
+  }
+
+  function poolView() {
+    return state.pool.map(function (id) { return { id: id, m: metaOfItem(state.items[id]) }; })
+      .filter(function (e) { return matchFilters(e.m); })
+      .sort(function (a, b) { return compareMeta(a.m, b.m); });
+  }
   function renderPool() {
-    var q = els.poolQ.value.trim().toLowerCase();
-    var ids = state.pool.filter(function (id) { return !q || state.items[id].name.toLowerCase().indexOf(q) >= 0; });
-    els.poolList.innerHTML = ids.map(itemTile).join('');
+    var view = poolView();
+    shownPool = view.map(function (e) { return e.id; });
+    els.poolList.innerHTML = view.map(function (e) {
+      return tileHtml(tileModel(state.items[e.id]), selPool[e.id] ? ' ct-sel' : '', 'data-kind="item" data-id="' + e.id + '"', true);
+    }).join('');
     els.poolCount.textContent = state.pool.length;
   }
 
   function renderCatalog() {
-    var q = els.catQ.value.trim().toLowerCase(), t = els.catType.value;
     var used = {};
     Object.keys(state.items).forEach(function (id) { used[state.items[id].key] = true; });
-    var list = catalog.filter(function (c) {
-      return (!t || c.type === t) && (!q || (c.display + ' ' + c.code).toLowerCase().indexOf(q) >= 0);
-    });
-    els.catList.innerHTML = list.slice(0, CONFIG.catalogShowLimit).map(function (c) {
-      return tileHtml({ name: c.display, img: c.img }, used[c.key] ? ' ct-used' : '', 'data-kind="cat" data-ck="' + c._i + '"');
+    var list = catalog.filter(matchFilters).sort(compareMeta);
+    shownCat = list.slice(0, CONFIG.catalogShowLimit);
+    els.catList.innerHTML = shownCat.map(function (c) {
+      return tileHtml({ name: c.display, img: c.img, type: c.type }, (used[c.key] ? ' ct-used' : '') + (selCat[c.key] ? ' ct-sel' : ''), 'data-kind="cat" data-ck="' + c._i + '"', true);
     }).join('');
     els.catCount.textContent = catalog.length;
-    var msg = catalog.length ? '共 ' + catalog.length + ' 筆，符合 ' + list.length + ' 筆' + (list.length > CONFIG.catalogShowLimit ? '（僅顯示前 ' + CONFIG.catalogShowLimit + ' 筆，請用搜尋縮小）' : '') + '。點一下加入「未分配」，或直接拖進欄位；灰掉的已在表中。' : els.catMsg.getAttribute('data-base') || '';
-    els.catMsg.textContent = msg;
+    els.catMsg.textContent = catalog.length
+      ? '共 ' + catalog.length + ' 筆，符合 ' + list.length + ' 筆' + (list.length > CONFIG.catalogShowLimit ? '（僅顯示前 ' + CONFIG.catalogShowLimit + ' 筆，請用搜尋或篩選縮小）' : '') + '。點選可多選，連點兩下直接加入「未分配」，也可以拖進欄位；灰掉的已在表中。'
+      : (els.catMsg.getAttribute('data-base') || '');
   }
 
+  // 目前選取的數量與批次動作列
+  function paneNow() { var b = root.querySelector('.ct-tabs button.on'); return b ? b.getAttribute('data-tab') : 'pool'; }
+  function renderSelBar() {
+    var opts = '<option value="">移到欄位…</option>' + state.rows.map(function (r) { return '<option value="' + r.id + '">' + esc(r.label || '(未命名)') + '</option>'; }).join('');
+    [['pool', selPool], ['cat', selCat]].forEach(function (p) {
+      var pane = root.querySelector('.ct-pane[data-pane="' + p[0] + '"]'), n = Object.keys(p[1]).length;
+      pane.querySelector('[data-role="sel-info"]').textContent = n ? '已選 ' + n + ' 個' : '點選陀螺可多選，Shift 連選';
+      var mv = pane.querySelector('[data-role="move-to"]'); mv.innerHTML = opts; mv.disabled = !n;
+      pane.querySelectorAll('[data-act="sel-none"],[data-act="cat-add"],[data-act="pool-delete"]').forEach(function (b) { b.disabled = !n; });
+    });
+  }
+  function paintSelection() {
+    root.querySelectorAll('.ct-cat-list .ct-tile').forEach(function (t) { var c = catalog[+t.getAttribute('data-ck')]; t.classList.toggle('ct-sel', !!(c && selCat[c.key])); });
+    root.querySelectorAll('.ct-pool-list .ct-tile').forEach(function (t) { t.classList.toggle('ct-sel', !!selPool[t.getAttribute('data-id')]); });
+    renderSelBar();
+  }
+  function clearSel() { selCat = {}; selPool = {}; anchor = null; if (root) paintSelection(); }
+
   function render() {
+    var sz = sizeNow();
     root.style.setProperty('--per-row', state.perRow);
+    root.style.setProperty('--tw', sz.TW + 'px'); root.style.setProperty('--th', sz.TH + 'px');
+    root.style.setProperty('--img', sz.IMG + 'px'); root.style.setProperty('--nmh', sz.NM_H + 'px');
     els.title.value = state.title;
     els.sub.value = state.subtitle;
     els.perRow.value = state.perRow;
+    els.sizeSel.value = state.size;
     els.undo.disabled = !undoStack.length;
     els.redo.disabled = !redoStack.length;
-    renderRows(); renderPool(); renderCatalog();
+    els.banner.hidden = !state.note;
+    els.bannerText.textContent = state.note;
+    renderRows(); renderPool(); renderCatalog(); renderSelBar();
   }
 
   // ---------- 圖鑑（零件清單由 index.html 的兵工廠資料庫提供） ----------
-  // 傳入格式：[{ key:'Blade::蒼龍爆刃', name:'蒼龍爆刃', img:'圖片網址', type:'Blade', typeLabel:'戰刃' }, ...]
+  // 傳入格式：[{ key:'Blade::蒼龍爆刃', name:'蒼龍爆刃', img:'圖片網址', type:'Blade', typeLabel:'戰刃',
+  //             group:'TopPart' (裝備庫的零件分類群組), tags:['BX','BXG'] (與裝備庫相同的分類標籤), bitTypes:['Attack'] (軸心類型),
+  //             rel:'2023-07-15T…' (首次發售日), collab:false (是否聯名) }, ...]
+  // opts.groups = [{ id:'TopPart', label:'核心上蓋' }, ...]、opts.classes = [{ v:'BX', label:'BX' }, ...]、opts.bitClasses：分類下拉選單的內容，與裝備庫的零件選擇視窗共用同一份定義。
   // key 必須是「種類::零件名」，牌組裡的零件才對得上 (見 index.html 的 evalCostSet)。
-  function setCatalog(list) {
+  // opts.legacy = { 'Blade::惡魔勇氣 J': ['MainBlade::勇氣'], ... }：舊版把 CX 成品放進表中，這份對照用來把舊表自動轉成核心零件。
+  function setCatalog(list, opts) {
     var seen = {};
-    catalog = [];
+    catalog = []; catByKey = {};
     (Array.isArray(list) ? list : []).forEach(function (c) {
       if (!c || !c.key || seen[c.key]) return;
       seen[c.key] = true;
       var name = String(c.display || c.name || c.key);
-      catalog.push({ key: String(c.key), name: name, display: name, code: String(c.code || ''), img: typeof c.img === 'string' ? c.img : '',
-                     type: String(c.type || ''), typeLabel: String(c.typeLabel || c.type || '') });
+      var e = { key: String(c.key), name: name, display: name, code: String(c.code || ''), img: typeof c.img === 'string' ? c.img : '',
+                type: String(c.type || ''), typeLabel: String(c.typeLabel || TYPE_LABELS[c.type] || c.type || ''),
+                group: String(c.group || ''), tags: Array.isArray(c.tags) ? c.tags.slice() : [], bitTypes: Array.isArray(c.bitTypes) ? c.bitTypes.slice() : [],
+                rel: typeof c.rel === 'string' ? c.rel : '', collab: !!c.collab };
+      catalog.push(e); catByKey[e.key] = e;
     });
     catalog.forEach(function (c, i) { c._i = i; });
-    if (root) { rebuildTypeOptions(); renderCatalog(); }
+    legacyMap = (opts && opts.legacy && typeof opts.legacy === 'object') ? opts.legacy : {};
+    slotGroups = (opts && Array.isArray(opts.groups)) ? opts.groups : [];
+    classFilters = (opts && Array.isArray(opts.classes)) ? opts.classes : [];
+    bitFilters = (opts && Array.isArray(opts.bitClasses)) ? opts.bitClasses : [];
+    labelCache = {};
+    var s = ensureState();
+    if (normalizeWithCatalog(s)) { undoStack.length = 0; redoStack.length = 0; scheduleSave(); }
+    if (root) { rebuildFilterOptions(); render(); }
   }
-  // 依圖鑑重建「種類」下拉選單並保留目前選擇；第一次建立時預設選「戰刃」(最常拿來定 Cost 的零件)
-  function rebuildTypeOptions() {
-    var labels = {}, order = [];
-    catalog.forEach(function (c) { if (c.type && !labels[c.type]) { labels[c.type] = c.typeLabel; order.push(c.type); } });
-    var cur = els.catType.value;
-    els.catType.innerHTML = '<option value="">全部種類</option>' + order.map(function (t) { return '<option value="' + esc(t) + '">' + esc(labels[t]) + '</option>'; }).join('');
-    els.catType.value = (cur && labels[cur]) ? cur : (labels.Blade ? 'Blade' : '');
-    els.catType.hidden = !order.length;
+  // 依與裝備庫共用的分類定義重建「種類」「分類」下拉選單，並保留目前選擇
+  function rebuildFilterOptions() {
+    if (!els.ftype) return;
+    var t = els.ftype.value, c = els.fcls.value;
+    els.ftype.innerHTML = '<option value="">全部種類</option>' + slotGroups.map(function (g) { return '<option value="' + esc(g.id) + '">' + esc(g.label) + '</option>'; }).join('') + (slotGroups.length ? '<option value="extra">加價零件 (全部)</option>' : '');
+    els.fcls.innerHTML = '<option value="">全部分類</option>' + classFilters.map(function (f) { return '<option value="' + esc(f.v) + '">' + esc(f.label) + '</option>'; }).join('') +
+      (bitFilters.length ? '<optgroup label="軸心類型">' + bitFilters.map(function (f) { return '<option value="' + esc(f.v) + '">' + esc(f.label) + '</option>'; }).join('') + '</optgroup>' : '');
+    els.ftype.value = t; els.fcls.value = c;
+    filters.type = els.ftype.value; filters.cls = els.fcls.value;
+  }
+  function setImageFallback(fn) { if (typeof fn === 'function') { imgAlt = fn; imgCache = {}; } }
+
+  function findIdByKey(s, key) { for (var id in s.items) if (s.items[id].key === key) return id; return null; }
+  function locate(s, id) {
+    for (var i = 0; i < s.rows.length; i++) if (s.rows[i].items.indexOf(id) >= 0) return { row: s.rows[i], list: s.rows[i].items };
+    return { row: null, list: s.pool };
+  }
+  function costOfLabel(label) { return isNumLabel(label) ? Number(label) : null; }
+
+  // 圖鑑載入後整理表：舊 CX 成品 → 核心零件、補種類、把一般零件放進「未分配」。回傳是否有變動。
+  function normalizeWithCatalog(s) {
+    if (!catalog.length) return false;
+    var before = JSON.stringify(s);
+    migrateLegacy(s);
+    Object.keys(s.items).forEach(function (id) { var c = catByKey[s.items[id].key]; if (c && !s.items[id].type) s.items[id].type = c.type; });
+    syncPool(s);
+    return JSON.stringify(s) !== before;
+  }
+
+  // 舊表裡的 CX 成品 (如「惡魔勇氣 J」) 換成它的核心零件：
+  //   · 主戰刃 (CX1) 或鋼鐵戰刃 (CX2)：核心放在成品原本的欄位 (超越戰刃是加價零件，預設 0，不會自動放進表中)
+  //   · 同一個核心被多款成品共用 (例如「勇氣」)：兩邊都在欄位時取較高的 Cost
+  function migrateLegacy(s) {
+    var converted = 0, merged = [];
+    Object.keys(s.items).slice().forEach(function (id) {
+      var it = s.items[id], cores = it && legacyMap[it.key];
+      if (!cores || !cores.length) return;
+      var loc = locate(s, id);
+      cores.forEach(function (ck) {
+        var c = catByKey[ck]; if (!c) return;
+        var target = loc;   // 核心放在成品原本的欄位
+        var exId = findIdByKey(s, ck);
+        if (!exId) {
+          var nid = ensureItemFromCatalog(s, c), pos = target === loc ? target.list.indexOf(id) : -1;
+          if (pos >= 0) target.list.splice(pos, 0, nid); else target.list.push(nid);
+          converted++;
+        } else if (target.row) {
+          var exLoc = locate(s, exId);
+          if (!exLoc.row) { removeEverywhere(s, exId); target.list.push(exId); }
+          else if (exLoc.row !== target.row) {
+            var a = costOfLabel(exLoc.row.label), b = costOfLabel(target.row.label);
+            if (b != null && (a == null || b > a)) { removeEverywhere(s, exId); target.list.push(exId); merged.push(c.display + '：' + exLoc.row.label + ' → ' + target.row.label); }
+            else merged.push(c.display + '：維持 ' + exLoc.row.label + '（成品原放 ' + target.row.label + '）');
+          }
+        }
+      });
+      removeEverywhere(s, id); delete s.items[id];
+    });
+    if (converted || merged.length) {
+      s.note = '已把舊表裡的 CX 成品換成核心零件（主戰刃 / 鋼鐵戰刃），Cost 現在依核心零件計算，與紋章、超越戰刃、輔助戰刃怎麼搭配無關；這幾個加價零件預設 0，要加價再從圖鑑拉進表中。' +
+        (merged.length ? '共用同一核心的成品已合併：' + merged.join('；') + '。' : '');
+    }
+  }
+
+  // 把「一般 (非聯名) 核心零件」放進未分配；已在表中或已處理過 (autoSeen) 的不會再加，所以刪掉的不會被加回來
+  function syncPool(s) {
+    Object.keys(s.items).forEach(function (id) { s.autoSeen[s.items[id].key] = true; });
+    catalog.forEach(function (c) {
+      if (!isCore(c.type) || c.collab || s.autoSeen[c.key]) return;
+      s.autoSeen[c.key] = true;
+      s.pool.push(ensureItemFromCatalog(s, c));
+    });
   }
 
   // ---------- 拖曳（Pointer Events：滑鼠與觸控通用） ----------
@@ -1139,7 +1391,7 @@
     return null;
   }
   function placeTileMarker(zone, before, src) {
-    var m = drag.marker, left, top, h = LAYOUT.TH;
+    var m = drag.marker, left, top, h = sizeNow().TH;
     var tiles = Array.prototype.filter.call(zone.querySelectorAll(':scope > .ct-tile'), function (t) { return t !== src; });
     if (before) { var r = before.getBoundingClientRect(); left = r.left - 3; top = r.top; h = r.height; }
     else if (tiles.length) { var l = tiles[tiles.length - 1].getBoundingClientRect(); left = l.right + 1; top = l.top; h = l.height; }
@@ -1165,8 +1417,8 @@
     if (drag.started) updateDropTarget();   // 以放開當下的位置為準
     var d = endDrag();
     if (!d.started) {
-      // 沒有移動 = 一般點擊：點圖鑑的磚就加入未分配
-      if (d.type === 'tile' && d.src.getAttribute('data-kind') === 'cat') quickAddCatalog(d.src);
+      // 沒有移動 = 一般點擊：圖鑑與未分配區的磚是「選取 / 取消選取」(Shift 連選)
+      if (d.type === 'tile') handleTileClick(d.src, e);
       return;
     }
     if (!d.drop) return;   // 放在無效區域：取消
@@ -1201,6 +1453,74 @@
       if (pos < 0) s.rows.push(r); else s.rows.splice(pos, 0, r);
     });
   }
+  // 點一下磚塊：切換選取；按住 Shift 則選取與上一次點擊之間的所有磚
+  function handleTileClick(tile, e) {
+    var kind = tile.getAttribute('data-kind');
+    var inPool = kind === 'item' && !!tile.closest('.ct-pool-list');
+    if (kind !== 'cat' && !inPool) return;
+    var sel = kind === 'cat' ? selCat : selPool;
+    var idOf = function (t) { return kind === 'cat' ? (catalog[+t.getAttribute('data-ck')] || {}).key : t.getAttribute('data-id'); };
+    var tiles = Array.prototype.slice.call(tile.parentNode.children), idx = tiles.indexOf(tile);
+    if (e && e.shiftKey && anchor && anchor.kind === kind) {
+      var a = Math.min(anchor.idx, idx), b = Math.max(anchor.idx, idx);
+      for (var i = a; i <= b; i++) { var k = idOf(tiles[i]); if (k) sel[k] = true; }
+    } else {
+      var key = idOf(tile);
+      if (sel[key]) delete sel[key]; else sel[key] = true;
+      anchor = { kind: kind, idx: idx };
+    }
+    paintSelection();
+  }
+  function selectAllShown() {
+    if (paneNow() === 'cat') shownCat.forEach(function (c) { selCat[c.key] = true; });
+    else shownPool.forEach(function (id) { selPool[id] = true; });
+    paintSelection();
+  }
+  // 把所選陀螺一次移到指定欄位 (放在欄位最後，順序依畫面排序)
+  function moveSelected(rowId) {
+    var inCat = paneNow() === 'cat', n = 0, label = '';
+    commit(function (s) {
+      var row = rowById(s, rowId); if (!row) return;
+      label = row.label;
+      var refs = inCat ? shownCat.filter(function (c) { return selCat[c.key]; }).map(function (c) { return c.key; }) : shownPool.filter(function (id) { return selPool[id]; });
+      refs.forEach(function (ref) {
+        var itemId = inCat ? ensureItemFromCatalog(s, catByKey[ref]) : ref;
+        if (!s.items[itemId]) return;
+        removeEverywhere(s, itemId); row.items.push(itemId); n++;
+      });
+    });
+    clearSel();
+    if (n) setNotice('已把 ' + n + ' 個陀螺移到「' + label + '」欄（Ctrl+Z 可復原）');
+  }
+  function addSelectedToPool() {
+    var n = 0;
+    commit(function (s) {
+      shownCat.filter(function (c) { return selCat[c.key]; }).forEach(function (c) {
+        if (findIdByKey(s, c.key)) return;
+        s.pool.push(ensureItemFromCatalog(s, c)); n++;
+      });
+    });
+    clearSel();
+    setNotice(n ? '已加入 ' + n + ' 個到「未分配」' : '所選的陀螺都已在表中');
+  }
+  function deleteSelected() {
+    var ids = shownPool.filter(function (id) { return selPool[id]; });
+    if (!ids.length || !confirm('從表中刪除所選的 ' + ids.length + ' 個陀螺？（刪除的不會被自動加回；要找回可到「圖鑑」分頁，或按「補齊一般零件」）')) return;
+    commit(function (s) { ids.forEach(function (id) { removeEverywhere(s, id); delete s.items[id]; }); });
+    clearSel();
+    setNotice('已刪除 ' + ids.length + ' 個陀螺（Ctrl+Z 可復原）');
+  }
+  // 把「一般零件」中目前不在表裡的補回未分配 (用來找回刪掉的零件)
+  function refillPool() {
+    var n = 0;
+    commit(function (s) {
+      catalog.forEach(function (c) {
+        if (!isCore(c.type) || c.collab || findIdByKey(s, c.key)) return;
+        s.pool.push(ensureItemFromCatalog(s, c)); s.autoSeen[c.key] = true; n++;
+      });
+    });
+    setNotice(n ? '已補回 ' + n + ' 個一般零件到「未分配」' : '沒有缺少的一般零件');
+  }
   function quickAddCatalog(tileEl) {
     var c = catalog[+tileEl.getAttribute('data-ck')];
     if (!c) return;
@@ -1217,13 +1537,13 @@
   // ---------- 編輯 / 新增陀螺對話框 ----------
   function openItemDialog(id) {
     var it = id ? state.items[id] : null;
-    dlgState = { id: id, img: it ? it.img : '', fileData: '' };
+    dlgState = { id: id, img: it ? imgOf(it) : '', fileData: '' };
     els.dlgTitle.textContent = it ? '編輯陀螺' : '新增自訂陀螺';
-    els.dlgName.value = it ? it.name : '';
+    els.dlgName.value = it ? nameOf(it) : '';
     els.dlgName.rows = it ? 1 : 4;
     els.dlgNameLabel.textContent = it ? '名稱' : '名稱（每行一個，可一次新增多個）';
     els.dlgHint.textContent = it ? '' : '一次新增多個時不會套用圖片。';
-    els.dlgUrl.value = it && it.img && !/^data:/.test(it.img) ? it.img : '';
+    els.dlgUrl.value = it && imgOf(it) && !/^data:/.test(imgOf(it)) ? imgOf(it) : '';
     els.dlgFile.value = '';
     els.dlgDel.hidden = !it;
     refreshDlgPreview();
@@ -1257,7 +1577,9 @@
     commit(function (s) {
       if (id) {
         var it = s.items[id]; if (!it) return;
-        it.name = lines[0]; it.img = img;
+        var cat0 = catOf(it);
+        it.name = lines[0]; it.edited = true;   // 手動編輯過：之後名稱不再被圖鑑覆蓋
+        it.img = (cat0 && img === cat0.img) ? '' : img;   // 圖片沒換 (與圖鑑相同) 就留空，繼續跟著圖鑑 (改用本機圖片時才會一起更新)
       } else {
         lines.forEach(function (nm) {
           var nid = uid('i');
@@ -1282,17 +1604,22 @@
   }
   function safeName(s) { return (s || 'cost-table').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40); }
 
+  // 載入單一圖片；非 data URL 必須走 CORS，否則 canvas 會被污染而無法匯出
+  function loadOne(src) {
+    return new Promise(function (resolve) {
+      var im = new Image();
+      if (!/^data:/.test(src)) im.crossOrigin = 'anonymous';
+      var t = setTimeout(function () { resolve(null); }, 8000);
+      im.onload = function () { clearTimeout(t); resolve(im); };
+      im.onerror = function () { clearTimeout(t); resolve(null); };
+      im.src = src;
+    });
+  }
+  // 依序嘗試原網址與備援網址 (/site/ → /app/、本機 ↔ 遠端，由 index.html 的 setImageFallback 提供)，全部失敗才回傳 null
   function loadImg(src) {
     if (!imgCache[src]) {
-      imgCache[src] = new Promise(function (resolve) {
-        var im = new Image();
-        // 非 data URL 必須走 CORS，否則 canvas 會被污染而無法匯出；載入失敗就略過該張圖
-        if (!/^data:/.test(src)) im.crossOrigin = 'anonymous';
-        var t = setTimeout(function () { resolve(null); }, 8000);
-        im.onload = function () { clearTimeout(t); resolve(im); };
-        im.onerror = function () { clearTimeout(t); resolve(null); };
-        im.src = src;
-      });
+      var list = [src].concat(imgAlt(src) || []);
+      imgCache[src] = list.reduce(function (p, u) { return p.then(function (im) { return im || loadOne(u); }); }, Promise.resolve(null));
     }
     return imgCache[src];
   }
@@ -1307,20 +1634,21 @@
     ensureState();
     setNotice('產生圖片中…');
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
-    var L = LAYOUT, S = L.SCALE, perRow = state.perRow;
+    labelCache = {};   // 字型載入完成後重新量測名稱寬度
+    var L = LAYOUT, S = L.SCALE, perRow = state.perRow, sz = sizeNow();
     var hasHead = !!(state.title || state.subtitle), headH = hasHead ? L.HEAD_H : 0;
-    var W = L.LABEL_W + L.PAD * 2 + perRow * (L.TW + L.GAP) - L.GAP;
+    var W = L.LABEL_W + L.PAD * 2 + perRow * (sz.TW + L.GAP) - L.GAP;
     var layout = state.rows.map(function (r) {
       var lines = Math.max(1, Math.ceil(r.items.length / perRow));
-      return { r: r, h: Math.max(lines * (L.TH + L.GAP) - L.GAP + L.PAD * 2, L.TH + L.PAD * 2) };
+      return { r: r, h: Math.max(lines * (sz.TH + L.GAP) - L.GAP + L.PAD * 2, sz.TH + L.PAD * 2) };
     });
     var H = headH + layout.reduce(function (a, x) { return a + x.h; }, 0) + Math.max(0, layout.length - 1) * L.ROW_GAP;
 
-    // 先把所有圖片載入（失敗的只計數，不中斷）
+    // 先把所有圖片載入（失敗的只計數，不中斷）；圖片網址以圖鑑目前的為準
     var ids = []; state.rows.forEach(function (r) { r.items.forEach(function (id) { ids.push(id); }); });
     var imgs = {}, failed = 0;
     await Promise.all(ids.map(function (id) {
-      var src = state.items[id].img;
+      var src = imgOf(state.items[id]);
       if (!src) return null;
       return loadImg(src).then(function (im) { if (im) imgs[id] = im; else failed++; });
     }));
@@ -1340,7 +1668,7 @@
     }
 
     var y = headH;
-    layout.forEach(function (row, ri) {
+    layout.forEach(function (row) {
       var r = row.r, c = rowColors(r.color);
       ctx.fillStyle = c.labelBg; ctx.fillRect(0, y, L.LABEL_W, row.h);
       ctx.fillStyle = c.bg; ctx.fillRect(L.LABEL_W, y, W - L.LABEL_W, row.h);
@@ -1351,30 +1679,38 @@
       ctx.fillText(r.label, L.LABEL_W / 2, y + row.h / 2);
       // 陀螺磚
       r.items.forEach(function (id, i) {
-        var it = state.items[id];
-        var x = L.LABEL_W + L.PAD + (i % perRow) * (L.TW + L.GAP);
-        var ty = y + L.PAD + Math.floor(i / perRow) * (L.TH + L.GAP);
-        roundRectPath(ctx, x, ty, L.TW, L.TH, 6);
+        var it = state.items[id], v = tileModel(it);
+        var x = L.LABEL_W + L.PAD + (i % perRow) * (sz.TW + L.GAP);
+        var ty = y + L.PAD + Math.floor(i / perRow) * (sz.TH + L.GAP);
+        roundRectPath(ctx, x, ty, sz.TW, sz.TH, 6);
         ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1;
-        roundRectPath(ctx, x + 0.5, ty + 0.5, L.TW - 1, L.TH - 1, 6); ctx.stroke();
+        roundRectPath(ctx, x + 0.5, ty + 0.5, sz.TW - 1, sz.TH - 1, 6); ctx.stroke();
         // 圖片（置中裁成正方形，與畫面上 object-fit:cover 一致）
+        var ix = x + (sz.TW - sz.IMG) / 2, iy = ty + 2;
         ctx.save();
-        roundRectPath(ctx, x + 3, ty + 3, 58, 58, 4); ctx.clip();
+        roundRectPath(ctx, ix, iy, sz.IMG, sz.IMG, 4); ctx.clip();
         if (imgs[id]) {
-          var im = imgs[id], sz = Math.min(im.width, im.height);
-          ctx.drawImage(im, (im.width - sz) / 2, (im.height - sz) / 2, sz, sz, x + 3, ty + 3, 58, 58);
+          var im = imgs[id], side = Math.min(im.width, im.height);
+          ctx.drawImage(im, (im.width - side) / 2, (im.height - side) / 2, side, side, ix, iy, sz.IMG, sz.IMG);
         } else {
-          ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(x + 3, ty + 3, 58, 58);
-          ctx.fillStyle = '#8b90a8'; ctx.font = '22px ' + FONT_FAMILY;
-          ctx.fillText(initialOf(it.name), x + L.TW / 2, ty + 32);
+          ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(ix, iy, sz.IMG, sz.IMG);
+          ctx.fillStyle = '#8b90a8'; ctx.font = Math.round(sz.IMG * 0.38) + 'px ' + FONT_FAMILY;
+          ctx.fillText(initialOf(v.name), x + sz.TW / 2, iy + sz.IMG / 2);
         }
         ctx.restore();
-        // 名稱
-        ctx.fillStyle = '#fff';
-        var nfs = fitFontSize(it.name, 58, 9, 5.5);
-        ctx.font = '700 ' + nfs + 'px ' + FONT_FAMILY;
-        ctx.fillText(it.name, x + L.TW / 2, ty + L.TH - 9, 58);
+        // 種類標籤 (與畫面上的 .ct-badge 相同：核心紫色、加價琥珀色)
+        if (TYPE_BADGE[v.type]) {
+          ctx.fillStyle = isCore(v.type) ? 'rgba(109,77,224,0.92)' : 'rgba(217,150,20,0.95)';
+          roundRectPath(ctx, ix + 1, iy + 1, 15, 15, 4); ctx.fill();
+          ctx.fillStyle = isCore(v.type) ? '#fff' : '#201400'; ctx.font = '700 10px ' + FONT_FAMILY;
+          ctx.fillText(TYPE_BADGE[v.type], ix + 8.5, iy + 8.5);
+        }
+        // 名稱 (與畫面相同的排版，垂直置中於名稱區)
+        var lab = labelFor(v.name, v.type, sz);
+        ctx.fillStyle = '#fff'; ctx.font = '700 ' + lab.fs + 'px ' + FONT_FAMILY;
+        var top = ty + 2 + sz.IMG + 2 + (sz.NM_H - lab.lines.length * lab.lh) / 2;
+        lab.lines.forEach(function (ln, k) { ctx.fillText(ln, x + sz.TW / 2, top + (k + 0.5) * lab.lh, sz.TW - 4); });
       });
       y += row.h + L.ROW_GAP;
     });
@@ -1383,7 +1719,7 @@
       cv.toBlob(function (blob) {
         if (!blob) { setNotice('匯出失敗：瀏覽器無法產生圖片'); resolve(null); return; }
         download(blob, safeName(state.title) + '-' + fileStamp() + '.png');
-        setNotice(failed ? '已匯出，但有 ' + failed + ' 張圖片因跨來源限制無法繪入（請改用 http server 開啟，或把圖片上傳為自訂圖片）' : '已匯出圖片');
+        setNotice(failed ? '已匯出，但有 ' + failed + ' 張圖片載入失敗而顯示成文字 (多半是圖片主機沒有開放跨來源讀取；把圖片下載到本機即可解決)' : '已匯出圖片');
         resolve(blob);
       }, 'image/png');
     });
@@ -1398,7 +1734,7 @@
       try {
         var j = JSON.parse(fr.result);
         if (!j || !Array.isArray(j.rows) || typeof j.items !== 'object') throw new Error('格式不符');
-        commit(function () { return sanitize(j); });
+        commit(function () { var s = sanitize(j); normalizeWithCatalog(s); return s; });
         setNotice('已匯入（Ctrl+Z 可復原）');
       } catch (e) { setNotice('匯入失敗：' + e.message); }
     };
@@ -1426,40 +1762,32 @@
     return { item: JSON.parse(JSON.stringify(item)), row: rowLabel, cost: rowLabel != null && isNumLabel(rowLabel) ? Number(rowLabel) : null };
   }
   function getCost(q) { var r = lookup(q); return r ? r.cost : null; }
-  // 項目的零件種類：優先用 type 欄位，舊資料沒有就從 key 的「種類::」前綴推回來
-  function itemType(it) { return it.type || (String(it.key).indexOf('::') > 0 ? String(it.key).split('::')[0] : ''); }
-  // 目前「已分配到欄位」的陀螺涵蓋哪些零件種類 (例 ['Blade', 'Bit'])；自訂陀螺 (沒有種類) 不計入。
-  // Cost 賽依這份清單決定「核心上蓋以外」哪些部位要計 Cost。
-  function getCountedTypes() {
-    var s = ensureState(), seen = {}, out = [];
-    s.rows.forEach(function (r) {
-      r.items.forEach(function (id) {
-        var t = itemType(s.items[id]);
-        if (t && !seen[t]) { seen[t] = true; out.push(t); }
-      });
-    });
-    return out;
-  }
+  function isCoreType(t) { return isCore(t); }
 
-  // Cost 賽配置驗證：傳入一組陀螺（名稱或編號的陣列）與 Cost 上限，回傳總 Cost 與逐顆明細。
+  // Cost 賽配置驗證：傳入一組陀螺（名稱、編號或 key 的陣列）與 Cost 上限，回傳總 Cost 與逐顆明細。
   //   total     已知 Cost 的總和
-  //   details   [{ query, name, row, cost, status }]；status 為 ok | unknown（表中找不到）| unassigned（還沒分到欄位）| nonnumeric（欄位名稱不是數字）
-  //   problems  status 不是 ok 的項目（這些不計入 total，呼叫端應提示使用者補表）
+  //   details   [{ query, name, row, cost, status }]；status 為
+  //             ok（有 Cost）｜unknown（表中找不到）｜unassigned（還沒分到欄位）｜nonnumeric（欄位名稱不是數字）｜
+  //             skipped（選填的項目沒列入表中：算 0，不算問題）
+  //   problems  status 不是 ok / skipped 的項目（這些不計入 total，呼叫端應提示使用者補表）
   //   limit     傳入的上限（沒傳或不是數字就是 null，此時 over / remaining 也是 null）
   //   over      total 是否超過上限；problems 非空時 total 可能偏低，因此 valid 另外給
   //   valid     沒有 problems 且沒有超過上限才為 true
-  //   opts.exact  為 true 時查詢只做精確比對 (Cost 賽驗證用)
+  //   opts.exact     為 true 時查詢只做精確比對 (Cost 賽驗證用，避免短名字誤配)
+  //   opts.optional  與 list 等長的布林陣列；為 true 的項目是「加價零件」，沒列入表中 (unknown / unassigned) 時算 0 而不是問題
   function check(list, limit, opts) {
-    var details = (Array.isArray(list) ? list : []).map(function (q) {
+    var optional = (opts && Array.isArray(opts.optional)) ? opts.optional : [];
+    var details = (Array.isArray(list) ? list : []).map(function (q, i) {
       var r = lookup(q, opts && opts.exact), status = 'ok';
       if (!r) status = 'unknown';
       else if (r.row == null) status = 'unassigned';
       else if (r.cost == null) status = 'nonnumeric';
+      if (optional[i] && (status === 'unknown' || status === 'unassigned')) status = 'skipped';
       return { query: q, name: r ? r.item.name : null, row: r ? r.row : null, cost: status === 'ok' ? r.cost : null, status: status };
     });
     var total = details.reduce(function (a, d) { return a + (d.cost || 0); }, 0);
     var lim = (limit === null || limit === undefined || limit === '' || isNaN(Number(limit))) ? null : Number(limit);
-    var problems = details.filter(function (d) { return d.status !== 'ok'; });
+    var problems = details.filter(function (d) { return d.status !== 'ok' && d.status !== 'skipped'; });
     var over = lim == null ? null : total > lim;
     return { total: total, limit: lim, over: over, remaining: lim == null ? null : lim - total, details: details, problems: problems, valid: !problems.length && !over };
   }
@@ -1471,6 +1799,7 @@
       '<button type="button" class="ct-btn" data-act="undo" title="Ctrl+Z">復原</button>' +
       '<button type="button" class="ct-btn" data-act="redo" title="Ctrl+Shift+Z">重做</button>' +
       '<label class="ct-field">每列顆數<input type="number" min="4" max="20" data-bind="perRow"></label>' +
+      '<label class="ct-field">磚塊大小<select data-bind="size"><option value="s">小</option><option value="m">中</option><option value="l">大</option></select></label>' +
       '<span class="spacer"></span>' +
       '<button type="button" class="ct-btn primary" data-act="export-png">匯出圖片</button>' +
       '<button type="button" class="ct-btn" data-act="export-json">匯出 JSON</button>' +
@@ -1479,6 +1808,7 @@
       '<input type="file" accept=".json,application/json" hidden data-role="import-file">' +
     '</div>' +
     '<div class="ct-toolbar"><span class="ct-status"></span><span class="ct-notice"></span></div>' +
+    '<div class="ct-banner" data-role="banner" hidden><span data-role="banner-text"></span><button type="button" class="ct-btn" data-act="banner-ok">知道了</button></div>' +
     '<div class="ct-board-wrap"><div class="ct-board">' +
       '<div class="ct-head">' +
         '<input type="text" class="ct-title" data-bind="title" placeholder="標題（例如 11/22 Cost 表）" aria-label="表格標題">' +
@@ -1491,18 +1821,33 @@
         '<button type="button" class="on" data-act="tab" data-tab="pool">未分配<b data-role="pool-count">0</b></button>' +
         '<button type="button" data-act="tab" data-tab="cat">圖鑑<b data-role="cat-count">0</b></button>' +
       '</div>' +
+      '<div class="ct-filter">' +
+        '<input type="search" data-role="f-q" placeholder="搜尋名稱">' +
+        '<select data-role="f-type" title="零件種類 (與裝備庫相同)"><option value="">全部種類</option></select>' +
+        '<select data-role="f-cls" title="分類 (與裝備庫相同)"><option value="">全部分類</option></select>' +
+        '<select data-role="f-sort" title="排序"><option value="new">新到舊</option><option value="old">舊到新</option><option value="name">名稱</option></select>' +
+        '<select data-role="f-collab" title="聯名"><option value="">一般＋聯名</option><option value="regular">只看一般</option><option value="collab">只看聯名</option></select>' +
+      '</div>' +
       '<div class="ct-pane" data-pane="pool">' +
         '<div class="ct-pane-bar">' +
-          '<input type="search" data-role="pool-q" placeholder="搜尋未分配的陀螺">' +
+          '<button type="button" class="ct-btn" data-act="sel-all">全選目前篩選結果</button>' +
+          '<button type="button" class="ct-btn" data-act="sel-none">取消選取</button>' +
+          '<select data-role="move-to" disabled></select>' +
+          '<button type="button" class="ct-btn danger" data-act="pool-delete">從表中刪除所選</button>' +
           '<button type="button" class="ct-btn" data-act="new-item">＋新增自訂陀螺</button>' +
-          '<span class="ct-dlg-hint">拖回這裡 = 從表中移除（不會刪除陀螺）；連點兩下可編輯名稱與圖片</span>' +
+          '<button type="button" class="ct-btn" data-act="refill" title="把一般零件中目前不在表裡的補回未分配">補齊一般零件</button>' +
+          '<span class="ct-dlg-hint" data-role="sel-info"></span>' +
         '</div>' +
-        '<div class="ct-pool-list" data-hint="未分配的陀螺會顯示在這裡"></div>' +
+        '<div class="ct-dlg-hint" style="margin-bottom:6px">一般 (非聯名) 的核心零件會自動放在這裡，新零件隨資料庫更新自動加入；拖回這裡 = 從欄位移出；連點兩下可編輯名稱與圖片</div>' +
+        '<div class="ct-pool-list" data-hint="沒有符合的陀螺"></div>' +
       '</div>' +
       '<div class="ct-pane" data-pane="cat" hidden>' +
         '<div class="ct-pane-bar">' +
-          '<input type="search" data-role="cat-q" placeholder="搜尋圖鑑">' +
-          '<select data-role="cat-type" hidden></select>' +
+          '<button type="button" class="ct-btn" data-act="sel-all">全選目前篩選結果</button>' +
+          '<button type="button" class="ct-btn" data-act="sel-none">取消選取</button>' +
+          '<button type="button" class="ct-btn primary" data-act="cat-add">加入未分配</button>' +
+          '<select data-role="move-to" disabled></select>' +
+          '<span class="ct-dlg-hint" data-role="sel-info"></span>' +
         '</div>' +
         '<div class="ct-dlg-hint" data-role="cat-msg" style="margin-bottom:6px"></div>' +
         '<div class="ct-cat-list"></div>' +
@@ -1538,8 +1883,10 @@
       title: q('[data-bind="title"]'), sub: q('[data-bind="subtitle"]'), perRow: q('[data-bind="perRow"]'),
       undo: q('[data-act="undo"]'), redo: q('[data-act="redo"]'),
       board: q('.ct-board'), rows: q('.ct-rows'),
-      poolQ: q('[data-role="pool-q"]'), poolList: q('.ct-pool-list'), poolCount: q('[data-role="pool-count"]'),
-      catQ: q('[data-role="cat-q"]'), catType: q('[data-role="cat-type"]'), catList: q('.ct-cat-list'),
+      sizeSel: q('[data-bind="size"]'), banner: q('[data-role="banner"]'), bannerText: q('[data-role="banner-text"]'),
+      poolList: q('.ct-pool-list'), poolCount: q('[data-role="pool-count"]'),
+      fq: q('[data-role="f-q"]'), ftype: q('[data-role="f-type"]'), fcls: q('[data-role="f-cls"]'), fsort: q('[data-role="f-sort"]'), fcollab: q('[data-role="f-collab"]'),
+      catList: q('.ct-cat-list'),
       catCount: q('[data-role="cat-count"]'), catMsg: q('[data-role="cat-msg"]'),
       importFile: q('[data-role="import-file"]'),
       dlg: q('dialog'), dlgTitle: q('[data-role="dlg-title"]'), dlgName: q('[data-role="dlg-name"]'),
@@ -1550,23 +1897,25 @@
     bindEvents();
     bindDrag();
     render();
-    // 圖片載入失敗：先改試 /app/ 路徑 (與兵工廠相同的備援)，仍失敗就改顯示文字縮寫
+    // 圖片載入失敗：依序試備援網址 (index.html 提供：/app/ 路徑、本機 ↔ 遠端)，全部失敗才改顯示文字縮寫
     root.addEventListener('error', function (e) {
       var im = e.target;
       if (!im || im.tagName !== 'IMG' || !im.closest('.ct-tile')) return;
-      if (!im.dataset.triedApp && /\/site\//.test(im.src)) { im.dataset.triedApp = '1'; im.src = im.src.replace('/site/', '/app/'); return; }
+      var orig = im.dataset.orig || (im.dataset.orig = im.getAttribute('src')), n = +(im.dataset.altN || 0), alts = imgAlt(orig) || [];
+      if (n < alts.length) { im.dataset.altN = n + 1; im.src = alts[n]; return; }
       var ph = document.createElement('div');
       ph.className = 'ct-noimg'; ph.textContent = initialOf(im.closest('.ct-tile').getAttribute('title') || '');
       im.replaceWith(ph);
     }, true);
     setStatus('已載入上次儲存的表');
     els.catMsg.setAttribute('data-base', '零件圖鑑尚未載入：請確認以 http server 開啟網頁，且 main_db.json、hardcoded.json 讀取成功 (頁面上方會顯示讀取狀態)。');
-    rebuildTypeOptions(); renderCatalog();
+    rebuildFilterOptions(); renderCatalog();
   }
 
   function switchTab(name) {
     root.querySelectorAll('.ct-tabs button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === name); });
     root.querySelectorAll('.ct-pane').forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
+    clearSel();
   }
 
   function bindEvents() {
@@ -1585,9 +1934,15 @@
         case 'export-json': exportJson(); break;
         case 'import-json': els.importFile.click(); break;
         case 'reset':
-          if (confirm('清空整張表（欄位、陀螺、標題）並還原成預設？之後可用 Ctrl+Z 復原。')) commit(function () { return defaultState(); });
+          if (confirm('清空整張表（欄位、陀螺、標題）並還原成預設？之後可用 Ctrl+Z 復原。')) commit(function () { var s = defaultState(); normalizeWithCatalog(s); return s; });
           break;
         case 'tab': switchTab(b.getAttribute('data-tab')); break;
+        case 'sel-all': selectAllShown(); break;
+        case 'sel-none': clearSel(); break;
+        case 'cat-add': addSelectedToPool(); break;
+        case 'pool-delete': deleteSelected(); break;
+        case 'refill': refillPool(); break;
+        case 'banner-ok': state.note = ''; scheduleSave(); render(); break;
         case 'new-item': openItemDialog(null); break;
         case 'dlg-cancel': els.dlg.close(); break;
         case 'dlg-ok': confirmItemDialog(); break;
@@ -1617,14 +1972,18 @@
         scheduleSave(); notify();
         return;
       }
-      if (t === els.poolQ) renderPool();
-      if (t === els.catQ) renderCatalog();
+      if (t === els.fq) { filters.q = t.value.trim().toLowerCase(); clearSel(); renderPool(); renderCatalog(); renderSelBar(); }
       if (t === els.dlgUrl) refreshDlgPreview();
     });
     root.addEventListener('change', function (e) {
       var t = e.target;
       if (t === els.perRow) { state.perRow = clamp(parseInt(t.value, 10) || 11, 4, 20); render(); scheduleSave(); notify(); }
-      else if (t === els.catType) renderCatalog();
+      else if (t === els.sizeSel) { state.size = SIZES[t.value] ? t.value : 'm'; render(); scheduleSave(); notify(); }
+      else if (t === els.ftype || t === els.fcls || t === els.fsort || t === els.fcollab) {
+        filters.type = els.ftype.value; filters.cls = els.fcls.value; filters.sort = els.fsort.value; filters.collab = els.fcollab.value;
+        clearSel(); renderPool(); renderCatalog(); renderSelBar();
+      }
+      else if (t.getAttribute('data-role') === 'move-to') { var rid = t.value; t.value = ''; if (rid) moveSelected(rid); }
       else if (t === els.importFile && t.files[0]) { importJsonFile(t.files[0]); t.value = ''; }
       else if (t === els.dlgFile && t.files[0]) {
         resizeImage(t.files[0], 128).then(function (d) { dlgState.fileData = d; refreshDlgPreview(); })
@@ -1634,7 +1993,9 @@
     // 連點兩下陀螺 = 編輯
     root.addEventListener('dblclick', function (e) {
       var t = e.target.closest('.ct-tile[data-kind="item"]');
-      if (t) openItemDialog(t.getAttribute('data-id'));
+      if (t) { openItemDialog(t.getAttribute('data-id')); return; }
+      var ct = e.target.closest('.ct-tile[data-kind="cat"]');
+      if (ct) quickAddCatalog(ct);
     });
     // 快捷鍵：只在這個分頁可見、且不在輸入框內時生效
     if (!shortcutBound) {
@@ -1657,7 +2018,8 @@
   global.CostTier = {
     mount: mount,
     setCatalog: setCatalog,           // 餵入零件圖鑑 (由 index.html 在圖鑑載入完成後呼叫)
-    getCountedTypes: getCountedTypes, // 已分配到欄位的零件種類 (Cost 賽決定哪些部位要計 Cost)
+    setImageFallback: setImageFallback, // 設定圖片載入失敗時的備援網址函式 fn(src) → [備援網址...]
+    isCoreType: isCoreType,           // 是否為核心零件種類 (Blade / MainBlade / MetalBlade，即裝備庫的核心上蓋)
     getTable: getTable,
     lookup: lookup,
     getCost: getCost,
@@ -1689,10 +2051,16 @@
 //     歸檔紀錄帶 ruleMode，歷史戰績與配件勝率可依模式篩選 (舊紀錄一律視為基本賽)
 // 13. 併入 Cost / Tier 表編輯器 (原 cost_tier.html，模組 window.CostTier)：設定列「📊 Cost / Tier 表」開啟；
 //     圖鑑直接取自兵工廠資料庫 (arsenalPartsDb)，表內零件以「種類::零件名」為 key，與牌組零件名稱完全一致。
-//     計算範圍：核心上蓋一律計 Cost；其他部位只有在 Cost 表裡放了該種類 (例如放了軸心) 才計。
+//     (計算範圍見 15)
 // 14. Cost 賽：設定列多一個「Cost 上限」(存在每場賽事 appState.costLimit，歸檔時一併記錄)；生成賽程時用 CostTier.check()
 //     驗證每位選手「先發 3 顆合計」；超標或有零件未列入 Cost 表會列出清單並詢問是否仍要開賽。
 //     牌組編輯器的 Cost 分頁會即時顯示每顆與合計 Cost。
+// 15. Cost 計算改為「核心 + 加價」：核心零件 = 裝備庫的核心上蓋 (BX/UX 戰刃、CX 主戰刃、CX 鋼鐵戰刃)，必須列入 Cost 表，
+//     Cost 為欄位數字；紋章、超越戰刃、輔助戰刃、固鎖、軸心都是加價零件：放進表中才加 Cost，沒放算 0 (例如「戰神紋章 = 1」)。
+//     Cost 表裡的 CX 一律放核心零件 (與裝備庫一致)，舊表與舊牌組裡的 CX 成品會自動換算成核心零件。
+// 16. Cost 表：「未分配」自動同步一般 (非聯名) 核心零件；圖鑑與未分配區可依零件種類 / 分類篩選 (與裝備庫共用同一份定義：BX、UX、CX、復刻/BXG、比賽/EVE、軸心類型)、
+//     新到舊排序、全選、多選後批次移到欄位；磚塊三段尺寸與兩行名稱 (「版本 2.0」顯示成 V2)；
+//     若網頁旁有 images/manifest.json (download_images.py 產生)，圖片改用本機優先。
 // ================== 核心系統變數 ==================
 const defaultColors = ['#00f3ff', '#ff003c', '#00ff66', '#f1c40f', '#bc13fe', '#ff7700', '#00ffcc', '#ff00aa'];
 const schedulesConfig = {
@@ -2683,17 +3051,39 @@ window.importHistoryBackup = function(event) {
 };
 
 // ================== Cost 賽整合 (CostTier 模組 + Cost 上限 + 驗證) ==================
-const COST_CAT_LABELS = { Blade: '戰刃', MainBlade: '主戰刃', MetalBlade: '金屬戰刃', OverBlade: '超越戰刃', AssistBlade: '輔助戰刃', LockChip: '紋章', Ratchet: '固鎖', Bit: '軸心' };
-const COST_SLOTS = ['TopPart', 'LockChip', 'OverBlade', 'MainBlade', 'MetalBlade', 'AssistBlade', 'Ratchet', 'Bit']; // 牌組裡的零件欄位
+// 零件種類名稱 (與牌組零件的 category 一致)
+const COST_CAT_LABELS = { Blade: '戰刃', MainBlade: '主戰刃', MetalBlade: '鋼鐵戰刃', OverBlade: '超越戰刃', LockChip: '紋章', AssistBlade: '輔助戰刃', Ratchet: '固鎖', Bit: '軸心' };
+// 牌組零件欄位分成兩類：
+//   核心 = 核心上蓋 (TopPart：BX/UX 的戰刃、CX 的主戰刃或鋼鐵戰刃)，與裝備庫的分類一致；必須列入 Cost 表
+//   加價 = 紋章、超越戰刃、輔助戰刃、固鎖、軸心；放進 Cost 表才加 Cost，沒放算 0 (超越戰刃與其他零件相同，不算核心)
+const COST_CORE_SLOTS = ['TopPart', 'MainBlade', 'MetalBlade'];
+const COST_EXTRA_SLOTS = ['LockChip', 'OverBlade', 'AssistBlade', 'Ratchet', 'Bit'];
+let costLegacyMap = {}; // CX 成品 key → 核心零件 key 陣列 (buildCostCatalog 產生，用來換算舊牌組裡仍是 CX 成品的核心上蓋)
 function fmtCost(n) { return String(Math.round(n * 100) / 100); }
 
-// 把兵工廠資料庫整理成 Cost 表可選的零件清單 (每個「種類 + 清理後名稱」一筆，與牌組零件的 category + clean_name 一一對應)
+// 把兵工廠資料庫整理成 Cost 表可選的零件清單 (每個「種類 + 清理後名稱」一筆，與牌組零件的 category + clean_name 一一對應)。
+// 分類 (group / tags / bitTypes) 直接取自裝備庫的零件群組，Cost 表的篩選列才會和裝備庫的選擇視窗一致。
+// CX 成品 (Blade 類別、所有版本都是 CX) 不放進清單：Cost 以它的核心零件 (主戰刃或鋼鐵戰刃) 計算，成品只留在 legacy 對照表，用來轉換舊表與舊牌組。
 function buildCostCatalog() {
-    const out = [];
+    const list = [], legacy = {};
     Object.keys(COST_CAT_LABELS).forEach(cat => (arsenalPartsDb[cat] || []).forEach(g => {
-        out.push({ key: cat + '::' + g.clean_name, name: g.clean_name, img: g.variants[0].image, type: cat, typeLabel: COST_CAT_LABELS[cat] });
+        if (cat === 'Blade' && g.variants.every(v => (v.sysType || '').includes('CX'))) {
+            const cores = [];
+            g.variants.forEach(v => ['MetalBlade', 'MainBlade'].forEach(c2 => {
+                const f = findArsenalInst(c2, v.instId); if (!f) return;
+                const k = c2 + '::' + f.clean_name; if (!cores.includes(k)) cores.push(k);
+            }));
+            if (cores.length) legacy['Blade::' + g.clean_name] = cores;
+            return;
+        }
+        const bitTypes = cat === 'Bit' ? [...new Set(g.variants.map(v => v.bitType).filter(Boolean))] : [];
+        list.push({
+            key: cat + '::' + g.clean_name, name: g.clean_name, img: g.variants[0].image, type: cat, typeLabel: COST_CAT_LABELS[cat],
+            group: ARSENAL_TOPPART_CATS.includes(cat) ? 'TopPart' : cat, tags: g.tags.slice(), bitTypes,
+            rel: (g.earliestRelease && g.earliestRelease < '9999') ? g.earliestRelease : '', collab: !!g.collab
+        });
     }));
-    return out;
+    return { list, legacy };
 }
 
 window.openCostTier = function() {
@@ -2704,10 +3094,13 @@ window.closeCostTier = function() {
     document.getElementById('costTierModal').style.display = 'none';
     if (document.getElementById('builderModal').style.display === 'block' && builderRuleMode === 'cost') renderDeckOverview(); // 從牌組編輯器開啟時，關閉後刷新 Cost 顯示
 };
-// Cost 表有任何修改 (拖曳、改名、改欄位…) 就刷新牌組編輯器的 Cost 顯示
-if (window.CostTier) CostTier.onChange(() => {
-    if (document.getElementById('builderModal').style.display === 'block' && builderRuleMode === 'cost') renderDeckOverview();
-});
+if (window.CostTier) {
+    CostTier.setImageFallback(arsenalImgAlternatives); // Cost 表的圖片也用同一套備援 (/app/ 路徑、本機 ↔ 遠端)
+    // Cost 表有任何修改 (拖曳、改名、改欄位…) 就刷新牌組編輯器的 Cost 顯示
+    CostTier.onChange(() => {
+        if (document.getElementById('builderModal').style.display === 'block' && builderRuleMode === 'cost') renderDeckOverview();
+    });
+}
 
 // 讀取設定列的 Cost 上限：空白、非數字或負數都回傳 null
 function readCostLimitInput() {
@@ -2730,28 +3123,35 @@ function syncCostLimitUI(active) {
 }
 
 // 計算一組牌組的 Cost (只取先發 3 顆)，直接呼叫 CostTier.check()：
-//   · 核心上蓋 (TopPart) 一律計入；其他部位只有 Cost 表放了該種類、或該零件本身就在表中才計入
-//   · 查詢用「種類::零件名」精確比對 (表中沒有這個 key 時，退回用零件名精確比對，相容手動新增的自訂陀螺)
+//   · 核心 (核心上蓋) 必須在 Cost 表中，查不到、沒分到欄位或欄位名稱不是數字都算「問題」
+//   · 加價零件 (紋章、超越戰刃、輔助戰刃、固鎖、軸心) 沒列入算 0，列入才加；欄位名稱不是數字才算問題
+//   · 查詢用「種類::零件名」精確比對 (表中沒有這個 key 時，才退回比對「自訂陀螺」的名稱)
+//   · 舊牌組若核心上蓋仍是 CX 成品，會換算成它的核心零件 (主戰刃或鋼鐵戰刃)；同一個核心搭配不同紋章 / 超越戰刃 / 輔助戰刃，核心 Cost 都一樣
 // 回傳 { res: CostTier.check 的結果, items: 查詢明細, perDeck: [每顆小計], problems: [有問題的零件] }
 function evalCostSet(decks, limit) {
-    const counted = new Set(CostTier.getCountedTypes());
     const items = [];
     (decks || []).slice(0, 3).forEach((d, di) => {
         if (!d || !d.parts) return;
-        COST_SLOTS.forEach(slot => {
+        const seen = new Set();
+        const add = (cat, name, slot, core) => { const key = cat + '::' + name; if (seen.has(key)) return; seen.add(key); items.push({ deckIdx: di, slot, cat, name, key, core }); };
+        COST_CORE_SLOTS.concat(COST_EXTRA_SLOTS).forEach(slot => {
             const p = d.parts[slot]; if (!p) return;
-            const key = p.category + '::' + p.clean_name;
-            if (items.some(x => x.deckIdx === di && x.key === key)) return; // 同一顆內相同零件只算一次 (避免 TopPart 與 MainBlade 欄位重複)
-            const inTable = !!CostTier.lookup(key, true);
-            if (slot !== 'TopPart' && !counted.has(p.category) && !inTable) return; // 這個部位不計 Cost
-            items.push({ deckIdx: di, slot, cat: p.category, name: p.clean_name, key, query: inTable ? key : p.clean_name });
+            const core = COST_CORE_SLOTS.includes(slot);
+            const legacy = (core && p.category === 'Blade') ? costLegacyMap['Blade::' + p.clean_name] : null;
+            if (legacy && legacy.length) legacy.forEach(k => { const i = k.indexOf('::'); add(k.slice(0, i), k.slice(i + 2), slot, true); });
+            else add(p.category, p.clean_name, slot, core);
         });
     });
-    const res = CostTier.check(items.map(x => x.query), limit, { exact: true });
+    const queries = items.map(x => {
+        if (CostTier.lookup(x.key, true)) return x.key;
+        const r = CostTier.lookup(x.name, true);
+        return (r && String(r.item.key).indexOf('custom:') === 0) ? x.name : x.key;
+    });
+    const res = CostTier.check(queries, limit, { exact: true, optional: items.map(x => !x.core) });
     const perDeck = [0, 0, 0], problems = [];
     res.details.forEach((dt, k) => {
         perDeck[items[k].deckIdx] += dt.cost || 0;
-        if (dt.status !== 'ok') problems.push({ item: items[k], status: dt.status, row: dt.row });
+        if (dt.status !== 'ok' && dt.status !== 'skipped') problems.push({ item: items[k], status: dt.status, row: dt.row });
     });
     return { res, items, perDeck, problems };
 }
@@ -2759,7 +3159,7 @@ function costProblemText(pr) {
     const label = COST_CAT_LABELS[pr.item.cat] || pr.item.cat, who = `「${label} ${pr.item.name}」`;
     if (pr.status === 'unassigned') return who + '在 Cost 表中但還沒分到欄位';
     if (pr.status === 'nonnumeric') return who + `所在欄位「${pr.row}」不是數字`;
-    return who + '不在 Cost 表中';
+    return who + (pr.item.core ? '不在 Cost 表中（核心零件必須列入）' : '不在 Cost 表中');
 }
 // 開賽前驗證：回傳每位不合格選手的說明文字 (空陣列 = 全部合格)
 function buildCostReport(players, limit) {
@@ -2774,13 +3174,19 @@ function buildCostReport(players, limit) {
     });
     return blocks;
 }
-// 牌組卡片上的單顆 Cost 標籤 (只在 Cost 分頁顯示)
+// 牌組卡片上的單顆 Cost 標籤 (只在 Cost 分頁顯示)：總 Cost，有加價零件時另外標示核心與加價各多少
 function deckCostBadgeHtml(deck) {
     if (!deck || !deck.parts || !deck.parts.TopPart || !window.CostTier) return '';
     const ev = evalCostSet([deck], null);
-    const detail = ev.items.map((x, k) => `${COST_CAT_LABELS[x.cat] || x.cat} ${x.name}：${ev.res.details[k].status === 'ok' ? fmtCost(ev.res.details[k].cost) : '未列入'}`).join('\n');
+    let core = 0, extra = 0; const lines = [];
+    ev.items.forEach((x, k) => {
+        const dt = ev.res.details[k]; if (dt.status !== 'ok') return;
+        if (x.core) core += dt.cost; else extra += dt.cost;
+        lines.push(`${COST_CAT_LABELS[x.cat] || x.cat} ${x.name}：${x.core ? '' : '+'}${fmtCost(dt.cost)}`);
+    });
     const warn = ev.problems.length ? ` <span title="${escapeHtml(ev.problems.map(costProblemText).join('\n'))}">⚠️ ${ev.problems.length} 項未列入</span>` : '';
-    return `<div class="deck-cost${ev.problems.length ? ' warn' : ''}" title="${escapeHtml(detail)}">💰 Cost ${fmtCost(ev.perDeck[0])}${warn}</div>`;
+    const split = extra ? `（核心 ${fmtCost(core)} ＋ 加價 ${fmtCost(extra)}）` : '';
+    return `<div class="deck-cost${ev.problems.length ? ' warn' : ''}" title="${escapeHtml(lines.join('\n'))}">💰 Cost ${fmtCost(ev.perDeck[0])}${split}${warn}</div>`;
 }
 // 牌組編輯器 Cost 分頁頂端的摘要：先發合計 / 上限
 function costSummaryHtml(decks) {
@@ -2795,7 +3201,29 @@ function costSummaryHtml(decks) {
 
 // ================== 兵工廠專屬核心 JS ==================
 let arsenalPartsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], MetalBlade: [], AssistBlade: [], LockChip: [], Ratchet: [], Bit: [] };
-const ARSENAL_BASE_IMG_URL = "https://beyblade.phstudy.org/images/site/";
+const ARSENAL_REMOTE_IMG_ROOT = "https://beyblade.phstudy.org/images/";   // 遠端圖片根目錄 (底下有 site/ 與 app/ 兩套路徑)
+const ARSENAL_BASE_IMG_URL = ARSENAL_REMOTE_IMG_ROOT + "site/";
+let arsenalLocalImgRoot = ''; // 本機圖片根目錄；網頁旁有 images/manifest.json (由 download_images.py 產生) 時設為 'images/'，之後圖片以本機優先
+// 聯名角色名稱 (漫威、星際大戰、變形金剛、侏羅紀、福音戰士)：資料庫沒有明確的聯名欄位，用型號 BXA、說明文字與這份名稱判斷。
+// 判斷錯了 (一般零件被當聯名，或相反) 就來這裡增減；聯名款不會自動放進 Cost 表的「未分配」，但可在圖鑑分頁找到。
+const ARSENAL_COLLAB_NAME_RE = /福音戰士|紅浩克|蜘蛛人|綠惡魔|美國隊長|薩諾斯|鋼鐵人|猛毒|丘巴卡|歐比王|葛里維斯|路克天行者|達斯維達|風暴兵|曼達洛|星區長|柯博文|密卡登|暴龍|滄龍|棘龍|翼龍/;
+// 零件分類定義：裝備庫的零件選擇視窗 (openVisualGrid) 與 Cost 表的篩選列共用，之後新增分類只要改這裡。
+//   CLASS_FILTERS 比對零件的 tags (系統與版本類別)；BIT_FILTERS 比對軸心的 bitType；SLOT_GROUPS 是零件欄位分類 (與牌組編輯器的欄位對應)
+const ARSENAL_CLASS_FILTERS = [{ v: 'BX', label: 'BX' }, { v: 'UX', label: 'UX' }, { v: 'CX', label: 'CX' }, { v: 'BXG', label: '復刻/BXG' }, { v: 'EVE', label: '比賽/EVE' }];
+const ARSENAL_BIT_FILTERS = [{ v: 'Attack', label: '攻擊型' }, { v: 'Defense', label: '防禦型' }, { v: 'Stamina', label: '持久型' }, { v: 'Balance', label: '平衡型' }];
+const ARSENAL_SLOT_GROUPS = [{ id: 'TopPart', label: '核心上蓋' }, { id: 'LockChip', label: '紋章' }, { id: 'OverBlade', label: '超越戰刃' }, { id: 'AssistBlade', label: '輔助戰刃' }, { id: 'Ratchet', label: '固鎖' }, { id: 'Bit', label: '軸心' }];
+// 核心上蓋 (TopPart) 在資料庫裡由這三種類別合併而成
+const ARSENAL_TOPPART_CATS = ['Blade', 'MainBlade', 'MetalBlade'];
+// 圖片載入失敗時依序嘗試的備援網址：同一根目錄的 app/ 路徑 → 另一個根目錄 (本機 ↔ 遠端) 的 site/、app/ 路徑
+function arsenalImgAlternatives(src) {
+    const m = String(src).match(/^(.*\/)(site|app)\/(.+)$/); if (!m) return [];
+    const root = m[1], kind = m[2], rest = m[3], other = kind === 'site' ? 'app' : 'site';
+    const roots = [root];
+    if (arsenalLocalImgRoot) roots.push(root === arsenalLocalImgRoot ? ARSENAL_REMOTE_IMG_ROOT : arsenalLocalImgRoot);
+    const out = [root + other + '/' + rest];
+    roots.slice(1).forEach(r => { out.push(r + kind + '/' + rest); out.push(r + other + '/' + rest); });
+    return out;
+}
 let arsenalSetStructureMap = {};
 let arsenalRatchetFreeInstIds = new Set(); // 「固鎖一體型戰刃」商品的 instId (戰刃已內建固鎖)
 // 內建固鎖的戰刃名稱：先放入手動保底清單 (目前已知的 5 款)，載入資料庫後會再自動加入「固鎖一體型戰刃」商品的戰刃。
@@ -2808,7 +3236,9 @@ let currentFilterType = "ALL"; let currentSortType = "NEW_TO_OLD";
 
 const ARSENAL_FALLBACK_IMG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='45' fill='none' stroke='%23555' stroke-width='4'/><text x='50' y='55' fill='%23888' font-size='16' text-anchor='middle'>無圖片</text></svg>";
 window.handleArsenalImgError = function(img) {
-    if (!img.dataset.triedApp) { img.dataset.triedApp = "true"; img.src = img.src.replace('/site/', '/app/'); } 
+    // 依序試備援網址 (見 arsenalImgAlternatives)，全部失敗才換成預設圖示
+    const orig = img.dataset.orig || (img.dataset.orig = img.getAttribute('src')), n = Number(img.dataset.altN || 0), alts = arsenalImgAlternatives(orig);
+    if (n < alts.length) { img.dataset.altN = n + 1; img.src = alts[n]; }
     else if (!img.dataset.triedFallback) { img.dataset.triedFallback = "true"; img.src = ARSENAL_FALLBACK_IMG; }
 };
 
@@ -2875,6 +3305,12 @@ async function loadArsenalDatabase() {
         indicator.style.color = '#e74c3c';
     }
 
+    // 網頁旁有 images/manifest.json (download_images.py 產生) 就改用本機圖片：同源，Cost 表匯出圖片才讀得到，也不依賴第三方站
+    try {
+        const rm = await fetch('images/manifest.json', { cache: 'no-cache' });
+        if (rm.ok) { const mf = await rm.json(); if (mf && Number(mf.count) > 0) { arsenalLocalImgRoot = 'images/'; indicator.innerHTML += ' ｜ 🖼️ 使用本機圖片'; } }
+    } catch (e) { /* 沒有本機圖片：維持使用遠端圖片 */ }
+
     const datasets = [mainDataObj, hardcodedDataObj];
     const categoryMap = { 'BeybladePartsBlade': 'Blade', 'BeybladePartsMainBlade': 'MainBlade', 'BeybladePartsOverBlade': 'OverBlade', 'BeybladePartsMetalBlade': 'MetalBlade', 'BeybladePartsAssistBlade': 'AssistBlade', 'BeybladePartsLockChip': 'LockChip', 'BeybladePartsRatchet': 'Ratchet', 'BeybladePartsBit': 'Bit' };
     
@@ -2933,8 +3369,10 @@ async function loadArsenalDatabase() {
                 if (fullText.includes('BXG') || fullText.includes('CROSSOVER') || item.series === 'BXG') tags.add('BXG');
                 if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('CUP')) tags.add('EVE');
 
+                let descText = ''; try { descText = Object.values(item.description || {}).join(' ') + ' ' + Object.values(item.catalog_title || {}).join(' '); } catch (e) {}
+                let isCollab = /^BXA/i.test(String(item.base_set_id || item.set_id || id)) || /collab|collaborat|evangelion|福音戰士|聯名/i.test(descText) || ARSENAL_COLLAB_NAME_RE.test(rawNameTW);
                 let releaseAt = item.release_at ? String(item.release_at) : '9999-12-31';
-                let vObj = { id: id, rawName: rawNameTW, image: `${ARSENAL_BASE_IMG_URL}${shortCat}/${id}.png`, category: shortCat, set_id: item.base_set_id || item.set_id || id, tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType, releaseAt: releaseAt, ratchetFree: (shortCat === 'Blade' && arsenalRatchetFreeInstIds.has(instId)) };
+                let vObj = { id: id, rawName: rawNameTW, image: `${arsenalLocalImgRoot || ARSENAL_REMOTE_IMG_ROOT}site/${shortCat}/${id}.png`, category: shortCat, set_id: item.base_set_id || item.set_id || id, tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType, releaseAt: releaseAt, ratchetFree: (shortCat === 'Blade' && arsenalRatchetFreeInstIds.has(instId)), collab: isCollab };
 
                 let ex = arsenalPartsDb[shortCat].find(p => p.clean_name === cleanName);
                 if (ex) {
@@ -2948,6 +3386,7 @@ async function loadArsenalDatabase() {
         catList.forEach(group => { 
             group.variants.sort((a, b) => a.releaseAt.localeCompare(b.releaseAt)); 
             group.earliestRelease = group.variants[0].releaseAt; 
+            group.collab = group.variants.every(v => v.collab); // 所有版本都是聯名才算聯名款 (只要有一般版本就算一般零件)
             let sysTags = ['BX', 'UX', 'CX']; let oldestSysTags = group.variants[0].tags.filter(t => sysTags.includes(t));
             if (oldestSysTags.length > 0) { group.tags = group.tags.filter(t => !sysTags.includes(t)); oldestSysTags.forEach(t => group.tags.push(t)); }
         });
@@ -2964,7 +3403,7 @@ async function loadArsenalDatabase() {
     // 彙整內建固鎖的戰刃名稱，供 isRatchetFreeTop 對舊存檔零件做名稱比對
     arsenalPartsDb.Blade.forEach(g => { if (g.variants.some(v => v.ratchetFree)) arsenalRatchetFreeNames.add(g.clean_name); });
     arsenalPartsDb.TopPart = [...arsenalPartsDb.Blade, ...arsenalPartsDb.MainBlade, ...arsenalPartsDb.MetalBlade].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
-    if (window.CostTier) CostTier.setCatalog(buildCostCatalog()); // 圖鑑整理完成，交給 Cost 表模組當作可選零件清單
+    if (window.CostTier) { const cc = buildCostCatalog(); costLegacyMap = cc.legacy; CostTier.setCatalog(cc.list, { legacy: cc.legacy, groups: ARSENAL_SLOT_GROUPS, classes: ARSENAL_CLASS_FILTERS, bitClasses: ARSENAL_BIT_FILTERS }); } // 圖鑑整理完成，交給 Cost 表模組
 }
 
 // 判斷是否為「占位用假零件」：資料庫為了讓商品有完整零件欄位，會替只含單一零件的商品補上其他部位的空殼資料
@@ -3231,7 +3670,12 @@ window.closeSwapModal = function() { document.getElementById('swapModal').style.
 
 window.openVisualGrid = function(cat, label) {
     selectingPartCategory = cat; document.getElementById('gridTitle').innerText = `選擇 ${label}`;
-    let filterHtml = (cat === 'Ratchet') ? '' : (cat === 'Bit') ? `<button class="filter-btn active" onclick="applyArsenalFilter('ALL')">全部</button><button class="filter-btn" onclick="applyArsenalFilter('Attack')">攻擊型</button><button class="filter-btn" onclick="applyArsenalFilter('Defense')">防禦型</button><button class="filter-btn" onclick="applyArsenalFilter('Stamina')">持久型</button><button class="filter-btn" onclick="applyArsenalFilter('Balance')">平衡型</button>` : `<button class="filter-btn active" onclick="applyArsenalFilter('ALL')">全部</button><button class="filter-btn" onclick="applyArsenalFilter('BX')">BX</button><button class="filter-btn" onclick="applyArsenalFilter('UX')">UX</button><button class="filter-btn" onclick="applyArsenalFilter('CX')">CX</button><button class="filter-btn" onclick="applyArsenalFilter('BXG')">復刻/BXG</button><button class="filter-btn" onclick="applyArsenalFilter('EVE')">比賽/EVE</button><select onchange="currentSortType=this.value;applyArsenalFilter();" style="margin-left:15px; padding:6px; border-radius:8px; background:#111; color:#0ff; border:2px solid #555;"><option value="NEW_TO_OLD">新到舊</option><option value="DEFAULT">A-Z</option></select>`;
+    const filterBtn = (v, text, active) => `<button class="filter-btn${active ? ' active' : ''}" onclick="applyArsenalFilter('${v}')">${text}</button>`;
+    const sortSelect = `<select onchange="currentSortType=this.value;applyArsenalFilter();" style="margin-left:15px; padding:6px; border-radius:8px; background:#111; color:#0ff; border:2px solid #555;"><option value="NEW_TO_OLD">新到舊</option><option value="DEFAULT">A-Z</option></select>`;
+    // 固鎖不分類；軸心依攻/防/持/衡類型；其餘零件依 BX/UX/CX/BXG/EVE 並可切換排序 (分類定義見 ARSENAL_CLASS_FILTERS / ARSENAL_BIT_FILTERS)
+    let filterHtml = (cat === 'Ratchet') ? '' : (cat === 'Bit')
+        ? filterBtn('ALL', '全部', true) + ARSENAL_BIT_FILTERS.map(f => filterBtn(f.v, f.label)).join('')
+        : filterBtn('ALL', '全部', true) + ARSENAL_CLASS_FILTERS.map(f => filterBtn(f.v, f.label)).join('') + sortSelect;
     if(cat==='Ratchet' || cat==='Bit') currentSortType = 'DEFAULT'; else currentSortType = 'NEW_TO_OLD';
     document.getElementById('systemFilter').innerHTML = filterHtml;
     applyArsenalFilter('ALL'); document.getElementById('visualGridModal').style.display = 'block';
