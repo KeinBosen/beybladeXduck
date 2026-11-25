@@ -359,13 +359,28 @@
 .ct-tile.ct-sel{outline:2px solid var(--ct-accent);outline-offset:-2px;background:rgba(167,139,250,.22)}
 .ct-tile.ct-used{opacity:.35}
 .ct-tile.ct-dragging{opacity:.25}
+/* 異色版標記：右上角粉紅「異」 (左上角是零件種類標籤) */
+.ct-vbadge{position:absolute;right:3px;top:3px;min-width:15px;height:15px;padding:0 2px;border-radius:4px;font-size:10px;line-height:15px;text-align:center;font-weight:700;color:#fff;background:rgba(214,51,108,.95);pointer-events:none}
 
 /* ---- 拖曳中的殘影與插入標記 ---- */
-.ct-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.92;box-shadow:0 6px 18px rgba(0,0,0,.6)}
+/* 殘影、插入線、游標提示都掛在 body (不在 .ct-root 底下)，要自己定義色彩變數 */
+.ct-ghost,.ct-marker,.ct-droptip{--ct-accent:#a78bfa;--ct-text:#e6e8f2;--ct-dim:#8b90a8}
+.ct-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.8;box-shadow:0 6px 18px rgba(0,0,0,.6)}
 .ct-ghost-row{background:#2c3148;border:1px solid var(--ct-accent);border-radius:6px;padding:4px 10px;font-weight:700;font-size:14px;color:#e6e8f2;white-space:nowrap}
 .ct-marker{position:fixed;z-index:9998;pointer-events:none;background:var(--ct-accent);border-radius:2px;box-shadow:0 0 6px var(--ct-accent);width:3px}
 .ct-marker.h{height:3px;width:auto}
-.ct-drop-hot{outline:2px dashed rgba(167,139,250,.7);outline-offset:-2px}
+.ct-drop-hot{outline:2px dashed var(--rc,#a78bfa);outline-offset:-2px;background-color:rgba(255,255,255,.05)}   /* 欄位內自帶 --rc (欄位顏色)，未分配區用紫色 */
+/* 半透明預覽磚：拖曳時插在落點，放開後磚塊就會在這個位置 */
+.ct-tile.ct-ph{opacity:.5;pointer-events:none;cursor:default;border:1px dashed var(--rc,#a78bfa);background:rgba(255,255,255,.1)}
+.ct-droptip{position:fixed;z-index:10000;pointer-events:none;padding:3px 10px;border-radius:999px;font:700 12px/1.5 "PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;white-space:nowrap;
+  background:#12141f;color:#fff;border:1.5px solid var(--tc,#a78bfa);box-shadow:0 2px 10px rgba(0,0,0,.6)}
+.ct-droptip.bad{border-color:#e5484d;color:#ffb4b4}
+/* 已選取下方陀螺：上方每個欄位顯示同色亮框 (欄位顏色)，滑過去更亮，提示可以直接點一下放入 */
+.ct-armed .ct-row{box-shadow:inset 0 0 0 2px var(--rc),0 0 10px var(--rc);cursor:copy;animation:ct-pulse 1.6s ease-in-out infinite}
+.ct-armed .ct-row:hover{box-shadow:inset 0 0 0 3px var(--rc),0 0 18px var(--rc);animation:none;filter:brightness(1.12)}
+.ct-armed .ct-cells:empty::before{content:'點一下放入所選陀螺';color:rgba(255,255,255,.6)}
+@keyframes ct-pulse{50%{box-shadow:inset 0 0 0 2px var(--rc),0 0 3px var(--rc)}}
+@media (prefers-reduced-motion:reduce){.ct-armed .ct-row{animation:none}}
 .ct-drag-active,.ct-drag-active *{cursor:grabbing !important}
 
 /* ---- 下方面板（未分配 / 圖鑑） ---- */
@@ -522,7 +537,7 @@
                 📊 Cost / Tier 表
                 <button class="btn-danger" onclick="closeCostTier()" style="margin:0;">❌ 關閉</button>
             </h2>
-            <p style="color:#aaa; font-size:18px; margin:0 0 15px 0;">欄位名稱是數字 (例如 9、8…0) 就是該欄零件的 Cost。核心上蓋 (戰刃、CX 的主戰刃與鋼鐵戰刃) 必須列入，Cost 為欄位數字；紋章、超越戰刃、輔助戰刃、固鎖、軸心是加價零件，放進表才會加 Cost，沒放算 0。一般零件已自動放在「未分配」，直接拖進欄位即可，聯名款到「圖鑑」分頁找；零件種類與分類篩選和裝備庫相同。表格自動存在這個瀏覽器，建議定期按「匯出 JSON」備份。</p>
+            <p style="color:#aaa; font-size:18px; margin:0 0 15px 0;">欄位名稱是數字 (例如 9、8…0) 就是該欄零件的 Cost。核心上蓋 (戰刃、CX 的主戰刃與鋼鐵戰刃) 必須列入，Cost 為欄位數字；紋章、超越戰刃、輔助戰刃、固鎖、軸心是加價零件，放進表才會加 Cost，沒放算 0。一般零件已自動放在「未分配」，直接拖進欄位，或點選陀螺後再點一下上方欄位即可放入；聯名款、限定款與異色版 (同一零件有公認強度差異的版本) 到「圖鑑」分頁找；零件種類與分類篩選和裝備庫相同。表格自動存在這個瀏覽器，建議定期按「匯出 JSON」備份。</p>
             <div id="costTierRoot"></div>
         </div>
     </div>
@@ -745,6 +760,8 @@
   var TYPE_LABELS = { Blade: '戰刃', MainBlade: '主戰刃', MetalBlade: '鋼鐵戰刃', OverBlade: '超越戰刃', LockChip: '紋章', AssistBlade: '輔助戰刃', Ratchet: '固鎖', Bit: '軸心' };
   // 磚塊左上角的種類標籤 (戰刃是最常見的核心，不加標籤)
   var TYPE_BADGE = { MainBlade: '主', MetalBlade: '鋼', OverBlade: '超', LockChip: '紋', AssistBlade: '輔', Ratchet: '固', Bit: '軸' };
+  // 「未分配」自動加入規則的版本：規則改變時 (例如一般零件的判斷方式修正)，舊存檔載入後會一次性重整未分配並在上方說明；新表一律是最新版本
+  var POOL_RULE = 2;
 
   // 磚塊三段尺寸 (畫面與匯出圖片共用，單位 px)：TW 磚寬、IMG 圖片邊長、NM_H 名稱區高度、FS 名稱基準字級、LINES 名稱最多幾行
   var SIZES = {
@@ -787,8 +804,9 @@
   var shortcutBound = false;
   var catByKey = {};           // 圖鑑 key → 圖鑑項目
   var legacyMap = {};          // 舊版 CX 成品 key → 核心零件 key 陣列 (setCatalog 傳入，用來轉換舊表)
+  var aliasMap = {};           // 舊版名稱 key → 現行名稱 key (setCatalog 傳入，例如「九尾 2」→「九尾」)
   var imgAlt = function () { return []; };   // 圖片載入失敗時的備援網址 (由 index.html 設定，見 setImageFallback)
-  var filters = { q: '', type: '', cls: '', sort: 'new', collab: '' };   // 下方面板的篩選與排序 (type = 零件分類群組、cls = BX/UX/CX/BXG/EVE 或軸心類型)
+  var filters = { q: '', type: '', cls: '', sort: 'new', collab: '', variant: '' };   // 下方面板的篩選與排序 (type = 零件分類群組、cls = BX/UX/CX/BXG/EVE 或軸心類型)
   var slotGroups = [], classFilters = [], bitFilters = [];   // 與裝備庫共用的分類定義，由 index.html 在 setCatalog 時傳入
   var selCat = {}, selPool = {}, anchor = null;   // 目前選取：圖鑑用 key、未分配用 item id；anchor = Shift 連選的起點
   var shownCat = [], shownPool = [];              // 最近一次畫面上顯示的順序 (批次動作依這個順序執行)
@@ -831,7 +849,7 @@
   function defaultState() {
     var rows = [];
     for (var n = 9; n >= 0; n--) rows.push({ id: uid('r'), label: String(n), color: DEFAULT_COLORS[n], items: [] });
-    return { version: 1, title: 'Cost 表', subtitle: '', perRow: 11, size: 'm', rows: rows, pool: [], items: {}, autoSeen: {}, note: '' };
+    return { version: 1, title: 'Cost 表', subtitle: '', perRow: 11, size: 'm', rows: rows, pool: [], items: {}, autoSeen: {}, note: '', poolRule: POOL_RULE };
   }
 
   // 把任意來源的資料整理成合法的表（匯入 JSON、讀 localStorage、復原都會經過）
@@ -844,6 +862,7 @@
       subtitle: typeof raw.subtitle === 'string' ? raw.subtitle : '',
       perRow: clamp(parseInt(raw.perRow, 10) || 11, 4, 20),
       size: SIZES[raw.size] ? raw.size : 'm',
+      poolRule: parseInt(raw.poolRule, 10) || 1,   // 沒有這個欄位 = 舊存檔，載入圖鑑後會依最新規則整理一次未分配
       rows: [], pool: [], items: {}, autoSeen: {},
       note: typeof raw.note === 'string' ? raw.note.slice(0, 800) : ''
     };
@@ -1000,7 +1019,7 @@
   function nameOf(it) { var c = catOf(it); return (c && !it.edited) ? c.display : it.name; }
   function imgOf(it) { var c = catOf(it); return (c && c.img && (!it.edited || !it.img)) ? c.img : it.img; }   // 手動指定過圖片 (edited 且 img 不空) 才不跟圖鑑；只改名稱的項目圖片仍跟圖鑑走 (改用本機圖片後會自動更新)
   function typeOf(it) { var c = catOf(it); return (c && c.type) || it.type || keyType(it.key); }
-  function tileModel(it) { return { name: nameOf(it), img: imgOf(it), type: typeOf(it) }; }
+  function tileModel(it) { var c = catOf(it); return { name: nameOf(it), img: imgOf(it), type: typeOf(it), variant: !!(c && c.isVariant) }; }
 
   function shortenName(name) {
     var s = String(name);
@@ -1054,14 +1073,15 @@
   }
 
   // ---------- 渲染 ----------
-  function tipOf(v) { return (TYPE_LABELS[v.type] ? TYPE_LABELS[v.type] + '｜' : '') + v.name; }
+  function tipOf(v) { return (TYPE_LABELS[v.type] ? TYPE_LABELS[v.type] + '｜' : '') + v.name + (v.variant ? '（異色版）' : ''); }
   function tileHtml(v, extraCls, extraAttr, lazy) {
     var sz = sizeNow(), lab = labelFor(v.name, v.type, sz);
     var inner = v.img
       ? '<img src="' + esc(v.img) + '" alt="" draggable="false"' + (lazy ? ' loading="lazy"' : '') + '>'
       : '<div class="ct-noimg">' + esc(initialOf(v.name)) + '</div>';
     var badge = TYPE_BADGE[v.type] ? '<span class="ct-badge ' + (isCore(v.type) ? 'core' : 'extra') + '">' + TYPE_BADGE[v.type] + '</span>' : '';
-    return '<div class="ct-tile' + (extraCls || '') + '" ' + extraAttr + ' title="' + esc(tipOf(v)) + '">' + inner + badge +
+    var vbadge = v.variant ? '<span class="ct-vbadge">異</span>' : '';   // 異色版：右上角粉紅「異」
+    return '<div class="ct-tile' + (extraCls || '') + '" ' + extraAttr + ' title="' + esc(tipOf(v)) + '">' + inner + badge + vbadge +
       '<span class="ct-nm" style="font-size:' + lab.fs + 'px;line-height:' + lab.lh + 'px">' + lab.lines.map(function (l) { return '<i>' + esc(l) + '</i>'; }).join('') + '</span></div>';
   }
   function itemTile(id) { return tileHtml(tileModel(state.items[id]), '', 'data-kind="item" data-id="' + id + '"', false); }
@@ -1099,6 +1119,8 @@
     if (f.cls && (m.tags || []).indexOf(f.cls) < 0 && (m.bitTypes || []).indexOf(f.cls) < 0) return false;   // 與裝備庫相同：看零件的 tags，軸心另看攻/防/持/衡類型
     if (f.collab === 'regular' && m.collab) return false;
     if (f.collab === 'collab' && !m.collab) return false;
+    if (f.variant === 'base' && m.isVariant) return false;
+    if (f.variant === 'only' && !m.isVariant) return false;
     return true;
   }
   function compareMeta(a, b) {
@@ -1128,24 +1150,26 @@
     var list = catalog.filter(matchFilters).sort(compareMeta);
     shownCat = list.slice(0, CONFIG.catalogShowLimit);
     els.catList.innerHTML = shownCat.map(function (c) {
-      return tileHtml({ name: c.display, img: c.img, type: c.type }, (used[c.key] ? ' ct-used' : '') + (selCat[c.key] ? ' ct-sel' : ''), 'data-kind="cat" data-ck="' + c._i + '"', true);
+      return tileHtml({ name: c.display, img: c.img, type: c.type, variant: !!c.isVariant }, (used[c.key] ? ' ct-used' : '') + (selCat[c.key] ? ' ct-sel' : ''), 'data-kind="cat" data-ck="' + c._i + '"', true);
     }).join('');
     els.catCount.textContent = catalog.length;
     els.catMsg.textContent = catalog.length
-      ? '共 ' + catalog.length + ' 筆，符合 ' + list.length + ' 筆' + (list.length > CONFIG.catalogShowLimit ? '（僅顯示前 ' + CONFIG.catalogShowLimit + ' 筆，請用搜尋或篩選縮小）' : '') + '。點選可多選，連點兩下直接加入「未分配」，也可以拖進欄位；灰掉的已在表中。'
+      ? '共 ' + catalog.length + ' 筆，符合 ' + list.length + ' 筆' + (list.length > CONFIG.catalogShowLimit ? '（僅顯示前 ' + CONFIG.catalogShowLimit + ' 筆，請用搜尋或篩選縮小）' : '') + '。點選可多選，選好後點上方欄位即可放入；連點兩下直接加入「未分配」，也可以拖進欄位；灰掉的已在表中。異色版 (右上角「異」) 有公認強度差異時可以另外列入。'
       : (els.catMsg.getAttribute('data-base') || '');
   }
 
-  // 目前選取的數量與批次動作列
+  function hasSel() { return Object.keys(selCat).length + Object.keys(selPool).length > 0; }
+  // 目前選取的數量與批次動作列；有選取時整個表加上 ct-armed，上方每個欄位顯示同色亮框，提示可以直接點一下放入
   function paneNow() { var b = root.querySelector('.ct-tabs button.on'); return b ? b.getAttribute('data-tab') : 'pool'; }
   function renderSelBar() {
     var opts = '<option value="">移到欄位…</option>' + state.rows.map(function (r) { return '<option value="' + r.id + '">' + esc(r.label || '(未命名)') + '</option>'; }).join('');
     [['pool', selPool], ['cat', selCat]].forEach(function (p) {
       var pane = root.querySelector('.ct-pane[data-pane="' + p[0] + '"]'), n = Object.keys(p[1]).length;
-      pane.querySelector('[data-role="sel-info"]').textContent = n ? '已選 ' + n + ' 個' : '點選陀螺可多選，Shift 連選';
+      pane.querySelector('[data-role="sel-info"]').textContent = n ? '已選 ' + n + ' 個｜點上方欄位即可放入（Esc 取消選取）' : '點選陀螺可多選，Shift 連選；選好後點上方欄位放入';
       var mv = pane.querySelector('[data-role="move-to"]'); mv.innerHTML = opts; mv.disabled = !n;
       pane.querySelectorAll('[data-act="sel-none"],[data-act="cat-add"],[data-act="pool-delete"]').forEach(function (b) { b.disabled = !n; });
     });
+    root.classList.toggle('ct-armed', hasSel());
   }
   function paintSelection() {
     root.querySelectorAll('.ct-cat-list .ct-tile').forEach(function (t) { var c = catalog[+t.getAttribute('data-ck')]; t.classList.toggle('ct-sel', !!(c && selCat[c.key])); });
@@ -1177,6 +1201,8 @@
   // opts.groups = [{ id:'TopPart', label:'核心上蓋' }, ...]、opts.classes = [{ v:'BX', label:'BX' }, ...]、opts.bitClasses：分類下拉選單的內容，與裝備庫的零件選擇視窗共用同一份定義。
   // key 必須是「種類::零件名」，牌組裡的零件才對得上 (見 index.html 的 evalCostSet)。
   // opts.legacy = { 'Blade::惡魔勇氣 J': ['MainBlade::勇氣'], ... }：舊版把 CX 成品放進表中，這份對照用來把舊表自動轉成核心零件。
+  // opts.aliases = { 'MainBlade::九尾 2': 'MainBlade::九尾', ... }：舊版名稱 → 現行名稱，載入時自動換名 (兩邊都在表中就合併)。
+  // 異色版：圖鑑項目多帶 isVariant:true、variantOf (本體 key)、variantLabel (標示)；key = 本體 key + '@' + 標示。異色版不會自動放進未分配，要從圖鑑自行加入。
   function setCatalog(list, opts) {
     var seen = {};
     catalog = []; catByKey = {};
@@ -1187,11 +1213,13 @@
       var e = { key: String(c.key), name: name, display: name, code: String(c.code || ''), img: typeof c.img === 'string' ? c.img : '',
                 type: String(c.type || ''), typeLabel: String(c.typeLabel || TYPE_LABELS[c.type] || c.type || ''),
                 group: String(c.group || ''), tags: Array.isArray(c.tags) ? c.tags.slice() : [], bitTypes: Array.isArray(c.bitTypes) ? c.bitTypes.slice() : [],
-                rel: typeof c.rel === 'string' ? c.rel : '', collab: !!c.collab };
+                rel: typeof c.rel === 'string' ? c.rel : '', collab: !!c.collab,
+                isVariant: !!c.isVariant, variantOf: c.variantOf ? String(c.variantOf) : '', variantLabel: c.variantLabel ? String(c.variantLabel) : '' };
       catalog.push(e); catByKey[e.key] = e;
     });
     catalog.forEach(function (c, i) { c._i = i; });
     legacyMap = (opts && opts.legacy && typeof opts.legacy === 'object') ? opts.legacy : {};
+    aliasMap = (opts && opts.aliases && typeof opts.aliases === 'object') ? opts.aliases : {};
     slotGroups = (opts && Array.isArray(opts.groups)) ? opts.groups : [];
     classFilters = (opts && Array.isArray(opts.classes)) ? opts.classes : [];
     bitFilters = (opts && Array.isArray(opts.bitClasses)) ? opts.bitClasses : [];
@@ -1223,11 +1251,55 @@
   function normalizeWithCatalog(s) {
     if (!catalog.length) return false;
     var before = JSON.stringify(s);
+    var renamed = migrateAliases(s);
     migrateLegacy(s);
     Object.keys(s.items).forEach(function (id) { var c = catByKey[s.items[id].key]; if (c && !s.items[id].type) s.items[id].type = c.type; });
-    syncPool(s);
+    // 未分配規則升級 (舊存檔第一次載入)：先清掉不再算「一般零件」的項目，再補上新判斷下的一般零件，並在上方說明做了什麼
+    var upgrading = (s.poolRule || 1) < POOL_RULE;
+    var removed = upgrading ? cleanupPool(s) : [];
+    var added = syncPool(s);
+    if (upgrading) {
+      s.poolRule = POOL_RULE;
+      var parts = [];
+      if (removed.length) parts.push('未分配裡的聯名款 / 限定款已移出（' + listNames(removed) + '），需要時可從「圖鑑」分頁加回');
+      if (added.length) parts.push('一般零件新放進未分配：' + listNames(added));
+      if (parts.length) addNote(s, '未分配的「一般零件」判斷方式已更新（聯名款、限定款不算一般零件）：' + parts.join('；') + '。');
+    }
+    if (renamed.length) addNote(s, '已把舊名稱的零件換成現行名稱：' + listNames(renamed) + '。');
     return JSON.stringify(s) !== before;
   }
+  function addNote(s, msg) { s.note = (s.note ? s.note + ' ' : '') + msg; }
+  function listNames(a) { return a.length > 10 ? a.slice(0, 10).join('、') + ' 等 ' + a.length + ' 個' : a.join('、'); }   // 說明文字裡的名單最多列 10 個
+
+  // 舊版名稱 (aliasMap，例如「九尾 2」) 換成現行名稱；現行名稱已在表中就合併成一個 (兩個都在欄位時留現有的，只有舊名稱在欄位時留舊名稱的位置)。回傳換名清單。
+  function migrateAliases(s) {
+    var done = [];
+    Object.keys(s.items).slice().forEach(function (id) {
+      var it = s.items[id], to = it && aliasMap[it.key], c = to && catByKey[to];
+      if (!c) return;
+      var exId = findIdByKey(s, to);
+      if (exId && exId !== id) {
+        var a = locate(s, id), b = locate(s, exId);
+        if (a.row && !b.row) { removeEverywhere(s, exId); delete s.items[exId]; }   // 舊名稱放在欄位、現行名稱還在未分配：保留欄位裡的
+        else { removeEverywhere(s, id); delete s.items[id]; done.push(it.name + ' → ' + c.display); return; }
+      }
+      done.push(it.name + ' → ' + c.display);
+      it.key = to; it.type = c.type; it.code = c.code;
+      if (!it.edited) it.name = c.display;
+    });
+    return done;
+  }
+  // 規則升級時的一次性整理：從未分配移出「現在不算一般零件」(聯名款、限定款、異色版) 的項目；使用者手動編輯過的、已在欄位裡的都不動。回傳被移出的名稱
+  function cleanupPool(s) {
+    var removed = [];
+    s.pool.slice().forEach(function (id) {
+      var it = s.items[id], c = it && catByKey[it.key];
+      if (!c || it.edited || !(c.collab || c.isVariant)) return;
+      removeEverywhere(s, id); delete s.items[id]; removed.push(c.display);
+    });
+    return removed;
+  }
+  function isRegularCore(c) { return isCore(c.type) && !c.collab && !c.isVariant; }
 
   // 舊表裡的 CX 成品 (如「惡魔勇氣 J」) 換成它的核心零件：
   //   · 主戰刃 (CX1) 或鋼鐵戰刃 (CX2)：核心放在成品原本的欄位 (超越戰刃是加價零件，預設 0，不會自動放進表中)
@@ -1264,14 +1336,16 @@
     }
   }
 
-  // 把「一般 (非聯名) 核心零件」放進未分配；已在表中或已處理過 (autoSeen) 的不會再加，所以刪掉的不會被加回來
+  // 把「一般核心零件」(不是聯名款、限定款、異色版) 放進未分配；已在表中或已處理過 (autoSeen) 的不會再加，所以刪掉的不會被加回來。回傳這次新加入的名稱
   function syncPool(s) {
+    var added = [];
     Object.keys(s.items).forEach(function (id) { s.autoSeen[s.items[id].key] = true; });
     catalog.forEach(function (c) {
-      if (!isCore(c.type) || c.collab || s.autoSeen[c.key]) return;
+      if (!isRegularCore(c) || s.autoSeen[c.key]) return;
       s.autoSeen[c.key] = true;
-      s.pool.push(ensureItemFromCatalog(s, c));
+      s.pool.push(ensureItemFromCatalog(s, c)); added.push(c.display);
     });
+    return added;
   }
 
   // ---------- 拖曳（Pointer Events：滑鼠與觸控通用） ----------
@@ -1314,6 +1388,7 @@
       g = drag.src.cloneNode(true);
       g.classList.add('ct-ghost');
       g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+      ['--tw', '--th', '--img', '--nmh'].forEach(function (k) { g.style.setProperty(k, root.style.getPropertyValue(k)); });   // 殘影掛在 body，要自己帶尺寸變數
     } else {
       g = document.createElement('div');
       g.className = 'ct-ghost ct-ghost-row';
@@ -1326,6 +1401,15 @@
     m.className = 'ct-marker' + (drag.type === 'row' ? ' h' : '');
     m.style.display = 'none';
     document.body.appendChild(m); drag.marker = m;
+    if (drag.type === 'tile') {
+      // 半透明預覽磚：插在目前落點 (後面的磚會讓開)，放開後磚塊就會在這個位置；游標旁另有文字說明會放進哪一欄
+      var ph = drag.src.cloneNode(true);
+      ph.classList.remove('ct-sel', 'ct-used', 'ct-dragging'); ph.classList.add('ct-ph');
+      ['data-kind', 'data-id', 'data-ck', 'title'].forEach(function (a) { ph.removeAttribute(a); });
+      drag.ph = ph;
+      var tip = document.createElement('div'); tip.className = 'ct-droptip'; tip.style.display = 'none';
+      document.body.appendChild(tip); drag.tip = tip;
+    }
     root.classList.add('ct-drag-active');
     drag.raf = requestAnimationFrame(dragTick);
   }
@@ -1359,11 +1443,12 @@
           }
         }
       }
-      if (!zone) { d.drop = null; d.marker.style.display = 'none'; return; }
+      if (!zone) { d.drop = null; d.marker.style.display = 'none'; hidePh(d); setTip(d, null); return; }
       var before = findBefore(zone, d.x, d.y, d.src);
       d.drop = { zone: zone, before: before };
       zone.classList.add('ct-drop-hot'); d.hot = zone;
-      placeTileMarker(zone, before, d.src);
+      d.marker.style.display = 'none';   // 磚塊拖曳改用半透明預覽磚，不再畫插入線 (欄位拖曳仍用橫線)
+      showPh(d, zone, before); setTip(d, zone);
     } else {
       var rows = Array.prototype.filter.call(els.rows.querySelectorAll(':scope > .ct-row'), function (r) { return r !== d.src; });
       var b = null;
@@ -1382,7 +1467,7 @@
   }
   // 依指標位置決定要插在哪一顆磚「之前」（不含正在拖的那顆）；回傳該磚元素或 null（放最後）
   function findBefore(zone, x, y, src) {
-    var tiles = Array.prototype.filter.call(zone.querySelectorAll(':scope > .ct-tile'), function (t) { return t !== src; });
+    var tiles = Array.prototype.filter.call(zone.querySelectorAll(':scope > .ct-tile:not(.ct-ph)'), function (t) { return t !== src; });   // 預覽磚不算
     for (var i = 0; i < tiles.length; i++) {
       var r = tiles[i].getBoundingClientRect();
       if (y < r.top) return tiles[i];                              // 指標在這一列上方
@@ -1390,14 +1475,26 @@
     }
     return null;
   }
-  function placeTileMarker(zone, before, src) {
-    var m = drag.marker, left, top, h = sizeNow().TH;
-    var tiles = Array.prototype.filter.call(zone.querySelectorAll(':scope > .ct-tile'), function (t) { return t !== src; });
-    if (before) { var r = before.getBoundingClientRect(); left = r.left - 3; top = r.top; h = r.height; }
-    else if (tiles.length) { var l = tiles[tiles.length - 1].getBoundingClientRect(); left = l.right + 1; top = l.top; h = l.height; }
-    else { var z = zone.getBoundingClientRect(); left = z.left + 5; top = z.top + 5; }
-    m.style.display = 'block';
-    m.style.left = left + 'px'; m.style.top = top + 'px'; m.style.height = h + 'px';
+  // 把半透明預覽磚放到落點 (已經在正確位置就不動，避免每個影格都重排)
+  function showPh(d, zone, before) {
+    var ph = d.ph;
+    if (ph.parentNode === zone && (before ? ph.nextElementSibling === before : !ph.nextElementSibling)) return;
+    zone.insertBefore(ph, before || null);
+  }
+  function hidePh(d) { if (d.ph && d.ph.parentNode) d.ph.parentNode.removeChild(d.ph); }
+  // 游標旁的文字提示：目前會放進哪個欄位；不在可放的區域時提醒「放開會取消」；邊框顏色跟著欄位顏色
+  function setTip(d, zone) {
+    var t = d.tip; if (!t) return;
+    var rowEl = zone ? zone.closest('.ct-row') : null, txt, color = '';
+    if (!zone) txt = '這裡不能放，放開會取消';
+    else if (rowEl) { txt = '放到「' + (rowEl.querySelector('.ct-label-in').value || '未命名') + '」欄'; color = rowEl.style.getPropertyValue('--rc'); }
+    else txt = '放回「未分配」';
+    t.textContent = txt; t.classList.toggle('bad', !zone);
+    t.style.setProperty('--tc', color || '#a78bfa');
+    t.style.display = 'block';
+    var left = d.x + d.gw / 2 + 8;
+    if (left + t.offsetWidth > window.innerWidth - 4) left = d.x - d.gw / 2 - 8 - t.offsetWidth;   // 右邊放不下就改放左邊
+    t.style.left = Math.max(4, left) + 'px'; t.style.top = (d.y - 10) + 'px';
   }
   function endDrag() {
     var d = drag; drag = null;
@@ -1406,6 +1503,7 @@
     cancelAnimationFrame(d.raf);
     if (d.ghost) d.ghost.remove();
     if (d.marker) d.marker.remove();
+    hidePh(d); if (d.tip) d.tip.remove();
     if (d.hot) d.hot.classList.remove('ct-drop-hot');
     d.src.classList.remove('ct-dragging');
     root.classList.remove('ct-drag-active');
@@ -1416,6 +1514,7 @@
     drag.x = e.clientX; drag.y = e.clientY;
     if (drag.started) updateDropTarget();   // 以放開當下的位置為準
     var d = endDrag();
+    if (d.started) suppressNextClick();
     if (!d.started) {
       // 沒有移動 = 一般點擊：圖鑑與未分配區的磚是「選取 / 取消選取」(Shift 連選)
       if (d.type === 'tile') handleTileClick(d.src, e);
@@ -1424,6 +1523,12 @@
     if (!d.drop) return;   // 放在無效區域：取消
     if (d.type === 'tile') applyTileDrop(d);
     else applyRowDrop(d);
+  }
+  // 拖曳結束後瀏覽器仍會送出 click (目標是起點與終點的共同祖先)，擋掉，避免被當成「點欄位放入所選陀螺」
+  function suppressNextClick() {
+    var kill = function (ev) { ev.stopImmediatePropagation(); ev.preventDefault(); };
+    root.addEventListener('click', kill, { capture: true, once: true });
+    setTimeout(function () { root.removeEventListener('click', kill, true); }, 0);
   }
   function onDragCancel() { endDrag(); }
   function onDragKey(e) { if (e.key === 'Escape') endDrag(); }
@@ -1515,7 +1620,7 @@
     var n = 0;
     commit(function (s) {
       catalog.forEach(function (c) {
-        if (!isCore(c.type) || c.collab || findIdByKey(s, c.key)) return;
+        if (!isRegularCore(c) || findIdByKey(s, c.key)) return;
         s.pool.push(ensureItemFromCatalog(s, c)); s.autoSeen[c.key] = true; n++;
       });
     });
@@ -1706,6 +1811,13 @@
           ctx.fillStyle = isCore(v.type) ? '#fff' : '#201400'; ctx.font = '700 10px ' + FONT_FAMILY;
           ctx.fillText(TYPE_BADGE[v.type], ix + 8.5, iy + 8.5);
         }
+        // 異色版標記 (與畫面上的 .ct-vbadge 相同：右上角粉紅「異」)
+        if (v.variant) {
+          ctx.fillStyle = 'rgba(214,51,108,0.95)';
+          roundRectPath(ctx, ix + sz.IMG - 16, iy + 1, 15, 15, 4); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.font = '700 10px ' + FONT_FAMILY;
+          ctx.fillText('異', ix + sz.IMG - 8.5, iy + 8.5);
+        }
         // 名稱 (與畫面相同的排版，垂直置中於名稱區)
         var lab = labelFor(v.name, v.type, sz);
         ctx.fillStyle = '#fff'; ctx.font = '700 ' + lab.fs + 'px ' + FONT_FAMILY;
@@ -1826,7 +1938,8 @@
         '<select data-role="f-type" title="零件種類 (與裝備庫相同)"><option value="">全部種類</option></select>' +
         '<select data-role="f-cls" title="分類 (與裝備庫相同)"><option value="">全部分類</option></select>' +
         '<select data-role="f-sort" title="排序"><option value="new">新到舊</option><option value="old">舊到新</option><option value="name">名稱</option></select>' +
-        '<select data-role="f-collab" title="聯名"><option value="">一般＋聯名</option><option value="regular">只看一般</option><option value="collab">只看聯名</option></select>' +
+        '<select data-role="f-collab" title="聯名款與限定款 (BXC 型號) 不算一般零件"><option value="">一般＋聯名/限定</option><option value="regular">只看一般</option><option value="collab">只看聯名/限定</option></select>' +
+        '<select data-role="f-var" title="異色版：同一零件有公認強度差異的版本，可另外列入 Cost 表"><option value="">含異色版</option><option value="base">不含異色版</option><option value="only">只看異色版</option></select>' +
       '</div>' +
       '<div class="ct-pane" data-pane="pool">' +
         '<div class="ct-pane-bar">' +
@@ -1838,7 +1951,7 @@
           '<button type="button" class="ct-btn" data-act="refill" title="把一般零件中目前不在表裡的補回未分配">補齊一般零件</button>' +
           '<span class="ct-dlg-hint" data-role="sel-info"></span>' +
         '</div>' +
-        '<div class="ct-dlg-hint" style="margin-bottom:6px">一般 (非聯名) 的核心零件會自動放在這裡，新零件隨資料庫更新自動加入；拖回這裡 = 從欄位移出；連點兩下可編輯名稱與圖片</div>' +
+        '<div class="ct-dlg-hint" style="margin-bottom:6px">一般核心零件 (不含聯名款、限定款與異色版) 會自動放在這裡，新零件隨資料庫更新自動加入；選好陀螺後點上方欄位即可放入，拖回這裡 = 從欄位移出；連點兩下可編輯名稱與圖片</div>' +
         '<div class="ct-pool-list" data-hint="沒有符合的陀螺"></div>' +
       '</div>' +
       '<div class="ct-pane" data-pane="cat" hidden>' +
@@ -1885,7 +1998,7 @@
       board: q('.ct-board'), rows: q('.ct-rows'),
       sizeSel: q('[data-bind="size"]'), banner: q('[data-role="banner"]'), bannerText: q('[data-role="banner-text"]'),
       poolList: q('.ct-pool-list'), poolCount: q('[data-role="pool-count"]'),
-      fq: q('[data-role="f-q"]'), ftype: q('[data-role="f-type"]'), fcls: q('[data-role="f-cls"]'), fsort: q('[data-role="f-sort"]'), fcollab: q('[data-role="f-collab"]'),
+      fq: q('[data-role="f-q"]'), ftype: q('[data-role="f-type"]'), fcls: q('[data-role="f-cls"]'), fsort: q('[data-role="f-sort"]'), fcollab: q('[data-role="f-collab"]'), fvar: q('[data-role="f-var"]'),
       catList: q('.ct-cat-list'),
       catCount: q('[data-role="cat-count"]'), catMsg: q('[data-role="cat-msg"]'),
       importFile: q('[data-role="import-file"]'),
@@ -1953,6 +2066,14 @@
           break;
       }
     });
+    // 已選取下方的陀螺時，點一下上方欄位 (欄位名稱輸入框、按鈕、拖曳把手除外) = 把所選陀螺放到該欄最後
+    root.addEventListener('click', function (e) {
+      if (!hasSel() || drag) return;
+      var rowEl = e.target.closest('.ct-row');
+      if (!rowEl || !els.rows.contains(rowEl)) return;
+      if (e.target.closest('input,textarea,select,button,.ct-grip')) return;
+      moveSelected(rowEl.getAttribute('data-row-id'));
+    });
     // 文字類輸入：標題、欄位名稱、欄位顏色屬於「輕量修改」，只存檔不進復原堆疊
     root.addEventListener('input', function (e) {
       var t = e.target, bind = t.getAttribute('data-bind'), act = t.getAttribute('data-act');
@@ -1979,8 +2100,8 @@
       var t = e.target;
       if (t === els.perRow) { state.perRow = clamp(parseInt(t.value, 10) || 11, 4, 20); render(); scheduleSave(); notify(); }
       else if (t === els.sizeSel) { state.size = SIZES[t.value] ? t.value : 'm'; render(); scheduleSave(); notify(); }
-      else if (t === els.ftype || t === els.fcls || t === els.fsort || t === els.fcollab) {
-        filters.type = els.ftype.value; filters.cls = els.fcls.value; filters.sort = els.fsort.value; filters.collab = els.fcollab.value;
+      else if (t === els.ftype || t === els.fcls || t === els.fsort || t === els.fcollab || t === els.fvar) {
+        filters.type = els.ftype.value; filters.cls = els.fcls.value; filters.sort = els.fsort.value; filters.collab = els.fcollab.value; filters.variant = els.fvar.value;
         clearSel(); renderPool(); renderCatalog(); renderSelBar();
       }
       else if (t.getAttribute('data-role') === 'move-to') { var rid = t.value; t.value = ''; if (rid) moveSelected(rid); }
@@ -2000,6 +2121,10 @@
     // 快捷鍵：只在這個分頁可見、且不在輸入框內時生效
     if (!shortcutBound) {
       shortcutBound = true;
+      // Esc：取消目前的選取 (拖曳中的 Esc 由 onDragKey 處理)
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && root && root.offsetParent !== null && !drag && hasSel()) clearSel();
+      });
       document.addEventListener('keydown', function (e) {
         if (!root || root.offsetParent === null || drag) return;
         if (e.target.closest && e.target.closest('input,textarea,select')) return;
@@ -2061,6 +2186,15 @@
 // 16. Cost 表：「未分配」自動同步一般 (非聯名) 核心零件；圖鑑與未分配區可依零件種類 / 分類篩選 (與裝備庫共用同一份定義：BX、UX、CX、復刻/BXG、比賽/EVE、軸心類型)、
 //     新到舊排序、全選、多選後批次移到欄位；磚塊三段尺寸與兩行名稱 (「版本 2.0」顯示成 V2)；
 //     若網頁旁有 images/manifest.json (download_images.py 產生)，圖片改用本機優先。
+// 17. Cost 表修正 (2026-11-25)：
+//     · 一般零件判斷：聯名款改由日文名稱的版權前綴 (トランスフォーマー / ジュラシック / マーベル / スター・ウォーズ) 與 BXA 型號判斷，
+//       不再用「暴龍 / 翼龍」這類普通字 (暴龍霸擊、暴龍咆哮、翼龍神翼是一般零件)；型號前綴 BXC (抽選 / 活動 / 特別合體陀螺) 的零件視為限定款，兩者都不自動放進未分配。
+//       舊存檔載入後會一次性整理未分配並在上方說明 (poolRule = 2)。
+//     · EVA 機體版 (「2 號機版」) 一律視為異色版後綴，九尾 / 勇氣 / 至尊 / 紋章不再殘留成「九尾 2」；舊名稱靠 ARSENAL_NAME_ALIASES 與牌組零件的 rawName 自動換成現行名稱。
+//     · 異色版 (同一零件名底下有不同標示，如金屬塗層:燦金)：圖鑑另列為額外零件 (key = 本體 key + '@' + 標示，磚塊右上角「異」)，可單獨給 Cost；
+//       牌組零件是異色版且 Cost 表有列入並分到欄位時，用異色版的 Cost 取代本體，否則沿用本體 (evalCostSet)。
+//     · 拖曳磚塊時在落點顯示半透明預覽磚與游標提示 (放到哪一欄)；選取下方陀螺後，上方欄位顯示同色亮框，點一下欄位即可放入 (Esc 取消選取)。
+//     · 兵工廠零件選擇格的圖片改為延遲載入 (loading=lazy)。
 // ================== 核心系統變數 ==================
 const defaultColors = ['#00f3ff', '#ff003c', '#00ff66', '#f1c40f', '#bc13fe', '#ff7700', '#00ffcc', '#ff00aa'];
 const schedulesConfig = {
@@ -2087,7 +2221,7 @@ Chart.defaults.font.size = 32;
 
 window.onload = async function() { 
     await loadArsenalDatabase(); 
-    initRoster(); migrateRatchetFreeDecks(); /* 清掉舊存檔中「內建固鎖戰刃」誤裝的固鎖 */ initDeckDrag(); 
+    initRoster(); migrateRatchetFreeDecks(); /* 清掉舊存檔中「內建固鎖戰刃」誤裝的固鎖 */ migrateDeckPartNames(); /* 名稱清理規則更新後，舊牌組零件改用現行名稱 */ initDeckDrag(); 
     loadState(); 
     if(!appState.matches || appState.matches.length === 0) { document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); }
     renderHistory();
@@ -2209,6 +2343,21 @@ function migrateRatchetFreeDecks() {
         if (d && d.parts && d.parts.Ratchet && isRatchetFreeTop(d.parts.TopPart)) { d.parts.Ratchet = null; changed = true; }
     }));
     if (changed) saveRoster();
+}
+// 名稱清理規則更新後 (例如 EVA「2 號機版」不再殘留成「九尾 2」)，舊存檔牌組零件裡的 clean_name 和圖鑑對不上：
+// 依零件自帶的原始名稱 (rawName) 重算，且圖鑑裡真的有這個名稱才改，避免誤改成不存在的零件。
+function migrateDeckPartNames() {
+    let changed = 0;
+    roster.forEach(p => [].concat(...Object.values(p.deckSets || {})).forEach(d => {
+        if (!d || !d.parts) return;
+        Object.keys(d.parts).forEach(slot => {
+            const part = d.parts[slot]; if (!part || !part.rawName || !part.category) return;
+            const nn = cleanArsenalPartName(part.rawName, part.id || '', part.category);
+            if (nn && nn !== part.clean_name && (arsenalPartsDb[part.category] || []).some(g => g.clean_name === nn)) { part.clean_name = nn; changed++; }
+        });
+    }));
+    if (changed) saveRoster();
+    return changed;
 }
 function saveRoster() { localStorage.setItem('beyblade_roster', JSON.stringify(roster)); }
 
@@ -3077,10 +3226,25 @@ function buildCostCatalog() {
             return;
         }
         const bitTypes = cat === 'Bit' ? [...new Set(g.variants.map(v => v.bitType).filter(Boolean))] : [];
+        const group = ARSENAL_TOPPART_CATS.includes(cat) ? 'TopPart' : cat;
+        const relOf = r => (r && r < '9999') ? r : '';
+        // 聯名款與限定款 (BXC 型號) 都不是「一般零件」，不會自動放進未分配
         list.push({
             key: cat + '::' + g.clean_name, name: g.clean_name, img: g.variants[0].image, type: cat, typeLabel: COST_CAT_LABELS[cat],
-            group: ARSENAL_TOPPART_CATS.includes(cat) ? 'TopPart' : cat, tags: g.tags.slice(), bitTypes,
-            rel: (g.earliestRelease && g.earliestRelease < '9999') ? g.earliestRelease : '', collab: !!g.collab
+            group, tags: g.tags.slice(), bitTypes, rel: relOf(g.earliestRelease), collab: !!(g.collab || g.limited)
+        });
+        // 異色版：同一零件名底下有兩種以上標示時，每個「非空標示」另列一筆額外零件 (key = 本體 key + '@' + 標示)。
+        // 只有一種標示的零件 (例如只出過一款的限定塗裝) 本身就是本體，不另列。
+        const forms = {};
+        g.variants.forEach(v => { const l = arsenalVariantLabel(v.rawName, g.clean_name); (forms[l] = forms[l] || []).push(v); });
+        const labels = Object.keys(forms);
+        if (labels.length >= 2) labels.filter(Boolean).forEach(l => {
+            const vs = forms[l].slice().sort((a, b) => a.releaseAt.localeCompare(b.releaseAt));
+            list.push({
+                key: cat + '::' + g.clean_name + '@' + l, name: g.clean_name + ' ' + arsenalVariantShort(l), img: vs[0].image, type: cat, typeLabel: COST_CAT_LABELS[cat],
+                group, tags: [...new Set([].concat(...vs.map(v => v.tags)))], bitTypes, rel: relOf(vs[0].releaseAt),
+                collab: vs.every(v => v.collab || v.limited), isVariant: true, variantOf: cat + '::' + g.clean_name, variantLabel: l
+            });
         });
     }));
     return { list, legacy };
@@ -3127,22 +3291,32 @@ function syncCostLimitUI(active) {
 //   · 加價零件 (紋章、超越戰刃、輔助戰刃、固鎖、軸心) 沒列入算 0，列入才加；欄位名稱不是數字才算問題
 //   · 查詢用「種類::零件名」精確比對 (表中沒有這個 key 時，才退回比對「自訂陀螺」的名稱)
 //   · 舊牌組若核心上蓋仍是 CX 成品，會換算成它的核心零件 (主戰刃或鋼鐵戰刃)；同一個核心搭配不同紋章 / 超越戰刃 / 輔助戰刃，核心 Cost 都一樣
+//   · 異色版：零件是異色版 (如惡魔紅鐮 金屬塗層:燦金)，而 Cost 表有列入同名異色版且已分到欄位時，用異色版的 Cost 取代本體；沒列入就沿用本體
+//   · 舊版名稱 (ARSENAL_NAME_ALIASES，例如「九尾 2」) 會先換成現行名稱再查
 // 回傳 { res: CostTier.check 的結果, items: 查詢明細, perDeck: [每顆小計], problems: [有問題的零件] }
 function evalCostSet(decks, limit) {
     const items = [];
     (decks || []).slice(0, 3).forEach((d, di) => {
         if (!d || !d.parts) return;
         const seen = new Set();
-        const add = (cat, name, slot, core) => { const key = cat + '::' + name; if (seen.has(key)) return; seen.add(key); items.push({ deckIdx: di, slot, cat, name, key, core }); };
+        // 舊版名稱 (例如「九尾 2」) 先換成現行名稱；vlabel = 異色版標示 (一般版本為空字串)，由零件自帶的原始名稱 (rawName) 算出
+        const add = (cat, name, slot, core, rawName) => {
+            const k0 = cat + '::' + name, k1 = ARSENAL_NAME_ALIASES[k0] || k0, nm = k1.slice(cat.length + 2);
+            if (seen.has(k1)) return; seen.add(k1);
+            const vlabel = rawName ? arsenalVariantLabel(rawName, nm) : '';
+            items.push({ deckIdx: di, slot, cat, name: nm, key: k1, core, vlabel, vkey: vlabel ? k1 + '@' + vlabel : '', useVariant: false });
+        };
         COST_CORE_SLOTS.concat(COST_EXTRA_SLOTS).forEach(slot => {
             const p = d.parts[slot]; if (!p) return;
             const core = COST_CORE_SLOTS.includes(slot);
             const legacy = (core && p.category === 'Blade') ? costLegacyMap['Blade::' + p.clean_name] : null;
-            if (legacy && legacy.length) legacy.forEach(k => { const i = k.indexOf('::'); add(k.slice(0, i), k.slice(i + 2), slot, true); });
-            else add(p.category, p.clean_name, slot, core);
+            if (legacy && legacy.length) legacy.forEach(k => { const i = k.indexOf('::'); add(k.slice(0, i), k.slice(i + 2), slot, true, ''); });
+            else add(p.category, p.clean_name, slot, core, p.rawName);
         });
     });
+    // 查詢用的 key：這個異色版有列入 Cost 表且已分到欄位，就用異色版的 Cost (取代本體)；否則沿用本體
     const queries = items.map(x => {
+        if (x.vkey) { const vr = CostTier.lookup(x.vkey, true); if (vr && vr.row != null) { x.useVariant = true; return x.vkey; } }
         if (CostTier.lookup(x.key, true)) return x.key;
         const r = CostTier.lookup(x.name, true);
         return (r && String(r.item.key).indexOf('custom:') === 0) ? x.name : x.key;
@@ -3155,8 +3329,10 @@ function evalCostSet(decks, limit) {
     });
     return { res, items, perDeck, problems };
 }
+// 查詢明細上顯示的零件名：套用異色版 Cost 時加上標示 (例如「惡魔紅鐮 燦金」)
+function costItemName(x) { return x.useVariant ? x.name + ' ' + arsenalVariantShort(x.vlabel) : x.name; }
 function costProblemText(pr) {
-    const label = COST_CAT_LABELS[pr.item.cat] || pr.item.cat, who = `「${label} ${pr.item.name}」`;
+    const label = COST_CAT_LABELS[pr.item.cat] || pr.item.cat, who = `「${label} ${costItemName(pr.item)}」`;
     if (pr.status === 'unassigned') return who + '在 Cost 表中但還沒分到欄位';
     if (pr.status === 'nonnumeric') return who + `所在欄位「${pr.row}」不是數字`;
     return who + (pr.item.core ? '不在 Cost 表中（核心零件必須列入）' : '不在 Cost 表中');
@@ -3182,7 +3358,7 @@ function deckCostBadgeHtml(deck) {
     ev.items.forEach((x, k) => {
         const dt = ev.res.details[k]; if (dt.status !== 'ok') return;
         if (x.core) core += dt.cost; else extra += dt.cost;
-        lines.push(`${COST_CAT_LABELS[x.cat] || x.cat} ${x.name}：${x.core ? '' : '+'}${fmtCost(dt.cost)}`);
+        lines.push(`${COST_CAT_LABELS[x.cat] || x.cat} ${costItemName(x)}：${x.core ? '' : '+'}${fmtCost(dt.cost)}`);
     });
     const warn = ev.problems.length ? ` <span title="${escapeHtml(ev.problems.map(costProblemText).join('\n'))}">⚠️ ${ev.problems.length} 項未列入</span>` : '';
     const split = extra ? `（核心 ${fmtCost(core)} ＋ 加價 ${fmtCost(extra)}）` : '';
@@ -3204,9 +3380,33 @@ let arsenalPartsDb = { TopPart: [], Blade: [], MainBlade: [], OverBlade: [], Met
 const ARSENAL_REMOTE_IMG_ROOT = "https://beyblade.phstudy.org/images/";   // 遠端圖片根目錄 (底下有 site/ 與 app/ 兩套路徑)
 const ARSENAL_BASE_IMG_URL = ARSENAL_REMOTE_IMG_ROOT + "site/";
 let arsenalLocalImgRoot = ''; // 本機圖片根目錄；網頁旁有 images/manifest.json (由 download_images.py 產生) 時設為 'images/'，之後圖片以本機優先
-// 聯名角色名稱 (漫威、星際大戰、變形金剛、侏羅紀、福音戰士)：資料庫沒有明確的聯名欄位，用型號 BXA、說明文字與這份名稱判斷。
-// 判斷錯了 (一般零件被當聯名，或相反) 就來這裡增減；聯名款不會自動放進 Cost 表的「未分配」，但可在圖鑑分頁找到。
-const ARSENAL_COLLAB_NAME_RE = /福音戰士|紅浩克|蜘蛛人|綠惡魔|美國隊長|薩諾斯|鋼鐵人|猛毒|丘巴卡|歐比王|葛里維斯|路克天行者|達斯維達|風暴兵|曼達洛|星區長|柯博文|密卡登|暴龍|滄龍|棘龍|翼龍/;
+// 聯名款 / 限定款判斷：資料庫沒有明確的「聯名」或「一般零件」欄位，只能從這幾個線索推斷 (任一個符合就算聯名)：
+//   1. 型號前綴 BXA (漫威、星際大戰系列)
+//   2. 日文名稱 (ja-JP) 型號後面緊接著版權名稱，例如「BXG-37-02 トランスフォーマー スタースクリーム」(天王星)、「BXG-40-02 ジュラシック・ワールド …」，見 ARSENAL_COLLAB_JA_RE
+//   3. 下面這份中文角色名單 (福音戰士、漫威、星際大戰、變形金剛的角色名)
+// 注意：不要把「暴龍」「翼龍」這類一般字加進名單，一般零件也有 (暴龍霸擊、暴龍咆哮、翼龍神翼)；侏羅紀聯名款改由日文版權前綴判斷。
+// 判斷錯了 (一般零件被當聯名，或相反) 就來這裡增減；聯名款與限定款不會自動放進 Cost 表的「未分配」，但可在圖鑑分頁找到。
+const ARSENAL_COLLAB_NAME_RE = /福音戰士|紅浩克|蜘蛛人|綠惡魔|美國隊長|薩諾斯|鋼鐵人|猛毒|丘巴卡|歐比王|葛里維斯|路克天行者|達斯維達|風暴兵|曼達洛|星區長|柯博文|密卡登/;
+// 日文名稱的版權前綴 (資料庫目前出現過的四個)；之後有新的聯名系列而判斷不到時，把它的日文版權名稱補在這裡
+const ARSENAL_COLLAB_JA_RE = /トランスフォーマー|ジュラシック|マーベル|スター・?ウォーズ|エヴァ/;
+// 限定款：型號前綴 BXC 是抽選獎品、活動限定、特別合體陀螺這類非常規商品 (鱷魚粉碎、惡魔紅鐮 特別合體陀螺、大蛇簇擁、武士鋼鐵…)。
+// 零件「所有版本」都是 BXC 才算限定款，只要有一個一般型號 (BX / UX / CX / BXG) 的版本就算一般零件；BXG 前綴一般款與聯名款都有，不能拿來判斷。
+const ARSENAL_LIMITED_SET_RE = /^BXC/i;
+// 舊版名稱清理規則造成的零件名 → 現行名稱 (Cost 表、牌組零件載入時自動換成現行名稱)。
+// 之後再調整 cleanArsenalPartName 而改變某些零件名稱時，在這裡補一行即可，舊存檔就不會對不上。
+const ARSENAL_NAME_ALIASES = { 'MainBlade::九尾 2': 'MainBlade::九尾', 'LockChip::新世紀福音戰士 2': 'LockChip::新世紀福音戰士', 'Blade::新世紀福音戰士九尾 T 2': 'Blade::新世紀福音戰士九尾 T' };
+
+// ---- 異色版 ----
+// 同一個零件名底下，除了型號不同，原始名稱還有不同標示 (金屬塗層:燦金、火紅版、特別版、零號機版…)，這個標示就是「異色版標示」；一般版本的標示是空字串。
+// Cost 表可以把「零件名@標示」當成額外零件列入 (有公認強度差異的異色版)，Cost 驗證時優先採用異色版的欄位，沒列入就沿用本體 (見 evalCostSet)。
+function arsenalVariantLabel(rawName, cleanName) {
+    // 去掉型號前綴與所有空白後比對 (清理後的名稱可能改動過空白，例如「勇氣 A」→「勇氣A」)
+    const strip = s => String(s || '').replace(/^(?:BX|UX|CX|BXG|BXH|BXC|BXA|BXR)-[\d-]+\s*/i, '').replace(/\s+/g, '');
+    const raw = strip(rawName), cn = strip(cleanName);
+    return (cn && raw.includes(cn)) ? raw.replace(cn, '') : '';
+}
+// 顯示用的簡短標示：「金屬塗層:燦金」→「燦金」
+function arsenalVariantShort(label) { return String(label || '').replace(/^金屬塗層[:：]/, ''); }
 // 零件分類定義：裝備庫的零件選擇視窗 (openVisualGrid) 與 Cost 表的篩選列共用，之後新增分類只要改這裡。
 //   CLASS_FILTERS 比對零件的 tags (系統與版本類別)；BIT_FILTERS 比對軸心的 bitType；SLOT_GROUPS 是零件欄位分類 (與牌組編輯器的欄位對應)
 const ARSENAL_CLASS_FILTERS = [{ v: 'BX', label: 'BX' }, { v: 'UX', label: 'UX' }, { v: 'CX', label: 'CX' }, { v: 'BXG', label: '復刻/BXG' }, { v: 'EVE', label: '比賽/EVE' }];
@@ -3370,9 +3570,11 @@ async function loadArsenalDatabase() {
                 if (fullText.includes('BXC') || fullText.includes('EVE') || fullText.includes('BXR') || fullText.includes('CUP')) tags.add('EVE');
 
                 let descText = ''; try { descText = Object.values(item.description || {}).join(' ') + ' ' + Object.values(item.catalog_title || {}).join(' '); } catch (e) {}
-                let isCollab = /^BXA/i.test(String(item.base_set_id || item.set_id || id)) || /collab|collaborat|evangelion|福音戰士|聯名/i.test(descText) || ARSENAL_COLLAB_NAME_RE.test(rawNameTW);
+                let jaName = ''; try { const nn = item.name || item.catalog_title; jaName = (nn && nn['ja-JP']) || ''; } catch (e) {} // 日文名稱：聯名款的型號後面會接版權名稱
+                let isCollab = /^BXA/i.test(String(item.base_set_id || item.set_id || id)) || /collab|collaborat|evangelion|福音戰士|聯名/i.test(descText) || ARSENAL_COLLAB_NAME_RE.test(rawNameTW) || ARSENAL_COLLAB_JA_RE.test(jaName);
+                let isLimited = ARSENAL_LIMITED_SET_RE.test(String(item.base_set_id || item.set_id || id)); // 型號前綴 BXC = 限定 / 特別款
                 let releaseAt = item.release_at ? String(item.release_at) : '9999-12-31';
-                let vObj = { id: id, rawName: rawNameTW, image: `${arsenalLocalImgRoot || ARSENAL_REMOTE_IMG_ROOT}site/${shortCat}/${id}.png`, category: shortCat, set_id: item.base_set_id || item.set_id || id, tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType, releaseAt: releaseAt, ratchetFree: (shortCat === 'Blade' && arsenalRatchetFreeInstIds.has(instId)), collab: isCollab };
+                let vObj = { id: id, rawName: rawNameTW, image: `${arsenalLocalImgRoot || ARSENAL_REMOTE_IMG_ROOT}site/${shortCat}/${id}.png`, category: shortCat, set_id: item.base_set_id || item.set_id || id, tags: Array.from(tags), instId: instId, sysType: sysType, bitType: parsedBitType, releaseAt: releaseAt, ratchetFree: (shortCat === 'Blade' && arsenalRatchetFreeInstIds.has(instId)), collab: isCollab, limited: isLimited };
 
                 let ex = arsenalPartsDb[shortCat].find(p => p.clean_name === cleanName);
                 if (ex) {
@@ -3387,6 +3589,7 @@ async function loadArsenalDatabase() {
             group.variants.sort((a, b) => a.releaseAt.localeCompare(b.releaseAt)); 
             group.earliestRelease = group.variants[0].releaseAt; 
             group.collab = group.variants.every(v => v.collab); // 所有版本都是聯名才算聯名款 (只要有一般版本就算一般零件)
+            group.limited = group.variants.every(v => v.limited); // 所有版本都是 BXC 型號才算限定款
             let sysTags = ['BX', 'UX', 'CX']; let oldestSysTags = group.variants[0].tags.filter(t => sysTags.includes(t));
             if (oldestSysTags.length > 0) { group.tags = group.tags.filter(t => !sysTags.includes(t)); oldestSysTags.forEach(t => group.tags.push(t)); }
         });
@@ -3403,7 +3606,7 @@ async function loadArsenalDatabase() {
     // 彙整內建固鎖的戰刃名稱，供 isRatchetFreeTop 對舊存檔零件做名稱比對
     arsenalPartsDb.Blade.forEach(g => { if (g.variants.some(v => v.ratchetFree)) arsenalRatchetFreeNames.add(g.clean_name); });
     arsenalPartsDb.TopPart = [...arsenalPartsDb.Blade, ...arsenalPartsDb.MainBlade, ...arsenalPartsDb.MetalBlade].sort((a, b) => a.clean_name.localeCompare(b.clean_name, 'en', { numeric: true, sensitivity: 'base' }));
-    if (window.CostTier) { const cc = buildCostCatalog(); costLegacyMap = cc.legacy; CostTier.setCatalog(cc.list, { legacy: cc.legacy, groups: ARSENAL_SLOT_GROUPS, classes: ARSENAL_CLASS_FILTERS, bitClasses: ARSENAL_BIT_FILTERS }); } // 圖鑑整理完成，交給 Cost 表模組
+    if (window.CostTier) { const cc = buildCostCatalog(); costLegacyMap = cc.legacy; CostTier.setCatalog(cc.list, { legacy: cc.legacy, aliases: ARSENAL_NAME_ALIASES, groups: ARSENAL_SLOT_GROUPS, classes: ARSENAL_CLASS_FILTERS, bitClasses: ARSENAL_BIT_FILTERS }); } // 圖鑑整理完成，交給 Cost 表模組
 }
 
 // 判斷是否為「占位用假零件」：資料庫為了讓商品有完整零件欄位，會替只含單一零件的商品補上其他部位的空殼資料
@@ -3435,7 +3638,7 @@ function cleanArsenalPartName(rawName, instId, shortCat) {
     let cleaned = name.replace(/(BX|UX|CX|BXG|BXH|BXC|BXR|PRD)[A-Za-z0-9\-]+\s*/ig, ''); 
     if (['Blade', 'MainBlade', 'MetalBlade', 'OverBlade', 'AssistBlade', 'LockChip', 'TopPart'].includes(shortCat)) cleaned = cleaned.replace(/\s*\d+-\d+[A-Za-z]*/ig, '');
     // 聯名/特殊塗裝後綴：釣魚魂 Wonder 版、FC 球隊版 (如 FC 巴塞隆納版)、鍍金/銀/銅版，皆視為原零件的異色版本
-    cleaned = cleaned.replace(/\s*釣魚魂\s*Wonder\s*版?/ig, '').replace(/\s*FC\s*[一-龥]+版?/ig, '').replace(/\s*鍍[金銀銅]版?/g, '');
+    cleaned = cleaned.replace(/\s*釣魚魂\s*Wonder\s*版?/ig, '').replace(/\s*FC\s*[一-龥]+版?/ig, '').replace(/\s*鍍[金銀銅]版?/g, '').replace(/\s*[0-9０-９]+\s*號機\s*版?/g, ''); // 「2 號機版」含空白，要先整段去掉，否則會殘留成「九尾 2」
     cleaned = cleaned.replace(/DMM\s*(抽獎|スクラッチ).*?[賞獎]\s*/ig, '').replace(/(金屬塗層|金屬塗裝|メタルコート|Metallic Coat)[:：-]?\s*[A-Za-z0-9\u4e00-\u9fa5\/]+/ig, '').replace(/\s*(J\s*League|キタニタツヤ)\s*(Ver\.|バージョン|版本?)?/ig, '').replace(/(火紅|原色|特別|異色|塗裝|限定|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明)(Ver\.|バージョン|版本?)/ig, '').replace(/\s+[A-Za-z0-9\u4e00-\u9fa5\uFF10-\uFF19]+(Ver\.|バージョン|版本?)/ig, '').replace(/\s+(Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|限定|原色|異色|抽包|獎品)\b/ig, '').replace(/\s*[\(（](限定|火紅|原色|特別|異色|塗裝|抽包|獎品|金|銀|銅|黑|白|紅|藍|綠|黃|紫|青|灰|粉|水藍|闇黑|透明|Black|Red|Blue|Gold|Silver|Clear|Cyan|Magenta|Orange|Green|Yellow|Bronze|Navy|White|Violet|連擊型|上升攻擊型)[\)）]/ig, '').replace(/中收錄.*$/ig, '').replace(/ランダムブースター.*$/ig, '').replace(/\s*(鋼鐵|金屬|主要|超越|輔助)戰刃/ig, '').replace(/\s*(紋章|ロックチップ)/ig, '').replace(/\s*(メタル|メイン|オーバー|アシスト)ブレード/ig, '');
     if (cleaned.includes('福音戰士')) cleaned = cleaned.replace(/\s+([A-Z])$/i, '$1'); // 合併連續空白 (移除後綴後會殘留雙空格)
     cleaned = cleaned.replace(/\s{2,}/g, ' ');
@@ -3701,12 +3904,12 @@ window.applyArsenalFilter = function(f = currentFilterType) {
         let g={}; list.forEach(p => { let m=p.clean_name.match(/^([0-9]+|M)-/i); let b = m ? (m[1].toUpperCase()==='M' ? 10 : parseInt(m[1])) : 99; /* M 型歸為 10 組 */ if(!g[b]) g[b]=[]; g[b].push(p); });
         Object.keys(g).sort((a,b)=>a-b).forEach(b => {
             html += `<div style="width:100%; border-bottom:1px solid #45a29e; margin:15px 0 5px; color:#66fcf1; font-weight:bold; font-size:22px; text-align:left;">${b==99?"特殊":(b==10?"M 型":`${b} 刃`)}固鎖</div><div class="grid-inner">`;
-            g[b].forEach(p => { let idx=arsenalPartsDb['Ratchet'].indexOf(p); html += `<div class="grid-item" onclick="handleArsenalGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleArsenalImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
+            g[b].forEach(p => { let idx=arsenalPartsDb['Ratchet'].indexOf(p); html += `<div class="grid-item" onclick="handleArsenalGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" loading="lazy" decoding="async" onerror="handleArsenalImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
             html += `</div>`;
         });
     } else {
         html += `<div class="grid-inner">${ARSENAL_CLEAR_CARD}`; // 「無」是清單第一格
-        list.forEach(p => { let idx=arsenalPartsDb[selectingPartCategory].indexOf(p); html += `<div class="grid-item" onclick="handleArsenalGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" onerror="handleArsenalImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
+        list.forEach(p => { let idx=arsenalPartsDb[selectingPartCategory].indexOf(p); html += `<div class="grid-item" onclick="handleArsenalGroupClick(${idx})">${p.variants.length>1?`<div class="variant-badge">${p.variants.length} 版本</div>`:""}<img src="${p.variants[0].image}" class="grid-img" loading="lazy" decoding="async" onerror="handleArsenalImgError(this)"><div class="grid-title">${p.clean_name}</div></div>`; });
         html += `</div>`;
     }
     document.getElementById('gridContainer').innerHTML = html;
