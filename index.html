@@ -149,7 +149,7 @@
         .vs-badge { font-size: 54px; font-weight: 900; color: transparent; -webkit-text-stroke: 2px #e74c3c; text-shadow: 0 0 20px rgba(231,76,60,0.8); font-style: italic; letter-spacing: 3px; }
         
         /* Modal & 輕量計分面板 */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; overflow-y: auto; padding: 25px; backdrop-filter: blur(10px); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; overflow-y: auto; padding: clamp(8px, 2vh, 25px) clamp(8px, 1.6vw, 25px); backdrop-filter: blur(10px); }
         .modal-content, .edit-modal-content { max-width: 1400px; margin: 0 auto; }
         .edit-modal-content { max-width: 600px; margin: 5% auto; text-align: center; border-color: #f1c40f; }
         .slider-group { text-align: left; margin-bottom: 25px; }
@@ -157,17 +157,19 @@
         .slider-group input[type="range"], .slider-group input[type="text"] { width: 100%; }
         .slider-group input[type="range"] { cursor: pointer; accent-color: #0ff; }
         
-        .scoring-panel { display: flex; gap: 20px; justify-content: center; margin: 15px 0; align-items: stretch; }
-        .player-score-col { flex: 1; padding: 15px 25px; border-radius: 20px; background: rgba(0,0,0,0.5); border: 2px solid #444; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); position: relative; }
-        .score-huge { font-size: 85px; font-weight: 900; line-height: 1; margin: 0 0 5px 0; font-family: 'Courier New', monospace; text-shadow: 0 0 20px currentColor; }
-        .win-btn { width: 100%; padding: 12px 20px; font-size: 22px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 2px solid; transition: 0.2s; background: rgba(0,0,0,0.8); display:flex; justify-content: space-between; align-items:center; margin-top: 5px; }
+        .scoring-panel { display: flex; gap: clamp(12px, 1.6vw, 28px); justify-content: center; margin: 12px 0; align-items: stretch; }
+        @media (max-width: 760px) { .scoring-panel { flex-direction: column; } }
+        .player-score-col { flex: 1; padding: clamp(8px, 1.6vh, 15px) clamp(12px, 1.6vw, 25px); border-radius: 20px; background: rgba(0,0,0,0.5); border: 2px solid #444; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); position: relative; }
+        .score-huge { font-size: clamp(48px, min(6vw, 9vh), 110px); font-weight: 900; line-height: 0.85; margin: 0; font-family: 'Courier New', monospace; text-shadow: 0 0 20px currentColor; }
+        .win-btn { width: 100%; padding: clamp(5px, 1vh, 14px) 12px; font-size: clamp(17px, 1.45vw, 26px); border-radius: 12px; font-weight: bold; cursor: pointer; border: 2px solid; transition: 0.2s; background: rgba(0,0,0,0.8); display:flex; justify-content: space-between; align-items:center; margin-top: 5px; }
         .win-btn:hover { filter: brightness(1.3); transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.6); }
         .win-btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; } /* 本局結束後鎖住計分按鈕 */
-        .win-pts { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 6px; font-family: monospace; font-size: 20px; }
-        .penalty-text { font-size: 18px; font-weight: bold; color: #e74c3c; text-shadow: 0 0 10px rgba(231,76,60,0.8); min-height: 25px; letter-spacing: 2px; margin: 0;}
+        .win-pts { background: rgba(255,255,255,0.15); padding: 2px 9px; border-radius: 6px; font-family: monospace; font-size: clamp(16px, 1.3vw, 20px); }
+        .score-row { position: relative; width: 100%; text-align: center; }
+        .penalty-text { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); max-width: 36%; text-align: right; font-size: clamp(13px, 1.3vw, 18px); font-weight: bold; color: #e74c3c; text-shadow: 0 0 10px rgba(231,76,60,0.8); letter-spacing: 1px; line-height: 1.25; margin: 0; }
         
         /* 戰局中顯示的陀螺資訊框 */
-        .active-bey-info { margin-top: 10px; padding: 10px; width: 100%; border-radius: 12px; background: rgba(0,0,0,0.6); border: 2px dashed rgba(255,255,255,0.3); text-align: center; }
+        .active-bey-info { margin-top: 0; padding: clamp(6px, 1.2vh, 15px); width: 100%; border-radius: 12px; background: rgba(0,0,0,0.6); border: 2px dashed rgba(255,255,255,0.3); text-align: center; }
         .active-bey-info h4 { margin: 0 0 5px 0; font-size: 20px; color: #f1c40f; }
         .active-bey-info p { margin: 0; font-size: 16px; color: #aaa; word-break: break-all; }
 
@@ -247,16 +249,34 @@
         .stack-top-cx2 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 3; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
         .stack-top-cx1 { position: absolute; width: 85px; height: 85px; bottom: 0px; left: 0px; z-index: 2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8)); }
 
-        .mini-icon-wrapper { width: 80px; height: 80px; position: relative; display: inline-block; margin-top: 5px; }
-        .mini-icon-wrapper .deck-img { width: 80px; height: 80px; margin: 0; }
-        .mini-icon-wrapper .stack-container { transform: scale(0.44); transform-origin: top left; margin: 0; position: absolute; top: 0; left: 0; }
+        /* 依容器寬度等比縮放的陀螺圖 (疊圖用百分比定位，所以不論卡片多大都不會跑版) */
+        .fluid-bey { position: relative; aspect-ratio: 1 / 1; }
+        .fluid-bey > .deck-img { width: 100%; height: 100%; margin: 0; }
+        .fluid-bey > .stack-container { width: 100%; height: 100%; margin: 0; }
+        .fluid-bey .stack-base { width: 78%; height: 78%; top: 5.5%; left: 5.5%; }
+        .fluid-bey .stack-mid { width: 78%; height: 78%; top: 16.7%; left: 16.7%; }
+        .fluid-bey .stack-top-cx1, .fluid-bey .stack-top-cx2 { width: 47%; height: 47%; }
+        .mini-icon-wrapper { width: clamp(76px, min(8vw, 13vh), 140px); position: relative; flex: 0 0 auto; }
+        .active-bey-row { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+        .active-bey-name { font-size: clamp(18px, 1.6vw, 26px); color: #f1c40f; line-height: 1.2; text-align: left; font-weight: bold; text-shadow: 0 0 5px rgba(241,196,15,0.5); }
+        /* 四顆得分鈕排成 2 欄 (面板窄時自動變 1 欄)，犯規鈕獨佔一列 */
+        .win-grid { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(max(235px, calc(50% - 10px)), 1fr)); gap: 6px 10px; }
+        .win-grid .win-btn { margin-top: 0; }
 
-        /* 全新變陣視覺卡片專屬 CSS */
-        .reorder-card { width: 160px; background: rgba(0,0,0,0.6); border: 2px solid #555; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; }
-        .reorder-card:hover { border-color: #0ff; transform: translateY(-3px); }
-        .reorder-card.selected { border-color: #0ff; box-shadow: 0 0 20px #0ff; transform: scale(1.05); z-index: 5; }
-        .reorder-img-wrap { transform: scale(0.55); margin-top: -40px; margin-bottom: -40px; pointer-events: none; }
-        .reorder-name { font-size: 15px; font-weight: bold; color: #f1c40f; line-height: 1.2; word-break: break-all; margin-top: 5px; }
+        /* 出戰順序面板：只含目前排定的 3 位先發，卡片可拖曳排序 (也可點一張再點另一張互換) */
+        .reorder-shell { max-width: min(96vw, 1760px); margin: 2vh auto; padding: clamp(14px, 2.2vw, 36px); background: rgba(15,18,25,0.98); border: 3px solid #f1c40f; border-radius: 24px; box-shadow: 0 0 50px rgba(241,196,15,0.25); }
+        .reorder-players { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2vw, 32px); margin: 16px 0; }
+        .reorder-area { background: rgba(0,0,0,0.5); padding: clamp(12px, 1.6vw, 26px); border-radius: 18px; border: 2px dashed #444; min-width: 0; }
+        .reorder-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 1.2vw, 20px); }
+        .reorder-card { position: relative; min-width: 0; background: rgba(0,0,0,0.6); border: 2px solid #555; border-radius: 14px; padding: clamp(26px, 2.4vw, 38px) clamp(6px, 0.8vw, 14px) clamp(8px, 1vw, 14px); text-align: center; cursor: grab; transition: border-color .2s, box-shadow .2s; touch-action: none; user-select: none; -webkit-user-select: none; }
+        .reorder-card:hover { border-color: #0ff; }
+        .reorder-card.selected { border-color: #0ff; box-shadow: 0 0 20px #0ff; }
+        .reorder-card img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+        .reorder-card.reorder-ph { opacity: 0.38; border: 2px dashed #0ff; background: rgba(0,255,255,0.08); } /* 半透明落點：放開後會落在這個位置 */
+        .reorder-card.dragging { position: fixed; z-index: 5000; margin: 0; opacity: 0.93; cursor: grabbing; border-color: #f1c40f; box-shadow: 0 20px 45px rgba(0,0,0,0.85); pointer-events: none; transition: none; }
+        .reorder-img-wrap { width: min(100%, 280px); margin: 0 auto 6px; pointer-events: none; }
+        .reorder-name { font-size: clamp(14px, 1.35vw, 24px); font-weight: bold; color: #f1c40f; line-height: 1.25; word-break: break-all; margin-top: 4px; }
+        @media (max-width: 1000px) { .reorder-players { grid-template-columns: 1fr; } }
 
         .editor-container { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
         .part-slot { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); border: 2px dashed #45a29e; padding: 10px 20px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
@@ -417,19 +437,162 @@
         #costLimit:disabled { opacity: 0.6; }
         .deck-cost { margin-top: 8px; font-size: 18px; font-weight: bold; color: #f1c40f; }
         .deck-cost.warn { color: #e67e22; }
+
+        /* ====================== 整體版面：頂部工具列 + 右側固定面板 + 主區依寬度重排 ====================== */
+        :root { --bar-h: 56px; --dock-w: 0px; }
+        body { margin: 0; }
+
+        /* 頂部固定工具列 */
+        #appBar { position: sticky; top: 0; z-index: 850; height: var(--bar-h); box-sizing: border-box; display: flex; align-items: center; gap: 14px; padding: 0 clamp(10px, 1.6vw, 24px); background: rgba(10,11,16,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,255,255,0.28); box-shadow: 0 4px 18px rgba(0,0,0,0.6); }
+        h1.app-title { margin: 0; font-size: clamp(17px, 1.7vw, 28px); letter-spacing: 3px; white-space: nowrap; flex: 0 0 auto; }
+        .app-status { flex: 1 1 auto; min-width: 0; font-size: 14px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .app-tools { display: flex; gap: 10px; flex: 0 0 auto; }
+        .tool-btn { margin: 0; padding: 7px 16px; font-size: 18px; border-radius: 10px; background: #1f2833; letter-spacing: 1px; white-space: nowrap; }
+        .tool-roster { border-color: #b056df; color: #b056df; } .tool-roster:hover, .tool-roster.on { background: #b056df; color: #fff; box-shadow: 0 0 16px #b056df; }
+        .tool-cost { border-color: #f1c40f; color: #f1c40f; } .tool-cost:hover, .tool-cost.on { background: #f1c40f; color: #0b0c10; box-shadow: 0 0 16px #f1c40f; }
+        @media (max-width: 760px) { .app-status { display: none; } h1.app-title { font-size: 15px; letter-spacing: 1px; } .tool-btn { padding: 6px 10px; font-size: 16px; } .tool-btn span { display: none; } .app-tools { margin-left: auto; } }
+
+        /* 主區：有右側面板時讓出寬度；內距與各區塊間距隨視窗縮放 */
+        #appBody { padding: clamp(10px, 1.6vw, 28px); box-sizing: border-box; }
+        body.dock-side #appBody { margin-right: var(--dock-w); }
+        #appBody h2 { font-size: clamp(22px, 2vw, 32px); padding-bottom: 10px; margin-bottom: 14px; }
+        .setup-box, .box { padding: clamp(14px, 1.8vw, 28px); margin-bottom: clamp(14px, 1.6vw, 24px); border-radius: 20px; }
+        .sticky-box { top: calc(var(--bar-h) + 14px); max-height: calc(100vh - var(--bar-h) - 28px); }
+
+        /* 設定區：欄位、選手選單與按鈕壓縮成較少的列 */
+        .setup-row { gap: 12px 18px; margin-bottom: 14px; }
+        .setup-row label { font-size: 20px; }
+        .setup-row select, .setup-row input[type="text"], .setup-row input[type="number"] { padding: 8px 12px; font-size: 20px; border-radius: 10px; }
+        #tournamentName { width: clamp(170px, 22vw, 300px); }
+        .setup-players-label { font-size: 20px; color: #c5c6c7; }
+        .player-inputs-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(190px, 15vw, 250px), 1fr)); gap: 12px; margin: 10px 0 16px; }
+        .player-field { padding: 10px 14px; border-radius: 14px; min-width: 0; }
+        .player-field label { font-size: 18px; margin-bottom: 6px; }
+        .player-field select { width: 100% !important; flex: 1 1 auto; min-width: 0; padding: 8px 10px; font-size: 20px; }
+        .setup-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .setup-actions button { margin: 0; padding: 8px 14px; font-size: clamp(15px, 1.3vw, 19px); letter-spacing: 1px; }
+        .setup-actions .spacer { flex: 1 1 20px; }
+
+        /* 主區兩欄 / 單欄：依「主區實際寬度」(JS 量測後寫在 body[data-mw])，而不是視窗寬度，所以右側面板開關或調寬都會正確重排 */
+        body[data-mw="xl"] .flex-container { flex-wrap: nowrap; gap: clamp(14px, 1.6vw, 28px); }
+        body[data-mw="xl"] .flex-container > .box:first-child { flex: 1 1 0; max-width: none; min-width: 0; }
+        body[data-mw="xl"] .flex-container > .sticky-box { flex: 0 0 clamp(440px, 37%, 600px); max-width: none; position: sticky; max-height: calc(100vh - var(--bar-h) - 28px); }
+        body[data-mw="md"] .flex-container > .box, body[data-mw="sm"] .flex-container > .box { flex: 0 0 100%; max-width: 100%; }
+        body[data-mw="md"] .flex-container > .sticky-box, body[data-mw="sm"] .flex-container > .sticky-box { position: static; max-height: none; }
+        .sticky-box { overflow-x: auto; }
+
+        /* 即時戰績 / 歷史表格壓縮 */
+        #summaryTable th, #historyTable th { font-size: clamp(16px, 1.3vw, 21px); padding: 10px 8px; }
+        #summaryTable td, #historyTable td { padding: 10px 8px; }
+        #summaryTable .rank-number, #summaryTable .big-wl { font-size: clamp(24px, 2vw, 36px); }
+        #summaryTable th, #summaryTable td { padding-left: 5px; padding-right: 5px; }
+        #summaryTable th:first-child { width: auto !important; }
+        #summaryTable td:last-child { white-space: normal; min-width: 80px; font-size: 16px; }
+        #summaryTable .player-pill { font-size: clamp(15px, 1.2vw, 20px); padding: 4px 12px 4px 5px; gap: 8px; border-width: 2px; }
+        #summaryTable .avatar { width: 34px; height: 34px; border-width: 2px; }
+
+        /* 賽程：卡片排成多欄；卡片本身縮小 */
+        .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 370px), 1fr)); gap: 16px; margin-top: 14px; }
+        .schedule-grid > :not(.match-card) { grid-column: 1 / -1; }
+        .match-card { padding: 14px 18px; gap: 10px; border-radius: 16px; }
+        .match-header { padding-bottom: 10px; gap: 10px; }
+        .match-number { font-size: 20px; padding: 4px 14px; }
+        .encounter-badge { font-size: 16px; padding: 4px 10px; }
+        .match-status { font-size: 17px; padding: 4px 12px; }
+        .match-body { padding: 6px 1%; gap: 6px; }
+        .player-side { gap: 10px; width: 40%; min-width: 0; }
+        .vs-badge { font-size: 34px; }
+        .score-display { width: 92px; height: 60px; font-size: 36px; }
+        .match-card .player-pill { font-size: 19px; padding: 4px 12px 4px 4px; gap: 8px; border-width: 2px; max-width: 100%; }
+        .match-card .player-pill .avatar { width: 38px; height: 38px; border-width: 2px; }
+        .match-card .player-name-truncate { max-width: 100%; min-width: 0; }
+
+        /* ---------------- 右側固定面板 (Dock) ---------------- */
+        .dock-head { gap: 8px; flex-wrap: wrap; }
+        .dock-ctrl { display: inline-flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .dock-ctrl button { margin: 0; padding: 6px 14px; font-size: 17px; }
+        .dock-only { display: none; }
+        .dock-help > summary { cursor: pointer; color: #8b90a8; font-size: 16px; margin-bottom: 8px; }
+        #dockResizer { display: none; }
+        body.dock-side #dockResizer { display: block; position: fixed; top: var(--bar-h); bottom: 0; right: calc(var(--dock-w) - 5px); width: 10px; cursor: ew-resize; z-index: 905; background: transparent; touch-action: none; }
+        body.dock-side #dockResizer:hover, body.dock-resizing #dockResizer { background: linear-gradient(90deg, transparent 3px, rgba(0,255,255,0.7) 3px, rgba(0,255,255,0.7) 7px, transparent 7px); }
+        body.dock-resizing { user-select: none; -webkit-user-select: none; cursor: ew-resize; }
+        body.dock-side .dock-only { display: inline-block; }
+
+        body.dock-side #rosterModal, body.dock-side #costTierModal { top: var(--bar-h); bottom: 0; left: auto; right: 0; width: var(--dock-w); height: auto; padding: 0; background: rgba(8,10,16,0.985); backdrop-filter: none; z-index: 900 !important; box-shadow: -10px 0 30px rgba(0,0,0,0.6); }
+        body.dock-side #rosterModal { border-left: 3px solid #b056df; }
+        body.dock-side #costTierModal { border-left: 3px solid #f1c40f; overflow: hidden; }
+        body.dock-side #rosterModal .modal-content, body.dock-side #costTierModal .modal-content { max-width: none !important; width: auto; margin: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; padding: 12px 14px !important; overflow: visible; }
+        body.dock-side .dock-head { font-size: 24px; position: sticky; top: 0; z-index: 6; background: rgba(8,10,16,0.985); padding: 2px 0 6px; margin-bottom: 8px !important; border-bottom-width: 2px; flex-wrap: nowrap; }
+        body.dock-side .dock-head > span:first-child { white-space: nowrap; }
+        body.dock-side .dock-ctrl { flex-wrap: nowrap; }
+        body.dock-side .dock-ctrl button { padding: 4px 10px; font-size: 15px; }
+        body.dock-side .dock-head > span:first-child { font-size: clamp(20px, 1.7vw, 26px); }
+        body.dock-side .roster-hint .hint-full { display: none; }
+        body.dock-side .roster-hint { font-size: 17px !important; margin: 0 0 10px !important; text-align: left !important; }
+        body.dock-side #rosterModal .modal-content > div[style*="text-align:center"] { margin-top: 14px !important; }
+        body.dock-side #rosterModal .modal-content > div[style*="text-align:center"] button { font-size: 20px !important; padding: 10px 24px !important; }
+
+        /* 並排時選手名單改成直向卡片清單 (不需要左右滑動)；窗夠寬自動變 2 欄 */
+        body.dock-side #rosterListContainer { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; overflow: visible; padding: 4px 2px; min-height: 0; scroll-snap-type: none; align-items: stretch; }
+        body.dock-side .roster-card { flex: none; display: grid; grid-template-columns: 92px 1fr auto; grid-template-areas: "av nm nm" "av col ar" "dk dk dk" "ch ch ch"; align-items: center; column-gap: 14px; row-gap: 8px; padding: 14px 14px 12px; border-radius: 18px; transform: none !important; opacity: 1 !important; filter: none !important; z-index: auto !important; }
+        body.dock-side .roster-card .avatar { grid-area: av; width: 88px; height: 88px; justify-self: center; }
+        body.dock-side .roster-card .name-edit-wrapper { grid-area: nm; }
+        body.dock-side .roster-card input[type="text"].card-name { font-size: 24px; text-align: left; }
+        body.dock-side .roster-card .roster-color-wrap { grid-area: col; margin-top: 0 !important; justify-self: start; }
+        body.dock-side .roster-card .roster-color-wrap input[type="color"] { width: 38px !important; height: 38px !important; }
+        body.dock-side .roster-card .card-arrows { grid-area: ar; width: auto; margin: 0; gap: 8px; }
+        body.dock-side .roster-card .card-arrows button { padding: 6px 14px; font-size: 16px; flex: none; }
+        body.dock-side .roster-card .roster-deck-btn { grid-area: dk; }
+        body.dock-side .roster-card .roster-mode-chips { grid-area: ch; }
+        body.dock-side .roster-card .delete-card-btn { top: 6px; right: 8px; font-size: 20px; }
+
+        /* 並排時 Cost 表：上方表格、下方零件庫 (未分配/圖鑑) 各自捲動，拖曳不必捲整個頁面；「📚 零件庫」鈕可收合下半部 */
+        body.dock-side #costTierModal .modal-content { height: 100%; display: flex; flex-direction: column; }
+        body.dock-side #costTierModal .dock-help { flex: 0 0 auto; }
+        body.dock-side #costTierModal .dock-help:not([open]) { margin-bottom: 6px; }
+        body.dock-side #costTierRoot { flex: 1 1 auto; min-height: 0; }
+        body.dock-side .ct-root { height: 100%; display: flex; flex-direction: column; padding: 6px; }
+        body.dock-side .ct-board-wrap { flex: var(--ct-split, 56) 1 0px; min-height: 140px; overflow: auto; }
+        body.dock-side .ct-panel { flex: calc(100 - var(--ct-split, 56)) 1 0px; min-height: 230px; display: flex; flex-direction: column; margin-top: 0; }
+        .ct-splitter { display: none; }
+        body.dock-side .ct-splitter { display: block; flex: 0 0 12px; cursor: ns-resize; position: relative; touch-action: none; }
+        body.dock-side .ct-splitter::after { content: ''; position: absolute; left: 38%; right: 38%; top: 4px; height: 4px; border-radius: 2px; background: #3a3f5c; }
+        body.dock-side .ct-splitter:hover::after { background: #a78bfa; }
+        body.dock-side .ct-toolbar { gap: 4px; margin-bottom: 6px; }
+        body.dock-side .ct-btn { padding: 3px 8px; font-size: 12px; }
+        body.dock-side .ct-filter { padding: 6px 8px 0; gap: 4px; }
+        body.dock-side .ct-pane[data-pane="pool"] > .ct-dlg-hint { display: none; }
+        body.dock-side .ct-root select, body.dock-side .ct-root input[type=search], body.dock-side .ct-root input[type=number] { font-size: 12px; padding: 3px 6px; }
+        body.dock-side .ct-filter input[type=search] { flex: 1 1 110px; min-width: 90px; width: auto; }
+        body.dock-side .ct-pane { padding: 6px; }
+        body.dock-side .ct-pane-bar { gap: 4px; margin-bottom: 4px; }
+        body.dock-side .ct-tabs button { padding: 5px 12px; }
+        body.dock-side .ct-panel > .ct-tabs, body.dock-side .ct-panel > .ct-filter { flex: 0 0 auto; }
+        body.dock-side .ct-panel > .ct-pane:not([hidden]) { flex: 1 1 auto; min-height: 0; overflow: auto; }
+        body.dock-side .ct-cat-list { max-height: none; overflow: visible; }
+        body.dock-side #costTierModal.ct-hide-panel .ct-panel, body.dock-side #costTierModal.ct-hide-panel .ct-splitter { display: none; }
+        body.dock-side #costTierModal.ct-hide-panel .ct-board-wrap { flex: 1 1 100%; }
+        .ct-root .ct-board { max-width: 100%; }   /* 欄位太窄時，磚塊在欄內自動換行，不再出現橫向捲動 */
     </style>
 </head>
 <body>
 
-    <h1>🏆 BEYBLADE X 專業賽事系統</h1>
-    <div id="dataStatusIndicator" style="text-align: center; font-size: 18px; color: #aaa; margin-top: -30px; margin-bottom: 20px;">
-        📡 系統初始化中...
-    </div>
+    <!-- 頂部固定工具列：標題、資料庫狀態、兩個常駐工具 (選手名單與裝備庫 / Cost-Tier 表) 的開關 -->
+    <header id="appBar">
+        <h1 class="app-title">🏆 BEYBLADE X 專業賽事系統</h1>
+        <div id="dataStatusIndicator" class="app-status">📡 系統初始化中...</div>
+        <nav class="app-tools">
+            <button id="toolBtnRoster" class="tool-btn tool-roster" onclick="toggleDockTool('roster')" title="選手名單與裝備庫 (固定在右側)">👤 <span>選手名單與裝備庫</span></button>
+            <button id="toolBtnCost" class="tool-btn tool-cost" onclick="toggleDockTool('cost')" title="Cost / Tier 表 (固定在右側)">📊 <span>Cost / Tier 表</span></button>
+        </nav>
+    </header>
+    <div id="appBody">
     
     <div class="setup-box">
         <div class="setup-row">
             <label>賽事名稱：</label>
-            <input type="text" id="tournamentName" placeholder="例如：2026 高雄電競盃" style="width:300px;">
+            <input type="text" id="tournamentName" placeholder="例如：2026 高雄電競盃">
             <label style="margin-left: 20px;">人數：</label>
             <select id="playerCount" onchange="renderPlayerBoxes()">
                 <option value="2">2 人</option><option value="3">3 人</option><option value="4">4 人</option><option value="5" selected>5 人</option>
@@ -445,14 +608,13 @@
             <select id="roundCount">
                 <option value="1" selected>打 1 輪</option><option value="2">打 2 輪</option><option value="3">打 3 輪</option>
             </select></span>
-            <button class="btn-purple" onclick="openRosterModal()" style="margin:0 0 0 auto;">👤 選手名單與裝備庫</button>
-            <button class="btn-yellow" onclick="openCostTier()" style="margin:0;">📊 Cost / Tier 表</button>
         </div>
-        <label style="font-size: 24px; color: #c5c6c7;"><b>請從名單選擇出賽選手：</b></label>
+        <label class="setup-players-label"><b>請從名單選擇出賽選手：</b></label>
         <div id="playerBoxesContainer" class="player-inputs-container"></div>
-        <button class="btn-blue" onclick="generateNewSchedule()">🔀 生成賽程表 (智能防連戰)</button>
-        <button class="btn-danger" onclick="clearTournament()">🔄 清空並重置當前賽局</button>
-        <div style="float: right;">
+        <div class="setup-actions">
+            <button class="btn-blue" onclick="generateNewSchedule()">🔀 生成賽程表 (智能防連戰)</button>
+            <button class="btn-danger" onclick="clearTournament()">🔄 清空並重置當前賽局</button>
+            <span class="spacer"></span>
             <button class="btn-green" onclick="exportToCSV()">📥 匯出單局對戰明細 (CSV)</button>
             <button class="btn-yellow" onclick="archiveTournament()">💾 結算並儲存至生涯紀錄</button>
         </div>
@@ -526,18 +688,27 @@
                 </div>
             </div>
             <div style="width: 100%; overflow-x: auto; padding-bottom: 15px;">
-                <div style="min-width: 1200px; height: 750px;"><canvas id="careerChart"></canvas></div>
+                <div style="min-width: min(1200px, 100%); height: clamp(380px, 56vh, 750px);"><canvas id="careerChart"></canvas></div>
             </div>
         </div>
     </div>
 
+    </div><!-- /appBody -->
+    <div id="dockResizer" title="拖曳調整面板寬度 (雙擊還原)"></div>
+
     <div id="costTierModal" class="modal-overlay" style="z-index: 1070;">
         <div class="modal-content" style="max-width: 1400px; background: rgba(10, 12, 18, 0.98); border: 3px solid #f1c40f; box-shadow: 0 0 40px rgba(241,196,15,0.35);">
-            <h2 style="color:#f1c40f; border-bottom: 3px dashed rgba(241,196,15,0.3); text-shadow: 0 0 15px rgba(241,196,15,0.5);">
-                📊 Cost / Tier 表
-                <button class="btn-danger" onclick="closeCostTier()" style="margin:0;">❌ 關閉</button>
+            <h2 class="dock-head" style="color:#f1c40f; border-bottom: 3px dashed rgba(241,196,15,0.3); text-shadow: 0 0 15px rgba(241,196,15,0.5);">
+                <span>📊 Cost / Tier 表</span>
+                <span class="dock-ctrl">
+                    <button class="btn-yellow dock-only" onclick="toggleCostPanel()" title="顯示／隱藏下方的零件庫 (未分配、圖鑑)">📚 零件庫</button>
+                    <button class="btn-blue dock-mode-btn" onclick="toggleDockMode()" title="切換：固定在右側 ／ 全螢幕">⤢ 全螢幕</button>
+                    <button class="btn-danger" onclick="closeCostTier()">❌ 關閉</button>
+                </span>
             </h2>
+            <details class="dock-help" open><summary>ℹ️ 使用說明</summary>
             <p style="color:#aaa; font-size:18px; margin:0 0 15px 0;">欄位名稱是數字 (例如 9、8…0) 就是該欄零件的 Cost。核心上蓋 (戰刃、CX 的主戰刃與鋼鐵戰刃) 必須列入，Cost 為欄位數字；紋章、超越戰刃、輔助戰刃、固鎖、軸心是加價零件，放進表才會加 Cost，沒放算 0。一般零件已自動放在「未分配」，直接拖進欄位，或點選陀螺後再點一下上方欄位即可放入；聯名款、限定款與異色版 (同一零件有公認強度差異的版本) 到「圖鑑」分頁找；零件種類與分類篩選和裝備庫相同。表格自動存在這個瀏覽器，建議定期按「匯出 JSON」備份。</p>
+            </details>
             <div id="costTierRoot"></div>
         </div>
     </div>
@@ -582,38 +753,36 @@
     </div>
 
     <div id="scoringModal" class="modal-overlay" style="z-index: 1005;">
-        <div class="modal-content" style="max-width: 1100px; padding: 25px 40px; background: rgba(15, 18, 25, 0.98); border-radius: 24px; border: 3px solid #0ff; box-shadow: 0 0 50px rgba(0,255,255,0.3);">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px dashed rgba(0,255,255,0.3); padding-bottom:15px; margin-bottom:15px;">
-                <h2 style="color:#0ff; font-size:36px; border:none; margin:0; text-shadow: 0 0 20px #0ff;">⚔️ 賽局計分面板 ⚔️</h2>
-                <div id="roundIndicator" style="font-size:24px; font-weight:bold; color:#f1c40f; background:rgba(241,196,15,0.1); padding:8px 20px; border-radius:12px; border:1px solid #f1c40f;">第 1 回合 (Round 1)</div>
+        <div class="modal-content" style="max-width: min(96vw, 1560px); padding: clamp(14px, 1.6vw, 28px) clamp(14px, 2.4vw, 44px); background: rgba(15, 18, 25, 0.98); border-radius: 24px; border: 3px solid #0ff; box-shadow: 0 0 50px rgba(0,255,255,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px dashed rgba(0,255,255,0.3); padding-bottom:clamp(6px, 1.5vh, 15px); margin-bottom:clamp(6px, 1.5vh, 15px);">
+                <h2 style="color:#0ff; font-size:clamp(24px, 3.6vh, 36px); border:none; margin:0; text-shadow: 0 0 20px #0ff;">⚔️ 賽局計分面板 ⚔️</h2>
+                <div id="roundIndicator" style="font-size:clamp(18px, 2.4vh, 24px); font-weight:bold; color:#f1c40f; background:rgba(241,196,15,0.1); padding:clamp(4px, 0.8vh, 8px) 20px; border-radius:12px; border:1px solid #f1c40f;">第 1 回合 (Round 1)</div>
             </div>
-            <p style="text-align:center; color:#aaa; font-size:18px; margin-top:0px; margin-bottom:10px;">*任一方達成 4 分即結束賽局，或點擊下方「完成此局」儲存</p>
+            <p style="text-align:center; color:#aaa; font-size:clamp(14px, 1.8vh, 18px); margin-top:0px; margin-bottom:clamp(4px, 1vh, 10px);">*任一方達成 4 分即結束賽局，或點擊下方「完成此局」儲存</p>
             <div id="matchFinishedBanner" style="display:none; text-align:center; font-size:26px; font-weight:bold; color:#2ecc71; background:rgba(46,204,113,0.1); border:2px solid #2ecc71; border-radius:12px; padding:12px; margin-bottom:10px;"></div>
             
             <div class="scoring-panel" id="scoringPanelBody"></div>
             
-            <div style="display:flex; flex-direction:column; align-items:center; gap: 15px;">
-                <button class="btn-purple" onclick="undoScore()" style="width: 50%; padding: 15px; font-size: 24px; border-radius: 16px; box-shadow: 0 0 15px rgba(176,86,223,0.5); margin: 0;">↩️ 修正上一筆 (Undo)</button>
-                <div style="display:flex; gap: 20px; width: 100%; justify-content: center; margin-top: 5px;">
-                    <button class="btn-danger" onclick="clearCurrentMatch()" style="flex:1; padding: 15px; font-size: 24px; border-radius: 16px; margin: 0;">🗑️ 清空此局</button>
-                    <button class="btn-yellow" onclick="closeScoringModal()" style="flex:1; padding: 15px; font-size: 24px; border-radius: 16px; box-shadow: 0 0 15px rgba(241,196,15,0.5); margin: 0;">✅ 完成此局並關閉</button>
-                </div>
+            <div style="display:flex; gap: clamp(10px, 1.4vw, 20px); width: 100%; justify-content: center; flex-wrap: wrap;">
+                <button class="btn-purple" onclick="undoScore()" style="flex:1 1 220px; padding: clamp(8px, 1.4vh, 14px); font-size: clamp(19px, 1.6vw, 26px); border-radius: 16px; box-shadow: 0 0 15px rgba(176,86,223,0.5); margin: 0;">↩️ 修正上一筆 (Undo)</button>
+                <button class="btn-danger" onclick="clearCurrentMatch()" style="flex:1 1 220px; padding: clamp(8px, 1.4vh, 14px); font-size: clamp(19px, 1.6vw, 26px); border-radius: 16px; margin: 0;">🗑️ 清空此局</button>
+                <button class="btn-yellow" onclick="closeScoringModal()" style="flex:1.3 1 260px; padding: clamp(8px, 1.4vh, 14px); font-size: clamp(19px, 1.6vw, 26px); border-radius: 16px; box-shadow: 0 0 15px rgba(241,196,15,0.5); margin: 0;">✅ 完成此局並關閉</button>
             </div>
         </div>
     </div>
 
     <div id="reorderDeckModal" class="modal-overlay" style="z-index: 1010;">
-        <div class="edit-modal-content" style="max-width: 1200px; padding: 30px; background: rgba(15, 18, 25, 0.98);">
-            <h3 style="color:#0ff; text-align:center; font-size:36px; margin-top:0; text-shadow: 0 0 15px #0ff;">🔄 3on3 全面變陣與排兵佈陣</h3>
-            <p style="color:#aaa; font-size:20px; text-align:center;">點擊任意兩張卡片即可互換位置！請將您要出戰的陀螺排在前 3 位。</p>
-            <div style="display:flex; gap:30px; margin:20px 0;">
-                <div id="reorderP1Area" style="flex:1; background:rgba(0,0,0,0.5); padding:25px; border-radius:16px; border:2px dashed #444;"></div>
-                <div id="reorderP2Area" style="flex:1; background:rgba(0,0,0,0.5); padding:25px; border-radius:16px; border:2px dashed #444;"></div>
+        <div class="reorder-shell">
+            <h3 style="color:#0ff; text-align:center; font-size:clamp(28px, 2.6vw, 42px); margin:0; text-shadow: 0 0 15px #0ff;">🔄 變更出戰順序</h3>
+            <p style="color:#aaa; font-size:clamp(16px, 1.4vw, 22px); text-align:center; margin: 8px 0 0;">直接拖動卡片調整先後順序，也可以點一張再點另一張互換。這裡只調整已排定的 3 位先發，備戰陀螺要換請回選手牌組編輯。</p>
+            <div class="reorder-players">
+                <div id="reorderP1Area" class="reorder-area"></div>
+                <div id="reorderP2Area" class="reorder-area"></div>
             </div>
-            <div id="reorderErrorMsg" style="color:#e74c3c; font-weight:bold; font-size:22px; text-align:center; margin-bottom:15px; min-height:30px;"></div>
+            <div id="reorderErrorMsg" style="color:#e74c3c; font-weight:bold; font-size:22px; text-align:center; margin-bottom:12px; min-height:30px;"></div>
             <div style="display:flex; gap:20px;">
-                <button class="btn-green" onclick="applyReorderDeck()" style="flex:1; font-size:26px; margin:0; padding:15px; box-shadow: 0 0 20px rgba(46,204,113,0.4);">✅ 確認變更</button>
-                <button class="btn-danger" onclick="closeReorderDeckModal()" style="flex:1; font-size:26px; margin:0; padding:15px;">❌ 取消</button>
+                <button class="btn-green" onclick="applyReorderDeck()" style="flex:1; font-size:clamp(20px, 1.9vw, 28px); margin:0; padding:15px; box-shadow: 0 0 20px rgba(46,204,113,0.4);">✅ 確認變更</button>
+                <button class="btn-danger" onclick="closeReorderDeckModal()" style="flex:1; font-size:clamp(20px, 1.9vw, 28px); margin:0; padding:15px;">❌ 取消</button>
             </div>
         </div>
     </div>
@@ -629,11 +798,14 @@
 
     <div id="rosterModal" class="modal-overlay">
         <div class="modal-content" style="max-width: 1500px; background: rgba(10, 12, 18, 0.98);">
-            <h2 style="color:#b056df; border-bottom: 3px dashed rgba(176,86,223,0.3); padding-bottom:15px; text-shadow: 0 0 15px rgba(176,86,223,0.5);">
-                👤 選手陣容與裝備庫 
-                <button class="btn-danger" onclick="closeRosterModal()" style="float:right; margin:0;">❌ 關閉面板</button>
+            <h2 class="dock-head" style="color:#b056df; border-bottom: 3px dashed rgba(176,86,223,0.3); padding-bottom:15px; text-shadow: 0 0 15px rgba(176,86,223,0.5);">
+                <span>👤 選手陣容與裝備庫</span>
+                <span class="dock-ctrl">
+                    <button class="btn-blue dock-mode-btn" onclick="toggleDockMode()" title="切換：固定在右側 ／ 全螢幕">⤢ 全螢幕</button>
+                    <button class="btn-danger" onclick="closeRosterModal()">❌ 關閉</button>
+                </span>
             </h2>
-            <p style="text-align:center; color:#45a29e; font-size:22px; margin-bottom: 20px;">使用<b>滑鼠滾輪</b>可左右滑動切換卡片。點擊卡片下方的<b>「🛠️ 配置 3on3 牌組」</b>來編輯裝備。</p>
+            <p class="roster-hint" style="text-align:center; color:#45a29e; font-size:22px; margin-bottom: 20px;"><span class="hint-full">使用<b>滑鼠滾輪</b>可左右滑動切換卡片。</span>點擊卡片下方的<b>「🛠️ 配置 3on3 牌組」</b>來編輯裝備。</p>
             
             <div id="rosterListContainer"></div>
             
@@ -1420,8 +1592,25 @@
     if (drag.y < 70) dy = -Math.ceil((70 - drag.y) / 4);
     else if (drag.y > vh - 70) dy = Math.ceil((drag.y - (vh - 70)) / 4);
     if (dy) { var sc = root.closest('.modal-overlay'); if (sc) sc.scrollTop += dy; else window.scrollBy(0, dy); }   // 在 modal 裡要捲 modal 本身
+    edgeScrollPane();   // 並排版面：表格區與零件庫各自捲動，指標靠近該區上下緣時捲動該區
     updateDropTarget();
     drag.raf = requestAnimationFrame(dragTick);
+  }
+  // 指標位在可捲動區域 (表格區 / 零件庫) 內且靠近它的上下緣 → 捲動那一區
+  function edgeScrollPane() {
+    var d = drag; if (!d) return;
+    var cands = [root.querySelector('.ct-board-wrap'), root.querySelector('.ct-panel > .ct-pane:not([hidden])')];
+    for (var i = 0; i < cands.length; i++) {
+      var el = cands[i];
+      if (!el || el.scrollHeight <= el.clientHeight + 1) continue;
+      var r = el.getBoundingClientRect();
+      if (d.x < r.left || d.x > r.right || d.y < r.top || d.y > r.bottom) continue;
+      var edge = 48, dy = 0;
+      if (d.y < r.top + edge) dy = -Math.ceil((r.top + edge - d.y) / 3);
+      else if (d.y > r.bottom - edge) dy = Math.ceil((d.y - (r.bottom - edge)) / 3);
+      if (dy) el.scrollTop += dy;
+      return;
+    }
   }
   // 找出指標下方的落點（欄位 / 未分配區）與插入位置
   function updateDropTarget() {
@@ -2219,15 +2408,164 @@ Chart.defaults.color = '#c5c6c7';
 Chart.defaults.font.family = "'Courier New', Courier, monospace";
 Chart.defaults.font.size = 32;
 
+
+// ================== 右側固定面板 (Dock)：選手名單與裝備庫 / Cost-Tier 表 ==================
+// 視窗夠寬時，兩個工具固定在畫面右側 (主區自動縮小，不會被蓋住)；
+// 視窗太窄 (小於 DOCK_MIN_VIEWPORT) 或牌組編輯器開著時，自動退回原本的全螢幕疊層。
+const DOCK_TOOLS = {
+    roster: { modal: 'rosterModal',   btn: 'toolBtnRoster', defW: 500, defRatio: 0.36, minW: 380 },
+    cost:   { modal: 'costTierModal', btn: 'toolBtnCost',   defW: 780, defRatio: 0.50, minW: 480 }
+};
+const DOCK_MIN_VIEWPORT = 1180;       // 視窗寬度小於這個值就不並排
+const DOCK_PREF_KEY = 'beyblade_dock'; // 偏好 (並排/全螢幕、各工具的面板寬度) 存在這個瀏覽器
+let dockState = { tool: null, mode: 'side', widths: {}, split: 56 };
+
+function dockLoadPrefs() {
+    try {
+        const d = JSON.parse(localStorage.getItem(DOCK_PREF_KEY) || '{}');
+        if (d.mode === 'side' || d.mode === 'full') dockState.mode = d.mode;
+        if (d.widths && typeof d.widths === 'object') dockState.widths = d.widths;
+        if (Number(d.split) >= 15 && Number(d.split) <= 85) dockState.split = Number(d.split);
+    } catch (e) { /* 讀不到就用預設 */ }
+}
+function dockSavePrefs() {
+    try { localStorage.setItem(DOCK_PREF_KEY, JSON.stringify({ mode: dockState.mode, widths: dockState.widths, split: dockState.split })); } catch (e) {}
+}
+// 目前工具的面板寬度：使用者調過就用調過的，否則預設 (依視窗寬度的比例，並限制範圍)
+function dockWidth(tool) {
+    const cfg = DOCK_TOOLS[tool], vw = window.innerWidth;
+    const w = Number(dockState.widths[tool]) || Math.min(cfg.defW, Math.round(vw * cfg.defRatio));
+    return Math.max(cfg.minW, Math.min(w, Math.floor(vw * 0.7)));
+}
+// 是否以「並排」顯示：偏好為並排、視窗夠寬、且沒有被牌組編輯器 (全螢幕) 蓋住
+function dockIsSide() {
+    return dockState.mode === 'side' && window.innerWidth >= DOCK_MIN_VIEWPORT && document.getElementById('builderModal').style.display !== 'block';
+}
+function dockApply() {
+    const tool = dockState.tool, b = document.body;
+    Object.keys(DOCK_TOOLS).forEach(k => document.getElementById(DOCK_TOOLS[k].btn).classList.toggle('on', k === tool));
+    const side = !!tool && dockIsSide();
+    const wasSide = b.classList.contains('dock-side');
+    b.classList.toggle('dock-side', side);
+    b.classList.toggle('dock-full', !!tool && !side);
+    b.dataset.dock = tool || '';
+    document.documentElement.style.setProperty('--dock-w', side ? dockWidth(tool) + 'px' : '0px');
+    document.querySelectorAll('.dock-mode-btn').forEach(el => {
+        el.textContent = side ? '⤢ 全螢幕' : '⇥ 並排';
+        el.title = side ? '改成全螢幕顯示' : '固定在右側並排顯示';
+        // 視窗太窄時並排不可能成立，按了也沒有反應，所以直接隱藏按鈕 (視窗變寬後自動出現)
+        el.style.display = (!side && window.innerWidth < DOCK_MIN_VIEWPORT) ? 'none' : '';
+    });
+    dockMeasureMain();
+    if (wasSide !== side) document.querySelectorAll('.dock-help').forEach(d => { d.open = !side; });
+    document.documentElement.style.setProperty('--ct-split', String(dockState.split || 56)); // Cost 表與零件庫的高度比例
+    if (wasSide && !side) setTimeout(updateCardStyles, 60); // 回到幻燈片卡片列時，重算卡片縮放
+}
+// 依兩個面板目前是否顯示，決定右側要放哪一個
+function dockSync() {
+    const vis = k => document.getElementById(DOCK_TOOLS[k].modal).style.display === 'block';
+    dockState.tool = vis('cost') ? 'cost' : (vis('roster') ? 'roster' : null);
+    dockApply();
+}
+function dockOpen(tool) {
+    const builderOpen = document.getElementById('builderModal').style.display === 'block';
+    const other = tool === 'roster' ? 'cost' : 'roster';
+    // 並排時一次只留一個工具：先用原本的關閉函式收掉另一個 (會順便刷新主畫面)；牌組編輯器開著時另一個維持在底下
+    if (!builderOpen && document.getElementById(DOCK_TOOLS[other].modal).style.display === 'block') {
+        if (other === 'roster') closeRosterModal(); else closeCostTier();
+    }
+    document.getElementById(DOCK_TOOLS[tool].modal).style.display = 'block';
+    dockSync();
+}
+window.toggleDockTool = function(tool) {
+    const shown = document.getElementById(DOCK_TOOLS[tool].modal).style.display === 'block';
+    if (shown) { if (tool === 'roster') closeRosterModal(); else closeCostTier(); }
+    else { if (tool === 'roster') openRosterModal(); else openCostTier(); }
+};
+window.toggleDockMode = function() {
+    dockState.mode = dockIsSide() || (dockState.mode === 'side') ? 'full' : 'side';
+    dockSavePrefs(); dockApply();
+};
+// 在 Cost 表與零件庫之間放一條可拖曳的分隔線 (每次 mount 後確認一次；已存在就略過)
+function ensureCostSplitter() {
+    const root = document.getElementById('costTierRoot');
+    if (!root || root.querySelector('.ct-splitter')) return;
+    const wrap = root.querySelector('.ct-board-wrap'), panel = root.querySelector('.ct-panel'); if (!wrap || !panel) return;
+    const sp = document.createElement('div'); sp.className = 'ct-splitter'; sp.title = '拖曳調整「表格」與「零件庫」的高度 (雙擊還原)';
+    wrap.after(sp);
+    let drag = null;
+    sp.addEventListener('pointerdown', e => { drag = e.pointerId; try { sp.setPointerCapture(e.pointerId); } catch (err) {} e.preventDefault(); });
+    sp.addEventListener('pointermove', e => {
+        if (drag === null) return;
+        const top = wrap.getBoundingClientRect().top, total = panel.getBoundingClientRect().bottom - top - sp.offsetHeight;
+        if (total <= 0) return;
+        dockState.split = Math.max(15, Math.min(85, Math.round((e.clientY - top) / total * 100)));
+        document.documentElement.style.setProperty('--ct-split', String(dockState.split));
+    });
+    const end = () => { if (drag === null) return; drag = null; dockSavePrefs(); };
+    sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
+    sp.addEventListener('dblclick', () => { dockState.split = 56; document.documentElement.style.setProperty('--ct-split', '56'); dockSavePrefs(); });
+}
+window.toggleCostPanel = function() { document.getElementById('costTierModal').classList.toggle('ct-hide-panel'); };
+
+// 主區實際寬度 → body[data-mw]：xl 為「賽程＋戰績」兩欄，md / sm 為單欄。加 ±24px 遲滯，避免捲軸出現/消失造成來回跳動
+const MW_STEPS = [['xl', 1180], ['md', 700], ['sm', 0]];
+function dockMeasureMain() {
+    const el = document.getElementById('appBody'); if (!el) return;
+    const w = el.clientWidth, cur = MW_STEPS.findIndex(x => x[0] === document.body.dataset.mw);
+    let idx = MW_STEPS.findIndex(x => w >= x[1]);
+    if (cur >= 0 && idx !== cur) {
+        if (idx < cur && w < MW_STEPS[idx][1] + 24) idx = cur;        // 想變寬：要超過門檻 24px 才換
+        else if (idx > cur && w >= MW_STEPS[cur][1] - 24) idx = cur;  // 想變窄：要低於門檻 24px 才換
+    }
+    document.body.dataset.mw = MW_STEPS[idx][0];
+}
+function initDock() {
+    dockLoadPrefs();
+    window.addEventListener('resize', dockApply);
+    if (window.ResizeObserver) new ResizeObserver(dockMeasureMain).observe(document.getElementById('appBody'));
+    // 牌組編輯器 / 名單 / Cost 面板的顯示狀態有任何變化 (包含其他程式直接改 style.display)，就重新判斷右側該放哪個、能不能並排
+    const mo = new MutationObserver(dockSync);
+    ['builderModal', 'rosterModal', 'costTierModal'].forEach(id => mo.observe(document.getElementById(id), { attributes: true, attributeFilter: ['style'] }));
+    // 拖曳左緣調整面板寬度 (雙擊還原預設)
+    const bar = document.getElementById('dockResizer'); let drag = null;
+    bar.addEventListener('pointerdown', e => {
+        if (!document.body.classList.contains('dock-side')) return;
+        drag = e.pointerId; try { bar.setPointerCapture(e.pointerId); } catch (err) {}
+        document.body.classList.add('dock-resizing'); e.preventDefault();
+    });
+    bar.addEventListener('pointermove', e => {
+        if (drag === null || !dockState.tool) return;
+        const cfg = DOCK_TOOLS[dockState.tool];
+        const w = Math.max(cfg.minW, Math.min(window.innerWidth - e.clientX, Math.floor(window.innerWidth * 0.7)));
+        dockState.widths[dockState.tool] = Math.round(w);
+        document.documentElement.style.setProperty('--dock-w', Math.round(w) + 'px');
+    });
+    const end = () => { if (drag === null) return; drag = null; document.body.classList.remove('dock-resizing'); dockSavePrefs(); dockApply(); };
+    bar.addEventListener('pointerup', end); bar.addEventListener('pointercancel', end);
+    bar.addEventListener('dblclick', () => { if (dockState.tool) { delete dockState.widths[dockState.tool]; dockSavePrefs(); dockApply(); } });
+    dockApply();
+}
+// 並排時，名單在右側改動就同步更新主區的「出賽選手」下拉選單 (保留已選的人；名單裡找不到的才改回預設)
+function refreshPlayerSelectOptions() {
+    const sels = document.querySelectorAll('.player-name-input'); if (!sels.length) return;
+    const optionsHtml = roster.map(r => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join('');
+    sels.forEach((sel, i) => {
+        const prev = sel.value; sel.innerHTML = optionsHtml;
+        sel.value = roster.some(r => r.name === prev) ? prev : (roster[i] ? roster[i].name : (roster[0] ? roster[0].name : ''));
+        if (typeof updateBoxColor === 'function') updateBoxColor(sel, i);
+    });
+}
+
 window.onload = async function() { 
     await loadArsenalDatabase(); 
-    initRoster(); migrateRatchetFreeDecks(); /* 清掉舊存檔中「內建固鎖戰刃」誤裝的固鎖 */ migrateDeckPartNames(); /* 名稱清理規則更新後，舊牌組零件改用現行名稱 */ initDeckDrag(); 
+    initRoster(); migrateRatchetFreeDecks(); /* 清掉舊存檔中「內建固鎖戰刃」誤裝的固鎖 */ migrateDeckPartNames(); /* 名稱清理規則更新後，舊牌組零件改用現行名稱 */ initDeckDrag(); initReorderDrag(); initDock(); 
     loadState(); 
     if(!appState.matches || appState.matches.length === 0) { document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); }
     renderHistory();
 
     const rosterContainer = document.getElementById('rosterListContainer');
-    rosterContainer.addEventListener('wheel', function(e) { e.preventDefault(); this.scrollBy({ left: e.deltaY > 0 ? 320 : -320, behavior: 'smooth' }); }, { passive: false });
+    rosterContainer.addEventListener('wheel', function(e) { if (document.body.classList.contains('dock-side')) return; e.preventDefault(); this.scrollBy({ left: e.deltaY > 0 ? 320 : -320, behavior: 'smooth' }); }, { passive: false });
 };
 
 // ================== 工具與 UI 切換 ==================
@@ -2359,10 +2697,10 @@ function migrateDeckPartNames() {
     if (changed) saveRoster();
     return changed;
 }
-function saveRoster() { localStorage.setItem('beyblade_roster', JSON.stringify(roster)); }
+function saveRoster() { localStorage.setItem('beyblade_roster', JSON.stringify(roster)); if (document.body.classList.contains('dock-side') && typeof refreshPlayerSelectOptions === 'function') refreshPlayerSelectOptions(); }
 
-function openRosterModal() { renderRosterList(); document.getElementById('rosterModal').style.display = 'block'; }
-function closeRosterModal() { document.getElementById('rosterModal').style.display = 'none'; renderPlayerBoxes(); if(appState.matches.length > 0) renderMatches(); renderHistory(); }
+function openRosterModal() { renderRosterList(); dockOpen('roster'); }
+function closeRosterModal() { document.getElementById('rosterModal').style.display = 'none'; dockSync(); renderPlayerBoxes(); if(appState.matches.length > 0) renderMatches(); renderHistory(); }
 
 function renderRosterList() {
     const container = document.getElementById('rosterListContainer'); container.innerHTML = '';
@@ -2388,11 +2726,11 @@ function renderRosterList() {
                     <input type="text" class="card-name" value="${escapeHtml(p.name)}" onchange="updateRosterName(${index}, this.value)" style="color:${p.color};" title="點擊即可修改名稱">
                     <span class="pencil-icon" style="color:${p.color};">✎</span>
                 </div>
-                <div style="position: relative; display: inline-block; margin-top: -5px;">
+                <div class="roster-color-wrap" style="position: relative; display: inline-block; margin-top: -5px;">
                     <input type="color" value="${p.color}" onchange="updateRosterAttr(${index}, 'color', this.value)" style="width: 50px; height: 50px; border-color: ${p.color};" title="變更代表色">
                     <span style="position:absolute; right: -5px; bottom: -5px; font-size: 14px; color: #000; background: rgba(255,255,255,0.85); border: 2px solid #000; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; box-shadow: 0 0 5px rgba(0,0,0,0.5);">✎</span>
                 </div>
-                <button onclick="openDeckBuilder(${index}, '${curMode}')" style="width:100%; margin:0; padding:10px; font-size:18px; border:2px solid ${deckBtnColor}; background:rgba(0,0,0,0.8); color:${deckBtnColor}; border-radius:12px; transition:0.3s;" onmouseover="this.style.background='${deckBtnColor}'; this.style.color='#000';" onmouseout="this.style.background='rgba(0,0,0,0.8)'; this.style.color='${deckBtnColor}';">${deckBtnText}</button>
+                <button class="roster-deck-btn" onclick="openDeckBuilder(${index}, '${curMode}')" style="width:100%; margin:0; padding:10px; font-size:18px; border:2px solid ${deckBtnColor}; background:rgba(0,0,0,0.8); color:${deckBtnColor}; border-radius:12px; transition:0.3s;" onmouseover="this.style.background='${deckBtnColor}'; this.style.color='#000';" onmouseout="this.style.background='rgba(0,0,0,0.8)'; this.style.color='${deckBtnColor}';">${deckBtnText}</button>
                 <div class="roster-mode-chips">${modeChipsHtml}</div>
                 <div class="card-arrows">${leftBtn}${rightBtn}</div>
             </div>`;
@@ -2401,6 +2739,7 @@ function renderRosterList() {
 }
 function updateCardStyles() {
     const container = document.getElementById('rosterListContainer'); if(!container) return;
+    if (document.body.classList.contains('dock-side')) return; // 並排時是直向清單，不做幻燈片縮放
     const center = container.getBoundingClientRect().left + container.getBoundingClientRect().width / 2;
     container.querySelectorAll('.roster-card').forEach(card => {
         const dist = Math.abs(center - (card.getBoundingClientRect().left + card.getBoundingClientRect().width / 2));
@@ -2646,7 +2985,7 @@ function renderScoringModal() {
     
     // 每 3 回合的開頭可變陣 (Round 1, Round 4, Round 7...)
     let canReorder = ((currentRound - 1) % 3 === 0);
-    let reorderHint = canReorder ? `<div style="font-size:16px; color:#f1c40f; margin-bottom:8px;">🔄 點擊變更出戰順序 (包含備戰庫)</div>` : `<div style="font-size:16px; color:#aaa; margin-bottom:8px;">🔒 第 ${currentRound} 回合鎖定上陣</div>`;
+    let reorderHint = canReorder ? `<div style="font-size:15px; color:#f1c40f; margin-bottom:4px;">🔄 點擊或拖動，調整出戰順序</div>` : `<div style="font-size:15px; color:#aaa; margin-bottom:4px;">🔒 第 ${currentRound} 回合鎖定上陣</div>`;
     let activeBeyStyle = canReorder ? "cursor:pointer; border-color:#0ff; box-shadow:0 0 15px rgba(0,255,255,0.4);" : "cursor:not-allowed; border-color:#555; opacity:0.8;";
     
     let reorderBtnHtml = canReorder ? `<button onclick="handleActiveBeyClick()" style="position:absolute; top:15px; right:15px; background:transparent; border:1px solid #f1c40f; color:#f1c40f; border-radius:8px; padding:5px 10px; font-size:16px; cursor:pointer; font-weight:bold;">🔄 變陣</button>` : '';
@@ -2655,30 +2994,34 @@ function renderScoringModal() {
         <div class="player-score-col" style="border-color:${c1}80;">
             ${reorderBtnHtml}
             ${getPlayerPillHtml(n1)}
-            <div class="active-bey-info" style="${activeBeyStyle} padding: 15px;" onclick="handleActiveBeyClick()" title="${canReorder ? '點擊設定上陣順序' : '對局中，順序已鎖定'}">
+            <div class="active-bey-info" style="${activeBeyStyle}" onclick="handleActiveBeyClick()" title="${canReorder ? '點擊設定上陣順序' : '對局中，順序已鎖定'}">
                 ${reorderHint}
                 ${renderScoringActiveBey(r1, p1BeyIndex)}
             </div>
-            <div class="score-huge" style="color:${c1};">${m.s1}</div><div class="penalty-text">${m.p1Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div>
+            <div class="score-row"><div class="score-huge" style="color:${c1};">${m.s1}</div><div class="penalty-text">${m.p1Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div></div>
+            <div class="win-grid">
             <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'spin', 1)"><span>轉停勝利 (Spin)</span><span class="win-pts">+1</span></button>
             <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'burst', 2)"><span>爆裂勝利 (Burst)</span><span class="win-pts">+2</span></button>
             <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'over', 2)"><span>擊飛勝利 (Over)</span><span class="win-pts">+2</span></button>
             <button class="win-btn" style="color:${c1}; border-color:${c1}; font-weight:900;" onclick="handleScoreAction(1, 'xtreme', 3)"><span>極限勝利 (Xtreme)</span><span class="win-pts">+3</span></button>
-            <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(1, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
+            <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; grid-column: 1 / -1;" onclick="handleScoreAction(1, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
+            </div>
         </div>
         <div class="player-score-col" style="border-color:${c2}80;">
             ${reorderBtnHtml}
             ${getPlayerPillHtml(n2)}
-            <div class="active-bey-info" style="${activeBeyStyle} padding: 15px;" onclick="handleActiveBeyClick()" title="${canReorder ? '點擊設定上陣順序' : '對局中，順序已鎖定'}">
+            <div class="active-bey-info" style="${activeBeyStyle}" onclick="handleActiveBeyClick()" title="${canReorder ? '點擊設定上陣順序' : '對局中，順序已鎖定'}">
                 ${reorderHint}
                 ${renderScoringActiveBey(r2, p2BeyIndex)}
             </div>
-            <div class="score-huge" style="color:${c2};">${m.s2}</div><div class="penalty-text">${m.p2Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div>
+            <div class="score-row"><div class="score-huge" style="color:${c2};">${m.s2}</div><div class="penalty-text">${m.p2Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div></div>
+            <div class="win-grid">
             <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'spin', 1)"><span>轉停勝利 (Spin)</span><span class="win-pts">+1</span></button>
             <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'burst', 2)"><span>爆裂勝利 (Burst)</span><span class="win-pts">+2</span></button>
             <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'over', 2)"><span>擊飛勝利 (Over)</span><span class="win-pts">+2</span></button>
             <button class="win-btn" style="color:${c2}; border-color:${c2}; font-weight:900;" onclick="handleScoreAction(2, 'xtreme', 3)"><span>極限勝利 (Xtreme)</span><span class="win-pts">+3</span></button>
-            <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; margin-top:10px;" onclick="handleScoreAction(2, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
+            <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; grid-column: 1 / -1;" onclick="handleScoreAction(2, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
+            </div>
         </div>
     `;
 
@@ -2704,97 +3047,187 @@ window.handleActiveBeyClick = function() {
     if ((currentRound - 1) % 3 === 0) { openReorderDeckModal(); }
 };
 
-// ================== 全新 3on3 變陣 (Reorder Deck) 卡片拖曳/互換引擎 ==================
-function openReorderDeckModal() {
-    let m = appState.matches.find(x => x.id === currentScoringMatchId); 
+// ================== 變更出戰順序：只調整目前排定的 3 位先發，可拖曳排序或點兩張互換 ==================
+// 備戰庫不在此替換 (要換備戰陀螺請回選手的牌組編輯)；reorderState.pN 永遠只有 3 個牌組索引
+function normalizeLineup(order, deckLen) {
+    let out = [];
+    (order || []).forEach(v => { if (Number.isInteger(v) && v >= 0 && v < Math.max(deckLen, 3) && !out.includes(v)) out.push(v); });
+    for (let i = 0; out.length < 3 && i < 3; i++) if (!out.includes(i)) out.push(i); // 資料異常時補齊
+    return out.slice(0, 3);
+}
+
+function getReorderContext() {
+    let m = appState.matches.find(x => x.id === currentScoringMatchId);
     let n1 = appState.players[m.p1Idx]; let n2 = appState.players[m.p2Idx];
-    let r1 = roster.find(x => x.name === n1); let r2 = roster.find(x => x.name === n2);
+    return { m, n1, n2, r1: roster.find(x => x.name === n1), r2: roster.find(x => x.name === n2) };
+}
 
-    reorderState.p1 = [...(m.p1DeckOrder || [0, 1, 2])];
-    getMatchDeck(r1).forEach((_, idx) => { if(!reorderState.p1.includes(idx)) reorderState.p1.push(idx); });
-
-    reorderState.p2 = [...(m.p2DeckOrder || [0, 1, 2])];
-    getMatchDeck(r2).forEach((_, idx) => { if(!reorderState.p2.includes(idx)) reorderState.p2.push(idx); });
-
-    reorderSelected = null;
-    renderReorderAreas(n1, n2, r1, r2);
+function openReorderDeckModal() {
+    let { m, n1, n2, r1, r2 } = getReorderContext();
+    reorderState.p1 = normalizeLineup(m.p1DeckOrder, getMatchDeck(r1).length);
+    reorderState.p2 = normalizeLineup(m.p2DeckOrder, getMatchDeck(r2).length);
+    reorderSelected = null; reorderDrag = null;
+    renderReorderAreas();
     document.getElementById('reorderErrorMsg').innerText = "";
     document.getElementById('reorderDeckModal').style.display = 'block';
 }
 
-function getReorderCardHtml(playerNum, arrayIndex, realDeckIndex, deckObj, isSelected) {
-    let isStarter = arrayIndex < 3;
-    let badgeText = isStarter ? `出戰 ${arrayIndex + 1}` : `備戰`;
-    let badgeColor = isStarter ? '#e74c3c' : '#f1c40f';
-    let cardClass = isSelected ? 'reorder-card selected' : 'reorder-card';
-    
-    return `<div class="${cardClass}" onclick="handleReorderClick(${playerNum}, ${arrayIndex})">
-                <div class="deck-badge" style="background:${badgeColor}; color:#000;">${badgeText}</div>
-                <div class="reorder-img-wrap">${getDeckCoverHtml(deckObj)}</div>
-                <div class="reorder-name">${getDeckFullName(deckObj)}</div>
-            </div>`;
+// 一位選手的 3 張卡片。order 可以是拖曳預覽用的暫時順序；phValue 為被拖曳的牌組索引 (該格改畫成半透明落點)
+function getReorderRowHtml(playerNum, deckArr, order, phValue) {
+    return order.map((di, i) => {
+        let isPh = (phValue !== null && phValue !== undefined && di === phValue);
+        let sel = !isPh && reorderSelected && reorderSelected.p === playerNum && reorderSelected.i === i;
+        return `<div class="reorder-card${sel ? ' selected' : ''}${isPh ? ' reorder-ph' : ''}" data-p="${playerNum}" data-i="${i}" onclick="handleReorderClick(${playerNum}, ${i})">
+                    <div class="deck-badge" style="background:#e74c3c; color:#000;">出戰 ${i + 1}</div>
+                    <div class="deck-grip">⠿ 拖動</div>
+                    <div class="reorder-img-wrap fluid-bey">${getDeckCoverHtml(deckArr[di])}</div>
+                    <div class="reorder-name">${getDeckFullName(deckArr[di])}</div>
+                </div>`;
+    }).join('');
 }
 
-function renderReorderAreas(n1, n2, r1, r2) {
-    let buildArea = (pNum, name, rState, deckObj) => `
-        <h3 style="color:${getPlayerColor(name)}; text-align:center; margin-top:0;">${escapeHtml(name)}</h3>
-        <p style="text-align:center; color:#aaa; margin-top:-10px; font-size:16px;">點選卡片 ➔ 點另一張以互換</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom: 20px;">
-            ${[0,1,2].map(i => getReorderCardHtml(pNum, i, rState[i], deckObj[rState[i]], reorderSelected?.p===pNum && reorderSelected?.i===i)).join('')}
-        </div>
-        ${rState.length > 3 ? `
-        <h4 style="color:#aaa; text-align:center; border-top: 1px dashed #555; padding-top: 15px;">👇 全備戰庫 👇</h4>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; max-height: 250px; overflow-y:auto; padding-bottom:15px;">
-            ${rState.slice(3).map((_, idx) => getReorderCardHtml(pNum, idx+3, rState[idx+3], deckObj[rState[idx+3]], reorderSelected?.p===pNum && reorderSelected?.i===idx+3)).join('')}
-        </div>` : ''}
-    `;
-
-    document.getElementById('reorderP1Area').innerHTML = buildArea(1, n1, reorderState.p1, getMatchDeck(r1));
-    document.getElementById('reorderP2Area').innerHTML = buildArea(2, n2, reorderState.p2, getMatchDeck(r2));
+function renderReorderAreas() {
+    let { n1, n2, r1, r2 } = getReorderContext();
+    const build = (pNum, name, order, deckArr) => `
+        <h3 style="color:${getPlayerColor(name)}; text-align:center; margin:0 0 12px; font-size:clamp(22px, 2vw, 32px);">${escapeHtml(name)}</h3>
+        <div class="reorder-row" id="reorderRowP${pNum}">${getReorderRowHtml(pNum, deckArr, order, null)}</div>`;
+    document.getElementById('reorderP1Area').innerHTML = build(1, n1, reorderState.p1, getMatchDeck(r1));
+    document.getElementById('reorderP2Area').innerHTML = build(2, n2, reorderState.p2, getMatchDeck(r2));
 }
 
+// 只重畫被拖曳那一位的卡片列 (拖曳預覽用)
+function renderReorderRow(playerNum, order, phValue) {
+    let { r1, r2 } = getReorderContext();
+    document.getElementById('reorderRowP' + playerNum).innerHTML = getReorderRowHtml(playerNum, getMatchDeck(playerNum === 1 ? r1 : r2), order, phValue);
+}
+
+// 點一張再點另一張互換 (同一位選手內)
 window.handleReorderClick = function(playerNum, arrayIndex) {
     if (!reorderSelected) {
         reorderSelected = { p: playerNum, i: arrayIndex };
     } else {
-        if (reorderSelected.p === playerNum) {
-            let tempState = playerNum === 1 ? reorderState.p1 : reorderState.p2;
-            let tempVal = tempState[arrayIndex];
-            tempState[arrayIndex] = tempState[reorderSelected.i];
-            tempState[reorderSelected.i] = tempVal;
+        if (reorderSelected.p === playerNum && reorderSelected.i !== arrayIndex) {
+            let st = playerNum === 1 ? reorderState.p1 : reorderState.p2;
+            let t = st[arrayIndex]; st[arrayIndex] = st[reorderSelected.i]; st[reorderSelected.i] = t;
         }
         reorderSelected = null;
     }
-    let m = appState.matches.find(x => x.id === currentScoringMatchId); 
-    let n1 = appState.players[m.p1Idx]; let n2 = appState.players[m.p2Idx];
-    renderReorderAreas(n1, n2, roster.find(x => x.name === n1), roster.find(x => x.name === n2));
+    renderReorderAreas();
+};
+
+// ---- 拖曳排序 (Pointer Events；滑鼠與觸控共用) ----
+// 按住卡片移動 8px 後開始拖：卡片殘影跟著游標，原位置換成半透明落點；放開後依落點排序 (插入式，和牌組編輯器一致)
+let reorderDrag = null;            // { p, from, startX, startY, pointerId, active, order, slot, ghost, lastX, lastY, raf, box }
+let reorderDragJustEnded = false;  // 拖完後瀏覽器仍會補發 click，用旗標擋掉，避免誤觸「點選互換」
+
+function initReorderDrag() {
+    const box = document.querySelector('#reorderDeckModal .reorder-players'); if (!box) return;
+    box.addEventListener('pointerdown', onReorderPointerDown);
+    box.addEventListener('pointermove', onReorderPointerMove);
+    box.addEventListener('pointerup', onReorderPointerUp);
+    box.addEventListener('pointercancel', onReorderPointerCancel);
+    box.addEventListener('dragstart', e => e.preventDefault());
+    box.addEventListener('click', e => { if (reorderDragJustEnded) { e.stopPropagation(); e.preventDefault(); } }, true);
+}
+
+function onReorderPointerDown(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const card = e.target.closest('.reorder-card[data-p]'); if (!card) return;
+    reorderDrag = { p: parseInt(card.dataset.p, 10), from: parseInt(card.dataset.i, 10), card, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY,
+                    pointerId: e.pointerId, active: false, order: null, slot: null, ghost: null, raf: null, box: e.currentTarget };
+}
+
+function onReorderPointerMove(e) {
+    const s = reorderDrag; if (!s || e.pointerId !== s.pointerId) return;
+    if (!s.active) {
+        if (Math.hypot(e.clientX - s.startX, e.clientY - s.startY) < 8) return; // 位移很小視為點擊
+        s.active = true;
+        try { s.box.setPointerCapture(e.pointerId); } catch (err) {}  // 之後的事件固定由容器接收 (卡片列會被重畫，不能依賴卡片本身)
+        const r = s.card.getBoundingClientRect(); const ghost = s.card.cloneNode(true);
+        ghost.removeAttribute('data-p'); ghost.removeAttribute('data-i'); ghost.removeAttribute('onclick'); ghost.classList.remove('selected'); ghost.classList.add('dragging');
+        Object.assign(ghost.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', boxSizing: 'border-box' });
+        document.body.appendChild(ghost); s.ghost = ghost;
+        s.order = [...(s.p === 1 ? reorderState.p1 : reorderState.p2)]; s.slot = s.from; s.phValue = s.order[s.from];
+        reorderSelected = null;
+        renderReorderRow(s.p, s.order, s.phValue);
+        s.raf = requestAnimationFrame(reorderAutoScroll);
+    }
+    e.preventDefault();
+    s.lastX = e.clientX; s.lastY = e.clientY;
+    reorderDragApply(s);
+}
+
+// 殘影跟著游標；落點 = 離游標最近的那一格 (3 格位置固定，卡片列重畫也不會抖動)；游標離開該選手區域太遠就回到原位
+function reorderDragApply(s) {
+    s.ghost.style.transform = `translate(${s.lastX - s.startX}px, ${s.lastY - s.startY}px) scale(1.04)`;
+    const row = document.getElementById('reorderRowP' + s.p); if (!row) return;
+    const rr = row.getBoundingClientRect(); const pad = 90;
+    let slot = s.from;
+    if (!(s.lastX < rr.left - pad || s.lastX > rr.right + pad || s.lastY < rr.top - pad || s.lastY > rr.bottom + pad)) {
+        let best = Infinity; slot = 0;
+        Array.from(row.children).forEach((c, i) => { const r = c.getBoundingClientRect(); const d = Math.hypot(s.lastX - (r.left + r.width / 2), s.lastY - (r.top + r.height / 2)); if (d < best) { best = d; slot = i; } });
+    }
+    if (slot === s.slot) return;
+    s.slot = slot;
+    const base = [...(s.p === 1 ? reorderState.p1 : reorderState.p2)];
+    const moved = base.splice(s.from, 1)[0]; base.splice(slot, 0, moved);
+    s.order = base;
+    renderReorderRow(s.p, s.order, s.phValue);
+}
+
+// 游標靠近視窗上/下緣時捲動變陣視窗 (直向堆疊時兩位選手可能不在同一畫面)
+function reorderAutoScroll() {
+    const s = reorderDrag; if (!s || !s.active) return;
+    const sc = document.getElementById('reorderDeckModal'); let v = 0;
+    if (s.lastY < 70) v = -16; else if (s.lastY > window.innerHeight - 70) v = 16;
+    if (v) { const before = sc.scrollTop; sc.scrollTop += v; if (sc.scrollTop !== before) reorderDragApply(s); }
+    s.raf = requestAnimationFrame(reorderAutoScroll);
+}
+
+function endReorderDrag() {
+    const s = reorderDrag; reorderDrag = null;
+    if (!s) return;
+    if (s.raf) cancelAnimationFrame(s.raf);
+    if (s.ghost) s.ghost.remove();
+    try { s.box.releasePointerCapture(s.pointerId); } catch (err) {}
+}
+
+function onReorderPointerUp(e) {
+    const s = reorderDrag; if (!s || e.pointerId !== s.pointerId) return;
+    endReorderDrag();
+    if (!s.active) return; // 沒有位移 → 一般點擊，交給卡片的 onclick (點選互換)
+    reorderDragJustEnded = true; setTimeout(() => { reorderDragJustEnded = false; }, 60);
+    if (s.p === 1) reorderState.p1 = s.order; else reorderState.p2 = s.order;
+    renderReorderAreas();
+}
+
+function onReorderPointerCancel(e) {
+    const s = reorderDrag; if (!s || e.pointerId !== s.pointerId) return;
+    endReorderDrag();
+    if (s.active) { reorderDragJustEnded = true; setTimeout(() => { reorderDragJustEnded = false; }, 60); renderReorderAreas(); } // 取消 → 維持原順序
 }
 
 function applyReorderDeck() {
-    let m = appState.matches.find(x => x.id === currentScoringMatchId);
-    let n1 = appState.players[m.p1Idx]; let n2 = appState.players[m.p2Idx];
-    let r1 = roster.find(x => x.name === n1); let r2 = roster.find(x => x.name === n2);
-
+    let { m, r1, r2 } = getReorderContext();
     let checkMissing = (rState, deckArr) => {
-        for(let i=0; i<3; i++) {
+        for (let i = 0; i < 3; i++) {
             let d = deckArr[rState[i]];
             if (!d || !d.parts || !d.parts.TopPart || !d.parts.Bit) return true;
         }
         return false;
     };
-
-    if(checkMissing(reorderState.p1, getMatchDeck(r1))) return document.getElementById('reorderErrorMsg').innerText = "❌ 選手 1 有空缺的先發位，請確保出戰陀螺已有完整配裝！";
-    if(checkMissing(reorderState.p2, getMatchDeck(r2))) return document.getElementById('reorderErrorMsg').innerText = "❌ 選手 2 有空缺的先發位，請確保出戰陀螺已有完整配裝！";
+    if (checkMissing(reorderState.p1, getMatchDeck(r1))) return document.getElementById('reorderErrorMsg').innerText = "❌ 選手 1 有空缺的先發位，請確保出戰陀螺已有完整配裝！";
+    if (checkMissing(reorderState.p2, getMatchDeck(r2))) return document.getElementById('reorderErrorMsg').innerText = "❌ 選手 2 有空缺的先發位，請確保出戰陀螺已有完整配裝！";
 
     m.p1DeckOrder = reorderState.p1.slice(0, 3);
     m.p2DeckOrder = reorderState.p2.slice(0, 3);
-    
+
     saveState();
     closeReorderDeckModal();
     renderScoringModal();
 }
 
-function closeReorderDeckModal() { document.getElementById('reorderDeckModal').style.display = 'none'; }
+function closeReorderDeckModal() { endReorderDrag(); document.getElementById('reorderDeckModal').style.display = 'none'; }
 
 
 function handleScoreAction(playerNum, actionType, points) {
@@ -3251,11 +3684,12 @@ function buildCostCatalog() {
 }
 
 window.openCostTier = function() {
-    document.getElementById('costTierModal').style.display = 'block';
+    dockOpen('cost');
     CostTier.mount(document.getElementById('costTierRoot')); // 第一次開啟才建立畫面；之後只是重繪
+    ensureCostSplitter();
 };
 window.closeCostTier = function() {
-    document.getElementById('costTierModal').style.display = 'none';
+    document.getElementById('costTierModal').style.display = 'none'; dockSync();
     if (document.getElementById('builderModal').style.display === 'block' && builderRuleMode === 'cost') renderDeckOverview(); // 從牌組編輯器開啟時，關閉後刷新 Cost 顯示
 };
 if (window.CostTier) {
@@ -3483,9 +3917,9 @@ window.saveBuilderToPlayer = function() {
 window.renderScoringActiveBey = function(p, beyIndex) {
     let deckObj = p ? getMatchDeck(p)[beyIndex] : null;
     if (deckObj && deckObj.parts && deckObj.parts.TopPart) {
-         return `<div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                   <div class="mini-icon-wrapper">${getDeckCoverHtml(deckObj)}</div>
-                   <div style="font-size:18px; color:#f1c40f; line-height:1.2; text-align:center; font-weight:bold; margin-top:5px; text-shadow: 0 0 5px rgba(241,196,15,0.5);">${getDeckFullName(deckObj)}</div>
+         return `<div class="active-bey-row">
+                   <div class="mini-icon-wrapper fluid-bey">${getDeckCoverHtml(deckObj)}</div>
+                   <div class="active-bey-name">${getDeckFullName(deckObj)}</div>
                  </div>`;
     }
     return `<div style="font-size:18px; color:#777; margin-top:15px;">(尚未配置)</div>`;
