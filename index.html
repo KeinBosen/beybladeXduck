@@ -2,6 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0c10">
     <title>BEYBLADE X 專業賽事系統 (極限戰情室 最終進化版)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -238,6 +240,7 @@
         .builder-mode-tab { margin: 0; padding: 12px 28px; font-size: 24px; background: rgba(0,0,0,0.7); border: 3px solid var(--mc); color: var(--mc); border-radius: 14px; opacity: 0.6; transition: 0.2s; }
         .builder-mode-tab:hover { opacity: 1; }
         .builder-mode-tab.active { background: var(--mc); color: #000; opacity: 1; box-shadow: 0 0 22px var(--mc); }
+        .setup-group.sg-name { margin-left: 0; }
         .setup-group { display: inline-flex; align-items: center; gap: 10px; margin-left: 20px; white-space: nowrap; } /* 標籤與選單綁在一起，換行時不會拆開 */
         .roster-mode-chips { display: flex; gap: 4px; justify-content: center; flex-wrap: nowrap; margin-top: 8px; }
         .roster-mode-chips button { margin: 0; padding: 3px 6px; font-size: 13px; white-space: nowrap; border-radius: 8px; background: rgba(0,0,0,0.7); border: 2px solid var(--mc); color: var(--mc); }
@@ -450,7 +453,21 @@
         .tool-btn { margin: 0; padding: 7px 16px; font-size: 18px; border-radius: 10px; background: #1f2833; letter-spacing: 1px; white-space: nowrap; }
         .tool-roster { border-color: #b056df; color: #b056df; } .tool-roster:hover, .tool-roster.on { background: #b056df; color: #fff; box-shadow: 0 0 16px #b056df; }
         .tool-cost { border-color: #f1c40f; color: #f1c40f; } .tool-cost:hover, .tool-cost.on { background: #f1c40f; color: #0b0c10; box-shadow: 0 0 16px #f1c40f; }
-        @media (max-width: 760px) { .app-status { display: none; } h1.app-title { font-size: 15px; letter-spacing: 1px; } .tool-btn { padding: 6px 10px; font-size: 16px; } .tool-btn span { display: none; } .app-tools { margin-left: auto; } }
+        /* 窄螢幕 (≤960px，含平板直向與手機橫向)：狀態列隱藏、標題縮短，三個工具鈕才放得進一行 */
+        @media (max-width: 960px) {
+            .app-status { display: none; }
+            h1.app-title { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+            h1.app-title .t-long { display: none; }
+            .app-tools { margin-left: auto; }
+        }
+        /* 手機 (≤760px)：工具鈕只留圖示，各 44px 以上的觸控範圍，確保放得進 360px 寬 */
+        @media (max-width: 760px) {
+            #appBar { gap: 8px; padding: 0 10px; }
+            h1.app-title { font-size: 16px; letter-spacing: 1px; }
+            .app-tools { gap: 8px; }
+            .tool-btn { padding: 0; min-width: 44px; height: 44px; font-size: 20px; letter-spacing: 0; display: inline-flex; align-items: center; justify-content: center; }
+            .tool-btn span { display: none; }
+        }
 
         /* 主區：有右側面板時讓出寬度；內距與各區塊間距隨視窗縮放 */
         #appBody { padding: clamp(10px, 1.6vw, 28px); box-sizing: border-box; }
@@ -506,6 +523,35 @@
         .match-card .player-pill { font-size: 19px; padding: 4px 12px 4px 4px; gap: 8px; border-width: 2px; max-width: 100%; }
         .match-card .player-pill .avatar { width: 38px; height: 38px; border-width: 2px; }
         .match-card .player-name-truncate { max-width: 100%; min-width: 0; }
+
+        /* ---------------- 備份與還原視窗 ---------------- */
+        .backup-shell { max-width: min(96vw, 880px); margin: 2vh auto; padding: clamp(14px, 2.4vw, 30px); background: rgba(15,18,25,0.98); border: 3px solid #f1c40f; border-radius: 22px; box-shadow: 0 0 40px rgba(241,196,15,0.25); }
+        .backup-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .backup-head h3 { margin: 0; color: #f1c40f; font-size: clamp(22px, 2.4vw, 32px); }
+        .backup-x { margin: 0 !important; padding: 6px 14px !important; font-size: 22px !important; min-width: 48px; min-height: 44px; }
+        .backup-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+        .backup-tabs button { margin: 0; padding: 12px 8px; font-size: clamp(17px, 2vw, 22px); border-radius: 12px; background: #1f2833; border: 2px solid #45a29e; color: #66fcf1; }
+        .backup-tabs button.on { background: #45a29e; color: #0b0c10; }
+        .backup-tip { color: #aaa; font-size: clamp(14px, 1.7vw, 18px); line-height: 1.5; margin: 0 0 8px; }
+        .bk-row { display: flex; gap: 14px; align-items: flex-start; padding: 12px 14px; margin: 8px 0; border: 2px solid rgba(255,255,255,0.15); border-radius: 14px; background: rgba(0,0,0,0.45); cursor: pointer; min-height: 56px; }
+        .bk-row.off { opacity: 0.5; cursor: default; }
+        .bk-row input[type=checkbox], .bk-row input[type=radio] { width: 26px; height: 26px; flex: 0 0 auto; margin: 2px 0 0; accent-color: #f1c40f; }
+        .bk-row b { display: block; font-size: clamp(17px, 2vw, 22px); color: #fff; }
+        .bk-row small { display: block; color: #aaa; font-size: clamp(14px, 1.7vw, 17px); line-height: 1.4; margin-top: 2px; }
+        .bk-sub { margin: -2px 0 8px 40px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+        .bk-sub label { display: flex; align-items: center; gap: 8px; color: #ddd; font-size: clamp(15px, 1.8vw, 19px); min-height: 40px; cursor: pointer; }
+        .bk-sub input { width: 22px; height: 22px; accent-color: #f1c40f; }
+        .bk-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin-top: 14px; }
+        .bk-actions button { margin: 0; padding: 14px 10px; font-size: clamp(17px, 2vw, 22px); border-radius: 14px; min-height: 52px; }
+        .bk-msg { display: none; margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: clamp(15px, 1.9vw, 19px); line-height: 1.55; word-break: break-word; }
+        .bk-msg.show { display: block; }
+        .bk-msg.ok { background: rgba(46,204,113,0.15); border: 1px solid #2ecc71; color: #8dffbb; }
+        .bk-msg.err { background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: #ffa398; }
+        .bk-msg.info { background: rgba(0,255,255,0.08); border: 1px solid #0ff; color: #aef; }
+        .bk-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+        .bk-paste { width: 100%; min-height: 110px; margin-top: 8px; padding: 10px; font-size: 16px; background: rgba(0,0,0,0.7); color: #ddd; border: 2px solid #45a29e; border-radius: 10px; font-family: monospace; }
+        .bk-details summary { cursor: pointer; color: #66fcf1; font-size: clamp(15px, 1.8vw, 19px); padding: 10px 0; min-height: 44px; }
+        .tool-backup { border-color: #2ecc71; color: #2ecc71; } .tool-backup:hover, .tool-backup.on { background: #2ecc71; color: #0b0c10; box-shadow: 0 0 16px #2ecc71; }
 
         /* ---------------- 右側固定面板 (Dock) ---------------- */
         .dock-head { gap: 8px; flex-wrap: wrap; }
@@ -574,37 +620,315 @@
         body.dock-side #costTierModal.ct-hide-panel .ct-panel, body.dock-side #costTierModal.ct-hide-panel .ct-splitter { display: none; }
         body.dock-side #costTierModal.ct-hide-panel .ct-board-wrap { flex: 1 1 100%; }
         .ct-root .ct-board { max-width: 100%; }   /* 欄位太窄時，磚塊在欄內自動換行，不再出現橫向捲動 */
+
+        /* ================= 手機版 (螢幕寬度 ≤ 640px) =================
+           原則：①字級縮到 14~17px，輸入欄位一律 ≥16px (iOS 聚焦時才不會自動放大畫面)
+                 ②按鈕與可點區域至少 40~44px 高 ③表單改成「標籤在上、欄位在下」、表格改成卡片
+                 ④任何元素都不能比螢幕寬 (否則整頁會被撐開、出現橫向捲動) */
+        .hint-touch { display: none; }
+        @media (pointer: coarse) {
+            .hint-mouse { display: none; }
+            .hint-touch { display: inline; }
+            /* 觸控時允許垂直捲動 (原本 none 會讓手指放在卡片上就無法捲頁面)；左右拖曳仍由程式接手 */
+            .deck-card[data-index], .reorder-card { touch-action: pan-y; }
+            .grid-item:hover, .deck-card:hover, .player-pill:hover, .win-btn:hover, .score-display:hover { transform: none; }
+        }
+        @media (max-width: 640px) {
+            html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+            body { line-height: 1.5; }
+            #appBody { padding: 8px 8px calc(14px + env(safe-area-inset-bottom)); }
+            #appBar { padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
+            #appBody h2, .modal-content h2 { font-size: 19px; line-height: 1.35; gap: 6px; padding-bottom: 8px; margin: 0 0 10px; flex-wrap: wrap; }
+            .setup-box, .box { padding: 12px; border-radius: 16px; margin-bottom: 12px; }
+            .setup-box::before { opacity: 0.06; }
+            button { min-height: 44px; margin-top: 8px; margin-right: 8px; padding: 10px 14px; font-size: 16px; letter-spacing: 0.5px; border-radius: 10px; }
+            select, input[type="text"], input[type="number"], input[type="search"], textarea { font-size: 16px; }
+
+            /* ---- 賽事設定：標籤在上，人數／輪數並排 ---- */
+            .setup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; align-items: end; }
+            .setup-group { display: flex; flex-direction: column; align-items: stretch; gap: 4px; margin-left: 0; min-width: 0; white-space: normal; }
+            .setup-group.sg-name, .setup-group.sg-mode, .setup-group.sg-cost { grid-column: 1 / -1; }
+            .sg-count { order: 1; } .sg-rounds { order: 2; } .sg-mode { order: 3; } .sg-cost { order: 4; }
+            .setup-row label { font-size: 15px; color: #9fb0b8; font-weight: bold; }
+            .setup-group select, .setup-group input { width: 100%; min-height: 46px; padding: 8px 10px; box-sizing: border-box; border-radius: 10px; }
+            .setup-players-label { display: block; font-size: 15px; margin: 4px 0 6px; }
+            .setup-players-label b { font-size: 16px; }
+
+            /* ---- 出賽選手：每位一列 (第 N 位 + 頭像 + 選單) ---- */
+            .player-inputs-container { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 6px 0 12px; }
+            .player-field { flex-direction: row; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 12px; border-width: 2px; }
+            .player-field label { margin: 0; font-size: 15px; flex: 0 0 auto; white-space: nowrap; }
+            .player-field > div { flex: 1 1 auto; min-width: 0; gap: 8px !important; }
+            .player-field select { flex: 1 1 auto; width: 100% !important; min-width: 0; min-height: 44px; border-width: 2px; border-radius: 10px; }
+            .player-field .avatar { width: 38px !important; height: 38px !important; }
+
+            /* ---- 操作按鈕：主要的獨佔一列，其餘 2 欄 ---- */
+            .setup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .setup-actions .spacer { display: none; }
+            .setup-actions button { width: 100%; margin: 0; min-height: 48px; padding: 8px 6px; font-size: 15px; line-height: 1.25; letter-spacing: 0; }
+            .setup-actions .btn-blue, .setup-actions .btn-yellow { grid-column: 1 / -1; font-size: 16px; }
+
+            /* ---- 對局卡片 ---- */
+            .flex-container { gap: 12px; margin-bottom: 14px; }
+            .schedule-grid { gap: 12px; margin-top: 12px; }
+            .match-card { padding: 10px 10px 14px; border-radius: 14px; border-left-width: 5px; gap: 8px; }
+            .match-header { padding-bottom: 8px; gap: 6px; }
+            .match-number { font-size: 16px; padding: 3px 10px; }
+            .encounter-badge { font-size: 13px; padding: 3px 8px; }
+            .match-status { font-size: 14px; padding: 3px 10px; }
+            .match-body { padding: 4px 0; gap: 4px; }
+            .player-side { width: 38%; gap: 10px; min-width: 0; }
+            .match-card .player-pill { font-size: 15px; gap: 6px; padding: 3px 10px 3px 3px; border-width: 2px; max-width: 100%; }
+            /* 頭像大小寫在 inline style 裡，所以這裡必須用 !important 才蓋得過 */
+            .player-pill .avatar { width: 34px !important; height: 34px !important; border-width: 2px; box-shadow: 0 0 6px currentColor; font-size: 12px !important; }
+            .player-name-truncate { max-width: 5.5em; }
+            .score-display { width: 76px; height: 54px; font-size: 32px; border-width: 2px; border-radius: 10px; }
+            .vs-badge { font-size: 24px; letter-spacing: 1px; -webkit-text-stroke: 1px #e74c3c; }
+            .sched-foot { flex-direction: column !important; gap: 8px !important; }
+            .sched-foot button { flex: none !important; width: 100%; margin: 0 !important; padding: 12px !important; font-size: 16px !important; }
+            #ruleModeBadge { font-size: 15px !important; }
+
+            /* ---- 即時戰績：表格改成每位選手一張卡片 (第一列 名次／選手／勝／敗／勝率，第二列對局紀錄) ---- */
+            #summaryTable, #summaryTable tbody { display: block; }
+            #summaryTable { margin-top: 8px; border-width: 1px; border-radius: 12px; }
+            #summaryTable thead { display: none; }
+            #summaryTable tr { display: grid; grid-template-columns: 52px minmax(0, 1fr) 30px 30px 56px; align-items: center; gap: 4px 4px; padding: 8px 8px 6px; border-bottom: 1px solid rgba(0,255,255,0.18); }
+            #summaryTable tr:last-child { border-bottom: none; }
+            #summaryTable td { border: none; padding: 0; white-space: normal; min-width: 0; }
+            #summaryTable td[colspan] { grid-column: 1 / -1; padding: 16px 8px !important; font-size: 15px; }
+            #summaryTable .rank-number { font-size: 19px; }
+            #summaryTable .big-wl { font-size: 22px; }
+            #summaryTable td:nth-child(5) { font-size: 17px !important; }
+            #summaryTable .player-pill { font-size: 15px; gap: 6px; padding: 3px 10px 3px 3px; border-width: 2px; }
+            #summaryTable td:nth-child(2) { text-align: left; }
+            #summaryTable td:last-child { grid-column: 1 / -1; text-align: left; font-size: 13px; padding-top: 4px; }
+            #summaryTable .match-box { width: calc(50% - 6px); margin: 3px; padding: 6px 6px; font-size: 13px; box-sizing: border-box; }
+            #summaryTable td:last-child button { min-height: 36px; padding: 4px 10px !important; font-size: 14px !important; margin: 3px 0 0 !important; }
+
+            /* ---- 歷史戰績 ---- */
+            .full-width-box > p { font-size: 14px !important; margin: 0 0 8px !important; }
+            .hist-filter { gap: 6px 8px !important; margin-bottom: 12px !important; }
+            .hist-filter label { font-size: 16px !important; width: 100%; }
+            .hist-filter select { flex: 1 1 100%; min-height: 46px; font-size: 16px !important; }
+            .hist-filter span { font-size: 13px !important; line-height: 1.4; }
+            #historyTable { font-size: 14px; }
+            #historyTable th, #historyTable td { padding: 10px 9px; font-size: 14px; text-shadow: none; }
+            #historyTable th:first-child, #historyTable td:first-child { position: sticky; left: 0; z-index: 3; background: #0f1219; box-shadow: 4px 0 6px rgba(0,0,0,0.5); }
+            #historyTable .player-pill { font-size: 14px; padding: 3px 9px 3px 3px; gap: 6px; border-width: 2px; }
+            .hist-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+            .hist-actions button { width: 100%; margin: 0 !important; min-height: 50px; padding: 8px 6px !important; font-size: 15px !important; line-height: 1.25; letter-spacing: 0; }
+            .hist-actions button:last-child { grid-column: 1 / -1; }
+            .chart-box { padding: 12px !important; border-radius: 16px !important; }
+            .chart-head { flex-direction: column; align-items: stretch !important; gap: 10px; margin-bottom: 12px !important; padding-bottom: 10px !important; }
+            .chart-head h3 { font-size: 18px; }
+            .chart-head > div { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+            .chart-head select { width: 100%; font-size: 16px !important; min-height: 44px; padding: 6px 8px !important; }
+            .chart-box > div:last-child > div { height: 300px !important; min-width: 100% !important; }
+
+            /* ---- 全螢幕視窗共通 ---- */
+            .modal-overlay { padding: 6px; }
+            .modal-content, .edit-modal-content { padding: 12px; border-radius: 16px; margin-bottom: 6px; }
+            .modal-content[style], .edit-modal-content[style] { border-width: 2px !important; }
+            .edit-modal-content { margin: 2vh auto; padding: 16px !important; }
+            .dock-head { flex-wrap: nowrap; font-size: 18px; align-items: center; }
+            .dock-head > span:first-child { min-width: 0; font-size: 18px; }
+            .dock-ctrl { flex: 0 0 auto; }
+            .dock-ctrl button { min-height: 40px; margin: 0; padding: 6px 12px; font-size: 15px; white-space: nowrap; }
+            .roster-hint { font-size: 14px !important; margin: 0 0 8px !important; text-align: left !important; }
+            .roster-hint .hint-full { display: none; }
+            .modal-content > div[style*="text-align:center"] button { max-width: 100%; }
+
+            /* ---- 選手名單：直向清單，每位一張橫式卡片 ---- */
+            #rosterListContainer { display: grid; grid-template-columns: 1fr; gap: 10px; overflow: visible; padding: 2px 0; min-height: 0; scroll-snap-type: none; align-items: stretch; }
+            .roster-card { flex: none; display: grid; grid-template-columns: 68px minmax(0, 1fr) auto; grid-template-areas: "av nm nm" "av col ar" "dk dk dk" "ch ch ch"; align-items: center; column-gap: 10px; row-gap: 8px; padding: 12px; border-width: 2px; border-radius: 16px; transform: none !important; opacity: 1 !important; filter: none !important; z-index: auto !important; }
+            .roster-card .avatar { grid-area: av; width: 64px; height: 64px; justify-self: center; border-width: 3px; }
+            .roster-card .avatar span { font-size: 22px !important; line-height: 58px !important; }
+            .roster-card .name-edit-wrapper { grid-area: nm; padding-right: 38px; box-sizing: border-box; }
+            .roster-card input[type="text"].card-name { font-size: 20px; text-align: left; min-height: 40px; }
+            .roster-card .pencil-icon { right: 44px; font-size: 18px; }
+            .roster-card .roster-color-wrap { grid-area: col; margin-top: 0 !important; justify-self: start; }
+            .roster-card .roster-color-wrap input[type="color"] { width: 44px !important; height: 44px !important; }
+            .roster-card .card-arrows { grid-area: ar; width: auto; margin: 0; gap: 8px; }
+            .roster-card .card-arrows button { min-height: 44px; min-width: 48px; padding: 6px 12px; font-size: 16px; flex: none; margin: 0; }
+            .roster-card .roster-deck-btn { grid-area: dk; min-height: 48px; font-size: 16px !important; }
+            .roster-card .roster-mode-chips { grid-area: ch; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 0; }
+            .roster-card .roster-mode-chips button { min-height: 42px; padding: 4px 2px; font-size: 14px; }
+            .roster-card .delete-card-btn { top: 2px; right: 2px; width: 44px; height: 44px; min-height: 0; padding: 0; margin: 0; font-size: 20px; }
+            #rosterModal .modal-content > div[style*="text-align:center"] { margin-top: 12px !important; }
+            #rosterModal .modal-content > div[style*="text-align:center"] button { width: 100%; font-size: 18px !important; padding: 12px !important; margin: 0; }
+
+            /* ---- 牌組編輯器 (builder) ---- */
+            #builderModal > div { padding: 8px !important; }
+            .builder-head { padding: 12px !important; margin-bottom: 12px !important; border-radius: 16px !important; }
+            .builder-head h2 { flex-wrap: wrap; justify-content: center; font-size: 17px; gap: 4px 8px; margin-bottom: 6px; }
+            .builder-head h2 > div { margin: 0 !important; transform: none !important; }
+            #builderPlayerName { font-size: 24px !important; }
+            .builder-head p { font-size: 14px !important; margin: 6px 0 10px !important; }
+            .builder-head button { display: block; width: 100%; margin: 8px 0 0 !important; padding: 10px !important; font-size: 17px !important; }
+            #builderModeTabs { gap: 6px !important; flex-wrap: nowrap !important; }
+            .builder-mode-tab { flex: 1 1 0; min-width: 0; padding: 8px 2px; font-size: 14px; border-width: 2px; border-radius: 10px; line-height: 1.25; margin: 0; }
+            #builderModeHint { font-size: 14px !important; min-height: 0 !important; margin-bottom: 10px !important; }
+            #builderModal h2 { font-size: 18px; }
+            .deck-drag-hint { font-size: 14px; margin: 0 0 10px; text-align: left; }
+            .deck-overview-container { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+            .deck-card { width: auto; min-width: 0; padding: 24px 5px 8px; border-radius: 12px; }
+            .deck-badge { top: 4px; left: 4px; font-size: 11px; padding: 2px 6px; border-radius: 6px; }
+            .deck-grip { display: none; }
+            .deck-card .deck-img { width: 100%; height: auto; aspect-ratio: 1 / 1; margin: 0 auto 4px; }
+            .deck-card .stack-container { width: 100%; height: auto; aspect-ratio: 1 / 1; margin: 0 auto 4px; }
+            .deck-card .stack-base { width: 78%; height: 78%; top: 5.5%; left: 5.5%; }
+            .deck-card .stack-mid { width: 78%; height: 78%; top: 16.7%; left: 16.7%; }
+            .deck-card .stack-top-cx1, .deck-card .stack-top-cx2 { width: 47%; height: 47%; }
+            .deck-name { font-size: 12.5px; margin-top: 4px; line-height: 1.3; word-break: break-all; }
+            .deck-card > div:last-child { margin-top: 8px !important; flex-wrap: wrap; gap: 4px !important; }
+            .deck-card > div:last-child button { flex: 1 1 100%; min-height: 36px; padding: 4px 6px !important; font-size: 13px !important; margin: 0; letter-spacing: 0; }
+            #builderModal h2 + .deck-drag-hint + .deck-overview-container + h2 { margin-top: 22px !important; }
+            #builderModal > div > div[style*="text-align: center"] button { width: 100%; margin: 0; }
+
+            /* ---- 配置編輯 (零件插槽) ---- */
+            .editor-container { gap: 8px; margin-top: 10px; }
+            .part-slot { padding: 8px 10px; border-radius: 10px; min-height: 56px; gap: 8px; }
+            .part-label { width: auto; flex: 0 0 34%; font-size: 15px; line-height: 1.3; }
+            .part-preview { flex: 1 1 auto; justify-content: flex-end; gap: 8px; min-width: 0; }
+            .part-thumb { width: 44px; height: 44px; flex: 0 0 auto; }
+            .part-val { width: auto; min-width: 0; font-size: 16px; line-height: 1.3; word-break: break-all; }
+            #editorModal .modal-content > p { font-size: 14px !important; margin: 0 0 6px; }
+            #editorModal .modal-content button { width: 100%; margin: 0; font-size: 18px !important; padding: 12px !important; }
+            #editorModal .modal-content > div[style*="text-align: center"] { margin-top: 14px !important; }
+
+            /* ---- 圖鑑挑選 (零件格) ---- */
+            .grid-container { max-height: none; overflow: visible; padding: 4px 0; margin-top: 6px; }
+            .grid-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .grid-item { padding: 10px 6px; border-radius: 10px; }
+            .grid-img { width: 92px; height: 92px; margin-bottom: 6px; }
+            .grid-title { font-size: 14px; line-height: 1.3; }
+            .variant-badge { font-size: 11px; padding: 2px 6px; top: 4px; right: 4px; }
+            .filter-btn { padding: 6px 12px; font-size: 14px; margin: 3px; min-height: 38px; border-radius: 18px; }
+            #visualGridModal .modal-content > div:last-child, #variantModal .modal-content > div:last-child { position: sticky; bottom: 0; margin: 8px -12px -12px !important; padding: 8px 12px; background: rgba(15,18,25,0.97); border-top: 1px solid #333; z-index: 5; }
+            #visualGridModal .modal-content > div:last-child button, #variantModal .modal-content > div:last-child button, #swapModal .modal-content > div:last-child button { width: 100%; margin: 0; }
+            #swapModal .modal-content h2 { font-size: 18px; }
+
+            /* ---- 變更出戰順序 ---- */
+            .reorder-shell { margin: 0 auto; padding: 12px; border-width: 2px; border-radius: 16px; max-width: 100%; }
+            .reorder-shell h3 { font-size: 21px !important; }
+            .reorder-shell > p { font-size: 14px !important; line-height: 1.45; }
+            .reorder-players { gap: 10px; margin: 10px 0; }
+            .reorder-area { padding: 8px; border-radius: 12px; }
+            .reorder-row { gap: 6px; }
+            .reorder-card { padding: 24px 3px 6px; border-radius: 10px; }
+            .reorder-card .deck-badge { font-size: 11px; padding: 2px 6px; top: 4px; left: 4px; }
+            .reorder-name { font-size: 12.5px; line-height: 1.3; }
+            #reorderErrorMsg { font-size: 16px !important; min-height: 20px !important; margin-bottom: 8px !important; }
+            #reorderDeckModal .reorder-shell > div:last-child { gap: 8px !important; }
+            #reorderDeckModal .reorder-shell > div:last-child button { min-height: 50px; padding: 8px !important; font-size: 17px !important; }
+
+            /* ---- 配件勝率、頭像、結算 ---- */
+            .ps-filter { display: grid; grid-template-columns: 1fr; gap: 4px; text-align: left !important; }
+            .ps-filter label { font-size: 16px !important; margin: 6px 0 0 !important; }
+            .ps-filter select { width: 100% !important; min-height: 46px; font-size: 16px !important; padding: 6px 10px !important; box-sizing: border-box; }
+            #partStatsModal .modal-content > p { font-size: 14px !important; margin: 4px 0 8px !important; text-align: left !important; }
+            .ps-scroll { max-height: none !important; overflow-x: auto; }
+            #partStatsTable th, #partStatsTable td { padding: 8px 8px; font-size: 14px; text-shadow: none; }
+            #partStatsTable th:nth-child(2), #partStatsTable td:nth-child(2) { position: sticky; left: 0; z-index: 3; background: #0f1219; box-shadow: 4px 0 6px rgba(0,0,0,0.5); }
+            #partStatsModal .modal-content > div:last-child button, #avatarEditModal button, .podium-box > button { min-height: 48px; }
+            #partStatsModal .modal-content > div:last-child button { width: 100%; margin: 0; font-size: 18px !important; }
+            #editAvatarFile { width: 100%; font-size: 15px; color: #aaa; }
+            #editAvatarFile::file-selector-button { min-height: 44px; padding: 8px 16px; font-size: 16px; font-weight: bold; border-radius: 10px; border: 2px solid #45a29e; background: #1f2833; color: #66fcf1; margin-right: 10px; }
+            #avatarPreview { width: 132px !important; height: 132px !important; margin-bottom: 16px !important; }
+            #avatarEditModal .edit-modal-content h3 { font-size: 20px; }
+            #avatarEditModal .slider-group { margin-bottom: 14px; }
+            #avatarEditModal .slider-group label { font-size: 15px; }
+            #avatarEditModal .slider-group input[type="range"] { min-height: 36px; }
+            #avatarEditModal .edit-modal-content > div:last-child { margin-top: 18px !important; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            #avatarEditModal .edit-modal-content > div:last-child button { margin: 0; }
+            .podium-box { padding: 16px !important; }
+            .podium-box h2 { font-size: 26px !important; margin-bottom: 4px !important; }
+            .podium-box p { font-size: 15px !important; margin: 0 0 12px !important; }
+            #podiumResult { gap: 12px !important; margin: 14px 0 !important; }
+            .podium-box > button { font-size: 18px !important; padding: 12px !important; margin-top: 8px !important; }
+
+            /* ---- Cost / Tier 表 ---- */
+            .ct-root { padding: 8px; }
+            .ct-toolbar { gap: 6px; }
+            .ct-btn { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+            .ct-root input[type=text], .ct-root input[type=number], .ct-root input[type=search], .ct-root select, .ct-root textarea { min-height: 40px; font-size: 16px; }
+            .ct-field input { width: 64px; }
+            #costTierModal .dock-help > p { font-size: 14px !important; margin: 0 0 8px !important; }
+            /* 手機上 Cost 表改成「依螢幕寬度自動換行」，不必左右捲動 (匯出圖片仍照「每列顆數」排版) */
+            .ct-board { width: 100% !important; }
+            .ct-board-wrap { overflow-x: visible; }
+            .ct-label { width: 64px; }
+            .ct-label-in { font-size: 22px !important; }
+            .ct-label-tools { flex-wrap: wrap; justify-content: center; opacity: 1; }
+            .ct-label-tools button, .ct-grip { width: 26px; height: 26px; line-height: 26px; font-size: 15px; border-radius: 5px; }
+            .ct-label-tools input[type=color] { width: 26px; height: 26px; }
+            .ct-cells { padding: 4px; }
+
+            /* ---- 備份視窗在手機上的小調整 ---- */
+            #appBar .tool-btn { flex: 0 0 auto; }
+        }
+
+        /* ---- 計分面板：手機直向 (≤640px) 與手機橫向 (高度 ≤520px) 共用的緊湊排法 ---- */
+        @media (max-width: 640px), (max-height: 520px) and (orientation: landscape) {
+            /* ---- 計分面板 ---- */
+            #scoringModal .modal-content { padding: 10px !important; border-radius: 16px !important; border-width: 2px !important; }
+            .score-head { flex-wrap: wrap; gap: 4px 10px; padding-bottom: 6px !important; margin-bottom: 6px !important; }
+            .score-head h2 { font-size: 18px !important; margin: 0 !important; padding: 0 !important; }
+            .score-head #roundIndicator { font-size: 14px !important; padding: 3px 10px !important; border-radius: 8px !important; }
+            #scoringModal .modal-content > p { display: none; }
+            #matchFinishedBanner { font-size: 17px !important; padding: 8px !important; }
+            .scoring-panel { gap: 8px; margin: 6px 0 8px; }
+            .player-score-col { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "pill score" "info info" "wins wins"; align-items: center; gap: 6px 10px; padding: 8px 10px; border-radius: 14px; }
+            .player-score-col > button { display: none; }
+            .player-score-col .player-pill { grid-area: pill; justify-self: start; font-size: 17px; gap: 8px; padding: 3px 12px 3px 3px; border-width: 2px; }
+            .player-score-col .score-row { grid-area: score; width: auto; }
+            .player-score-col .active-bey-info { grid-area: info; padding: 6px 8px; border-radius: 10px; }
+            .player-score-col .win-grid { grid-area: wins; grid-template-columns: 1fr 1fr; gap: 6px; }
+            .score-huge { font-size: 54px; line-height: 1; }
+            .penalty-text { position: static; transform: none; max-width: none; display: block; text-align: center; font-size: 12px; }
+            .active-bey-info > div:first-child { font-size: 13px !important; margin-bottom: 2px !important; }
+            .active-bey-row { flex-wrap: nowrap; justify-content: flex-start; gap: 10px; }
+            .mini-icon-wrapper { width: 60px; }
+            .active-bey-name { font-size: 15px; }
+            .win-btn { min-height: 46px; padding: 6px 10px; font-size: 16px; border-radius: 10px; margin: 0; letter-spacing: 0; }
+            .win-btn .en { display: none; }
+            .win-pts { font-size: 15px; padding: 2px 7px; }
+            .score-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+            .score-actions button { flex: none !important; width: 100%; min-height: 48px; padding: 8px 6px !important; font-size: 16px !important; border-radius: 12px !important; margin: 0 !important; letter-spacing: 0; }
+            .score-actions button:last-child { grid-column: 1 / -1; font-size: 18px !important; }
+        }
     </style>
 </head>
 <body>
 
     <!-- 頂部固定工具列：標題、資料庫狀態、兩個常駐工具 (選手名單與裝備庫 / Cost-Tier 表) 的開關 -->
     <header id="appBar">
-        <h1 class="app-title">🏆 BEYBLADE X 專業賽事系統</h1>
+        <h1 class="app-title">🏆 BEYBLADE X<span class="t-long"> 專業賽事系統</span></h1>
         <div id="dataStatusIndicator" class="app-status">📡 系統初始化中...</div>
         <nav class="app-tools">
             <button id="toolBtnRoster" class="tool-btn tool-roster" onclick="toggleDockTool('roster')" title="選手名單與裝備庫 (固定在右側)">👤 <span>選手名單與裝備庫</span></button>
             <button id="toolBtnCost" class="tool-btn tool-cost" onclick="toggleDockTool('cost')" title="Cost / Tier 表 (固定在右側)">📊 <span>Cost / Tier 表</span></button>
+            <button id="toolBtnBackup" class="tool-btn tool-backup" onclick="openBackupModal()" title="備份與還原 (選手、牌組、歷史、Cost 表)">💾 <span>備份</span></button>
         </nav>
     </header>
     <div id="appBody">
     
     <div class="setup-box">
         <div class="setup-row">
-            <label>賽事名稱：</label>
-            <input type="text" id="tournamentName" placeholder="例如：2026 高雄電競盃">
-            <label style="margin-left: 20px;">人數：</label>
+            <span class="setup-group sg-name"><label for="tournamentName">賽事名稱：</label>
+            <input type="text" id="tournamentName" placeholder="例如：2026 高雄電競盃"></span>
+            <span class="setup-group sg-count"><label for="playerCount">人數：</label>
             <select id="playerCount" onchange="renderPlayerBoxes()">
                 <option value="2">2 人</option><option value="3">3 人</option><option value="4">4 人</option><option value="5" selected>5 人</option>
                 <option value="6">6 人</option><option value="7">7 人</option><option value="8">8 人</option>
-            </select>
-            <span class="setup-group"><label>比賽模式：</label>
+            </select></span>
+            <span class="setup-group sg-mode"><label for="ruleMode">比賽模式：</label>
             <select id="ruleMode" onchange="syncRuleModeUI()" title="基本賽：官方規則 ／ Cost 賽：自製 Cost 表 ／ 極限盤賽：極限盤場地">
                 <option value="basic">🏆 基本賽</option><option value="cost">💰 Cost 賽</option><option value="xtreme">🌀 極限盤賽</option>
             </select></span>
-            <span class="setup-group" id="costLimitGroup" style="display:none;"><label>Cost 上限：</label>
+            <span class="setup-group sg-cost" id="costLimitGroup" style="display:none;"><label for="costLimit">Cost 上限：</label>
             <input type="number" id="costLimit" min="0" step="any" placeholder="例如 12" title="每位選手先發 3 顆的 Cost 合計上限；存在這場賽事，開賽後鎖定"></span>
-            <span class="setup-group"><label>輪數：</label>
+            <span class="setup-group sg-rounds"><label for="roundCount">輪數：</label>
             <select id="roundCount">
                 <option value="1" selected>打 1 輪</option><option value="2">打 2 輪</option><option value="3">打 3 輪</option>
             </select></span>
@@ -640,7 +964,7 @@
     <div class="box full-width-box" style="margin-top: 30px;">
         <h2 style="color: #f1c40f; border-bottom: 3px dashed rgba(241,196,15,0.3); text-shadow: 0 0 12px rgba(241,196,15,0.5);">📚 歷史生涯戰績與大數據勝率庫</h2>
         <p style="color:#aaa; font-size:20px; margin-top:-10px;">*將滑鼠移至選手膠囊上，即可分析其「戰鬥風格雷達圖與專屬評價」</p>
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+        <div class="hist-filter" style="display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
             <label style="font-size:22px; color:#f1c40f; font-weight:bold;">比賽模式篩選：</label>
             <select id="historyModeFilter" onchange="renderHistory()" style="padding: 8px 15px; font-size: 21px; background: rgba(0,0,0,0.8); border: 2px solid #45a29e; color: #0ff; border-radius: 8px;">
                 <option value="all">全部模式</option><option value="basic">🏆 基本賽</option><option value="cost">💰 Cost 賽</option><option value="xtreme">🌀 極限盤賽</option>
@@ -661,19 +985,17 @@
                 <tbody id="historyBody"><tr><td colspan="13" style="color:#777; padding: 30px; text-align:center;">尚無歷史歸檔紀錄</td></tr></tbody>
             </table>
             
-            <div style="margin-top: 20px; display:flex; gap: 15px; flex-wrap: wrap;">
+            <div class="hist-actions" style="margin-top: 20px; display:flex; gap: 15px; flex-wrap: wrap;">
                 <button class="btn-danger" onclick="clearHistory()" style="font-size:22px; margin:0;">🗑️ 刪除所有紀錄</button>
                 <button class="btn-purple" onclick="openPartStatsModal()" style="font-size:22px; margin:0; box-shadow: 0 0 15px rgba(176,86,223,0.5);">🔍 查閱配件勝率</button>
                 <button class="btn-green" onclick="exportHistoryCSV()" style="font-size:22px; margin:0;">📊 匯出總表 (Excel/CSV)</button>
-                <button class="btn-yellow" onclick="exportHistoryBackup()" style="font-size:22px; margin:0;">📥 下載資料備份檔 (.json)</button>
-                <button class="btn-blue" onclick="document.getElementById('importHistoryInput').click()" style="font-size:22px; margin:0;">📤 匯入資料備份檔</button>
-                <input type="file" id="importHistoryInput" style="display:none;" accept=".json" onchange="importHistoryBackup(event)">
+                <button class="btn-yellow" onclick="openBackupModal('export')" style="font-size:22px; margin:0;">💾 備份 / 還原資料 (選手、牌組、歷史、Cost 表)</button>
             </div>
             
         </div>
         
-        <div style="background: rgba(0,0,0,0.5); border: 2px solid rgba(241,196,15,0.3); border-radius: 24px; padding: 30px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid rgba(0,255,255,0.2); padding-bottom: 15px;">
+        <div class="chart-box" style="background: rgba(0,0,0,0.5); border: 2px solid rgba(241,196,15,0.3); border-radius: 24px; padding: 30px;">
+            <div class="chart-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid rgba(0,255,255,0.2); padding-bottom: 15px;">
                 <h3 style="margin:0; color:#c5c6c7; text-shadow: 0 0 8px rgba(255,255,255,0.2);">📈 賽事勝率變化圖</h3>
                 <div style="display:flex; gap:15px;">
                     <select id="chartLimit" onchange="renderHistory()" style="padding: 8px 15px; font-size: 21px; background: rgba(0,0,0,0.8); border: 2px solid #45a29e; color: #0ff; border-radius: 8px;">
@@ -716,7 +1038,7 @@
     <div id="partStatsModal" class="modal-overlay" style="z-index: 1060;">
         <div class="modal-content" style="max-width: 1200px; background: rgba(15, 18, 25, 0.98); border: 3px solid #b056df; box-shadow: 0 0 40px rgba(176,86,223,0.4);">
             <h2 style="color:#b056df; border-bottom: 3px dashed rgba(176,86,223,0.3); padding-bottom:15px; text-align:center;">🔍 選手專屬配件勝率大數據</h2>
-            <div style="text-align:center; margin-bottom: 20px;">
+            <div class="ps-filter" style="text-align:center; margin-bottom: 20px;">
                 <label style="color:#f1c40f; font-size:24px; font-weight:bold;">選擇分析選手：</label>
                 <select id="partStatsPlayerSelect" onchange="renderPartStatsTable()" style="font-size:24px; padding:10px 20px; width:300px; background:#111; color:#fff; border-color:#b056df;"></select>
                 <label style="color:#f1c40f; font-size:24px; font-weight:bold; margin-left:25px;">比賽模式：</label>
@@ -725,7 +1047,7 @@
                 </select>
             </div>
             <p style="text-align:center; color:#aaa; font-size:18px; margin-top:-10px;">*勝負判定為出戰該回合的「得分/被得分」，犯規失誤不納入單回合成敗計算。</p>
-            <div style="overflow-y:auto; max-height: 60vh;">
+            <div class="ps-scroll" style="overflow-y:auto; max-height: 60vh;">
                 <table id="partStatsTable" style="margin-top:0;">
                     <thead>
                         <tr>
@@ -754,7 +1076,7 @@
 
     <div id="scoringModal" class="modal-overlay" style="z-index: 1005;">
         <div class="modal-content" style="max-width: min(96vw, 1560px); padding: clamp(14px, 1.6vw, 28px) clamp(14px, 2.4vw, 44px); background: rgba(15, 18, 25, 0.98); border-radius: 24px; border: 3px solid #0ff; box-shadow: 0 0 50px rgba(0,255,255,0.3);">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px dashed rgba(0,255,255,0.3); padding-bottom:clamp(6px, 1.5vh, 15px); margin-bottom:clamp(6px, 1.5vh, 15px);">
+            <div class="score-head" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px dashed rgba(0,255,255,0.3); padding-bottom:clamp(6px, 1.5vh, 15px); margin-bottom:clamp(6px, 1.5vh, 15px);">
                 <h2 style="color:#0ff; font-size:clamp(24px, 3.6vh, 36px); border:none; margin:0; text-shadow: 0 0 20px #0ff;">⚔️ 賽局計分面板 ⚔️</h2>
                 <div id="roundIndicator" style="font-size:clamp(18px, 2.4vh, 24px); font-weight:bold; color:#f1c40f; background:rgba(241,196,15,0.1); padding:clamp(4px, 0.8vh, 8px) 20px; border-radius:12px; border:1px solid #f1c40f;">第 1 回合 (Round 1)</div>
             </div>
@@ -763,7 +1085,7 @@
             
             <div class="scoring-panel" id="scoringPanelBody"></div>
             
-            <div style="display:flex; gap: clamp(10px, 1.4vw, 20px); width: 100%; justify-content: center; flex-wrap: wrap;">
+            <div class="score-actions" style="display:flex; gap: clamp(10px, 1.4vw, 20px); width: 100%; justify-content: center; flex-wrap: wrap;">
                 <button class="btn-purple" onclick="undoScore()" style="flex:1 1 220px; padding: clamp(8px, 1.4vh, 14px); font-size: clamp(19px, 1.6vw, 26px); border-radius: 16px; box-shadow: 0 0 15px rgba(176,86,223,0.5); margin: 0;">↩️ 修正上一筆 (Undo)</button>
                 <button class="btn-danger" onclick="clearCurrentMatch()" style="flex:1 1 220px; padding: clamp(8px, 1.4vh, 14px); font-size: clamp(19px, 1.6vw, 26px); border-radius: 16px; margin: 0;">🗑️ 清空此局</button>
                 <button class="btn-yellow" onclick="closeScoringModal()" style="flex:1.3 1 260px; padding: clamp(8px, 1.4vh, 14px); font-size: clamp(19px, 1.6vw, 26px); border-radius: 16px; box-shadow: 0 0 15px rgba(241,196,15,0.5); margin: 0;">✅ 完成此局並關閉</button>
@@ -787,8 +1109,40 @@
         </div>
     </div>
 
+    <div id="backupModal" class="modal-overlay" style="z-index: 1020;">
+        <div class="backup-shell">
+            <div class="backup-head"><h3>💾 資料備份與還原</h3><button class="btn-danger backup-x" onclick="closeBackupModal()" title="關閉">✕</button></div>
+            <div class="backup-tabs"><button id="bkTabExport" class="on" onclick="backupTab('export')">📥 匯出備份</button><button id="bkTabImport" onclick="backupTab('import')">📤 匯入還原</button></div>
+
+            <div id="bkPaneExport">
+                <p class="backup-tip">備份檔是一個 .json 檔，包含你勾選的內容。電腦與手機都能匯入，也可以用來把資料搬到另一台裝置。</p>
+                <div id="bkExportRows"></div>
+                <div id="bkExportInfo" class="backup-tip" style="margin-top:10px;"></div>
+                <div class="bk-actions">
+                    <button class="btn-yellow" onclick="backupDownload()">📥 下載備份檔</button>
+                    <button class="btn-green" id="bkShareBtn" onclick="backupShare()" style="display:none;">📤 分享 / 存到手機</button>
+                    <button class="btn-blue" onclick="backupCopy()">📋 複製備份文字</button>
+                </div>
+            </div>
+
+            <div id="bkPaneImport" style="display:none;">
+                <p class="backup-tip">選擇備份檔 (.json)。也支援舊版只有生涯紀錄的備份檔，以及單獨匯出的 Cost 表 JSON。匯入前會先顯示內容，確認後才會寫入。</p>
+                <div class="bk-actions" style="margin-top:0;">
+                    <button class="btn-yellow" onclick="document.getElementById('bkFile').click()">📂 選擇備份檔</button>
+                </div>
+                <input type="file" id="bkFile" class="bk-file" onchange="backupPickFile(this)">
+                <details class="bk-details"><summary>選不到檔案？改用貼上備份文字</summary>
+                    <textarea id="bkPaste" class="bk-paste" placeholder="把「複製備份文字」複製到的內容貼在這裡" spellcheck="false"></textarea>
+                    <div class="bk-actions"><button class="btn-blue" onclick="backupReadPasted()">🔍 讀取貼上的內容</button></div>
+                </details>
+                <div id="bkPreview" style="margin-top:14px;"></div>
+            </div>
+            <div id="bkMsg" class="bk-msg" role="status" aria-live="polite"></div>
+        </div>
+    </div>
+
     <div id="podiumModal" class="modal-overlay" style="z-index: 1002;">
-        <div class="edit-modal-content" style="max-width: 700px; background: rgba(15, 18, 25, 0.95); padding: 45px;">
+        <div class="edit-modal-content podium-box" style="max-width: 700px; background: rgba(15, 18, 25, 0.95); padding: 45px;">
             <h2 style="color:#f1c40f; text-align:center; text-shadow: 0 0 25px rgba(241,196,15,0.8); border-bottom: none; justify-content:center; font-size:48px;">🏆 賽事結算 🏆</h2>
             <p style="color:#45a29e; margin-top:-15px; margin-bottom:30px; font-size: 24px;">本局前三名榮耀榜，已成功存入生涯紀錄！</p>
             <div id="podiumResult" style="display:flex; flex-direction:column; gap:25px; margin: 30px 0;"></div>
@@ -817,7 +1171,7 @@
 
 <div id="builderModal" class="modal-overlay" style="background: #0a0b10; overflow-y: auto; z-index: 1040;">
     <div style="padding: 20px; max-width: 1400px; margin: 0 auto;">
-        <div style="text-align:center; margin-bottom: 25px; background: rgba(0,0,0,0.6); padding: 25px; border-radius:20px; border:2px solid #45a29e; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+        <div class="builder-head" style="text-align:center; margin-bottom: 25px; background: rgba(0,0,0,0.6); padding: 25px; border-radius:20px; border:2px solid #45a29e; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
             <h2 style="color:#0ff; border:none; margin:0; display:flex; justify-content:center; align-items:center;">
                 目前編輯選手：
                 <div id="builderPlayerAvatar" style="margin: 0 15px; transform:scale(1.1); display:inline-block; vertical-align:middle;"></div>
@@ -831,7 +1185,7 @@
         <div id="builderModeTabs" style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap; margin-bottom:12px;"></div>
         <div id="builderModeHint" style="text-align:center; color:#aaa; font-size:18px; min-height:34px; margin-bottom:15px;"></div>
         <h2 style="color: #66fcf1; border-bottom: 2px dashed rgba(102, 252, 241, 0.3);">⚔️ 先發 3on3 牌組 <span id="builderModeTag" style="font-size:24px;"></span></h2>
-        <p class="deck-drag-hint">💡 按住牌組卡片左右拖曳即可調整順序；拖到另一區 (先發/備戰) 的卡片上則互換位置</p>
+        <p class="deck-drag-hint"><span class="hint-mouse">💡 按住牌組卡片左右拖曳即可調整順序；拖到另一區 (先發/備戰) 的卡片上則互換位置</span><span class="hint-touch">💡 手指左右滑動卡片即可調整順序；先發與備戰互換請按「🔄 替換」</span></p>
         <div class="deck-overview-container" id="mainDeckOverview"></div>
 
         <h2 style="margin-top: 40px; border-bottom: 2px dashed rgba(241, 196, 15, 0.3); color: #f1c40f;">🛡️ 備戰區 (Reserve)</h2>
@@ -883,6 +1237,7 @@
             <h3 style="margin-top:0; color:#0ff; text-shadow: 0 0 15px rgba(0,255,255,0.6);">調整選手頭像</h3>
             <div id="avatarPreview" class="avatar" style="width: 180px; height: 180px; margin: 0 auto 30px auto; border: 4px solid #0ff; box-shadow: 0 0 30px rgba(0,255,255,0.4);"></div>
             <div class="slider-group"><label>🌐 圖片網址 (URL):</label><input type="text" id="editAvatarUrl" placeholder="請貼上圖片網址" style="background: rgba(0,0,0,0.8);" onchange="updateAvatarPreview()" onkeyup="updateAvatarPreview()"></div>
+            <div class="slider-group"><label>📷 從手機相簿 / 電腦選圖：</label><input type="file" id="editAvatarFile" accept="image/*" onchange="pickAvatarFile(this)"><div style="color:#888; font-size:16px; margin-top:4px;">選好後會自動縮成小圖存在這台裝置，之後備份也會一起帶走。</div></div>
             <div class="slider-group"><label>🔍 縮放大小: <span id="valScale">100</span>%</label><input type="range" id="editScale" min="50" max="300" oninput="updateAvatarPreview()"></div>
             <div class="slider-group"><label>↔️ 左右平移 (X軸): <span id="valX">50</span>%</label><input type="range" id="editX" min="0" max="100" oninput="updateAvatarPreview()"></div>
             <div class="slider-group"><label>↕️ 上下平移 (Y軸): <span id="valY">50</span>%</label><input type="range" id="editY" min="0" max="100" oninput="updateAvatarPreview()"></div>
@@ -2033,7 +2388,7 @@
     var fr = new FileReader();
     fr.onload = function () {
       try {
-        var j = JSON.parse(fr.result);
+        var j = JSON.parse(String(fr.result).replace(/^\uFEFF/, ''));   // 去掉 BOM；手機轉存的檔案偶爾會帶
         if (!j || !Array.isArray(j.rows) || typeof j.items !== 'object') throw new Error('格式不符');
         commit(function () { var s = sanitize(j); normalizeWithCatalog(s); return s; });
         setNotice('已匯入（Ctrl+Z 可復原）');
@@ -2043,6 +2398,13 @@
   }
   // ---------- 對外 API（Cost 賽驗證使用） ----------
   function getTable() { return JSON.parse(JSON.stringify(ensureState())); }
+  // 整份取代 Cost 表 (完整備份匯入用)：套用目前圖鑑整理後立即存檔；仍可用復原回到匯入前
+  function setTable(obj) {
+    if (!obj || !Array.isArray(obj.rows) || typeof obj.items !== 'object') throw new Error('Cost 表格式不符');
+    ensureState();
+    commit(function () { var s = sanitize(obj); normalizeWithCatalog(s); return s; });
+    saveNow();
+  }
   function normKey(s) { return String(s).toLowerCase().replace(/[\s\-_]+/g, ''); }
   // 以名稱 / 圖鑑編號 / key 查陀螺；先精確比對，再退而求其次做「名稱包含」比對
   // exact 為 true 時只做精確比對 (名稱 / key / 編號)，不做「名稱包含」的模糊比對；Cost 賽驗證一律用 exact，避免短名字誤配
@@ -2106,7 +2468,7 @@
       '<button type="button" class="ct-btn" data-act="export-json">匯出 JSON</button>' +
       '<button type="button" class="ct-btn" data-act="import-json">匯入 JSON</button>' +
       '<button type="button" class="ct-btn danger" data-act="reset">清空重來</button>' +
-      '<input type="file" accept=".json,application/json" hidden data-role="import-file">' +
+      '<input type="file" hidden data-role="import-file">'   /* 不設 accept：手機的檔案選擇器會依副檔名 / MIME 灰掉檔案 */ +
     '</div>' +
     '<div class="ct-toolbar"><span class="ct-status"></span><span class="ct-notice"></span></div>' +
     '<div class="ct-banner" data-role="banner" hidden><span data-role="banner-text"></span><button type="button" class="ct-btn" data-act="banner-ok">知道了</button></div>' +
@@ -2335,6 +2697,7 @@
     setImageFallback: setImageFallback, // 設定圖片載入失敗時的備援網址函式 fn(src) → [備援網址...]
     isCoreType: isCoreType,           // 是否為核心零件種類 (Blade / MainBlade / MetalBlade，即裝備庫的核心上蓋)
     getTable: getTable,
+    setTable: setTable,               // 整份取代 Cost 表 (備份還原用)
     lookup: lookup,
     getCost: getCost,
     check: check,
@@ -2953,7 +3316,7 @@ function renderMatches() {
                 </div>
             </div>`;
     });
-    container.innerHTML += `<div style="display: flex; gap: 25px; margin-top: 20px;"><button class="btn-green" style="flex: 1; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(46,204,113,0.4);" onclick="exportToCSV()">📥 匯出單局對戰明細 (CSV)</button><button class="btn-yellow" style="flex: 2; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(241,196,15,0.4);" onclick="archiveTournament()">💾 完成賽局並儲存至生涯紀錄</button></div>`;
+    container.innerHTML += `<div class="sched-foot" style="display: flex; gap: 25px; margin-top: 20px;"><button class="btn-green" style="flex: 1; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(46,204,113,0.4);" onclick="exportToCSV()">📥 匯出單局對戰明細 (CSV)</button><button class="btn-yellow" style="flex: 2; padding: 25px; font-size: 26px; box-shadow: 0 0 15px rgba(241,196,15,0.4);" onclick="archiveTournament()">💾 完成賽局並儲存至生涯紀錄</button></div>`;
     renderSummary();
 }
 
@@ -3000,10 +3363,10 @@ function renderScoringModal() {
             </div>
             <div class="score-row"><div class="score-huge" style="color:${c1};">${m.s1}</div><div class="penalty-text">${m.p1Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div></div>
             <div class="win-grid">
-            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'spin', 1)"><span>轉停勝利 (Spin)</span><span class="win-pts">+1</span></button>
-            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'burst', 2)"><span>爆裂勝利 (Burst)</span><span class="win-pts">+2</span></button>
-            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'over', 2)"><span>擊飛勝利 (Over)</span><span class="win-pts">+2</span></button>
-            <button class="win-btn" style="color:${c1}; border-color:${c1}; font-weight:900;" onclick="handleScoreAction(1, 'xtreme', 3)"><span>極限勝利 (Xtreme)</span><span class="win-pts">+3</span></button>
+            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'spin', 1)"><span>轉停勝利<span class="en"> (Spin)</span></span><span class="win-pts">+1</span></button>
+            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'burst', 2)"><span>爆裂勝利<span class="en"> (Burst)</span></span><span class="win-pts">+2</span></button>
+            <button class="win-btn" style="color:${c1}; border-color:${c1};" onclick="handleScoreAction(1, 'over', 2)"><span>擊飛勝利<span class="en"> (Over)</span></span><span class="win-pts">+2</span></button>
+            <button class="win-btn" style="color:${c1}; border-color:${c1}; font-weight:900;" onclick="handleScoreAction(1, 'xtreme', 3)"><span>極限勝利<span class="en"> (Xtreme)</span></span><span class="win-pts">+3</span></button>
             <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; grid-column: 1 / -1;" onclick="handleScoreAction(1, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
             </div>
         </div>
@@ -3016,10 +3379,10 @@ function renderScoringModal() {
             </div>
             <div class="score-row"><div class="score-huge" style="color:${c2};">${m.s2}</div><div class="penalty-text">${m.p2Penalties > 0 ? "⚠️ 已有 1 次犯規失誤 (醜1)" : ""}</div></div>
             <div class="win-grid">
-            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'spin', 1)"><span>轉停勝利 (Spin)</span><span class="win-pts">+1</span></button>
-            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'burst', 2)"><span>爆裂勝利 (Burst)</span><span class="win-pts">+2</span></button>
-            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'over', 2)"><span>擊飛勝利 (Over)</span><span class="win-pts">+2</span></button>
-            <button class="win-btn" style="color:${c2}; border-color:${c2}; font-weight:900;" onclick="handleScoreAction(2, 'xtreme', 3)"><span>極限勝利 (Xtreme)</span><span class="win-pts">+3</span></button>
+            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'spin', 1)"><span>轉停勝利<span class="en"> (Spin)</span></span><span class="win-pts">+1</span></button>
+            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'burst', 2)"><span>爆裂勝利<span class="en"> (Burst)</span></span><span class="win-pts">+2</span></button>
+            <button class="win-btn" style="color:${c2}; border-color:${c2};" onclick="handleScoreAction(2, 'over', 2)"><span>擊飛勝利<span class="en"> (Over)</span></span><span class="win-pts">+2</span></button>
+            <button class="win-btn" style="color:${c2}; border-color:${c2}; font-weight:900;" onclick="handleScoreAction(2, 'xtreme', 3)"><span>極限勝利<span class="en"> (Xtreme)</span></span><span class="win-pts">+3</span></button>
             <button class="win-btn" style="color:#e74c3c; border-color:#e74c3c; grid-column: 1 / -1;" onclick="handleScoreAction(2, 'penalty', 0)"><span>⚠️ 紀錄犯規失誤 (醜1)</span></button>
             </div>
         </div>
@@ -3599,37 +3962,359 @@ window.exportHistoryCSV = function() {
     link.click();
 };
 
-window.exportHistoryBackup = function() {
-    let historyObj = localStorage.getItem('beyblade_history') || '{}';
-    if(historyObj === '{}') return alert("目前沒有紀錄可備份！");
-    const blob = new Blob([historyObj], { type: 'application/json' });
-    const link = document.createElement("a"); 
-    link.href = URL.createObjectURL(blob); 
-    link.download = `極限戰情室_生涯備份_${new Date().getTime()}.json`; 
-    link.click();
+// ================== 資料備份與還原 ==================
+// 完整備份 = 選手 (頭像、位置縮放、代表色、基本 / Cost / 極限盤三種牌組裝備庫) + 生涯歷史 + Cost / Tier 表 + 進行中賽程。
+// 檔案格式：{ app, format: 2, exportedAt, contents: [...], roster, history, costTable, appState }；
+// 舊版 (format 1) 只有生涯歷史的純物件，匯入時仍然看得懂。
+const BACKUP_APP = 'beyblade-x-arena';
+const BACKUP_FORMAT = 2;
+let backupPending = null;   // 已解析、等使用者確認的匯入內容
+let backupBuilt = null;     // 最近一次組好的匯出內容 { sig, promise, text, info }；分享 / 複製要在點擊當下使用，所以先備妥
+
+function backupParse(str, fb) { try { return JSON.parse(str); } catch (e) { return fb; } }
+function backupKb(n) { return n < 1024 * 100 ? (n / 1024).toFixed(1) : Math.round(n / 1024); }
+
+// 本機目前各項資料的數量 (匯出選項與提示用)
+function backupLocalSummary() {
+    const hist = backupParse(localStorage.getItem('beyblade_history') || '{}', {}) || {};
+    const costRaw = localStorage.getItem('beyblade_cost_table');
+    const cost = costRaw ? backupParse(costRaw, null) : null;
+    const decks = roster.reduce((n, p) => n + [].concat(...Object.values(p.deckSets || {})).filter(d => d && d.parts && d.parts.TopPart).length, 0);
+    return { players: roster.length, decks, history: Object.keys(hist).length,
+             cost: (cost && Array.isArray(cost.rows)) ? { rows: cost.rows.length, items: Object.keys(cost.items || {}).length } : null,
+             matches: (appState.matches || []).length };
+}
+
+window.openBackupModal = function(tab) {
+    backupPending = null; document.getElementById('bkPreview').innerHTML = ''; backupSay('');
+    renderBackupExport();
+    document.getElementById('backupModal').style.display = 'block';
+    // 手機 / 部分瀏覽器支援把檔案直接丟給「分享」(存到檔案、雲端硬碟、LINE...)，不支援就隱藏按鈕
+    try { const f = new File(['{}'], 'a.json', { type: 'application/json' }); document.getElementById('bkShareBtn').style.display = (navigator.canShare && navigator.canShare({ files: [f] })) ? '' : 'none'; } catch (e) { document.getElementById('bkShareBtn').style.display = 'none'; }
+    backupTab(tab === 'import' ? 'import' : 'export');
+};
+window.closeBackupModal = function() { document.getElementById('backupModal').style.display = 'none'; backupBuilt = null; backupPending = null; };
+window.backupTab = function(name) {
+    const ex = name === 'export';
+    document.getElementById('bkPaneExport').style.display = ex ? '' : 'none';
+    document.getElementById('bkPaneImport').style.display = ex ? 'none' : '';
+    document.getElementById('bkTabExport').classList.toggle('on', ex); document.getElementById('bkTabImport').classList.toggle('on', !ex);
+    backupSay('');
+    if (ex) backupInvalidate();
+};
+// 訊息顯示在視窗內 (不用 alert / confirm：手機的內嵌瀏覽器常把彈窗直接擋掉，看起來就像「沒反應」)
+function backupSay(msg, kind) {
+    const el = document.getElementById('bkMsg'); if (!el) return;
+    el.className = 'bk-msg' + (msg ? ' show ' + (kind || 'info') : ''); el.textContent = msg || '';
+    if (msg && el.scrollIntoView) { try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {} }
+}
+
+// ---------- 匯出 ----------
+function renderBackupExport() {
+    const s = backupLocalSummary();
+    const rows = [
+        { id: 'bkRoster', t: '選手與裝備庫', d: `${s.players} 位選手、${s.decks} 副牌組 (含頭像、位置縮放、代表色，基本 / Cost / 極限盤三種牌組)`, ok: s.players > 0 },
+        { id: 'bkHistory', t: '生涯歷史紀錄', d: `${s.history} 場已歸檔賽事 (戰績與配件勝率資料)`, ok: s.history > 0 },
+        { id: 'bkCost', t: 'Cost / Tier 表', d: s.cost ? `${s.cost.rows} 個欄位、${s.cost.items} 個零件` : '尚未建立', ok: !!s.cost },
+        { id: 'bkState', t: '進行中的賽程', d: s.matches ? `${s.matches} 場對局 (含目前比分)` : '目前沒有進行中的賽程', ok: s.matches > 0 }
+    ];
+    document.getElementById('bkExportRows').innerHTML = rows.map(r => `<label class="bk-row${r.ok ? '' : ' off'}"><input type="checkbox" id="${r.id}" ${r.ok ? 'checked' : 'disabled'} onchange="backupInvalidate()"><span><b>${r.t}</b><small>${r.d}</small></span></label>`).join('') +
+        `<label class="bk-row"><input type="checkbox" id="bkEmbed" checked onchange="backupInvalidate()"><span><b>頭像圖片一起打包</b><small>頭像是網址時，把圖片縮成小圖存進備份檔，換手機或網址失效也不會不見 (圖片主機不允許讀取的會保留網址)</small></span></label>`;
+}
+function backupOpts() {
+    const on = id => { const e = document.getElementById(id); return !!(e && e.checked && !e.disabled); };
+    return { roster: on('bkRoster'), history: on('bkHistory'), cost: on('bkCost'), state: on('bkState'), embed: on('bkEmbed') };
+}
+function backupFileName() { const d = new Date(), p = n => ('0' + n).slice(-2); return `beyblade-backup-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`; }
+
+// 把圖片網址縮成小圖並轉成 data URL；讀不到 (跨來源被擋、網址失效、逾時) 就回傳 null
+function backupImageToDataUrl(src, maxSide) {
+    maxSide = maxSide || 360;
+    return new Promise(resolve => {
+        const im = new Image(); let done = false;
+        const finish = v => { if (!done) { done = true; clearTimeout(timer); resolve(v); } };
+        const timer = setTimeout(() => finish(null), 8000);
+        im.crossOrigin = 'anonymous';
+        im.onload = () => {
+            try {
+                const r = Math.min(1, maxSide / Math.max(im.naturalWidth, im.naturalHeight, 1));
+                const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * r)); c.height = Math.max(1, Math.round(im.naturalHeight * r));
+                c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+                finish(c.toDataURL(/\.jpe?g(\?|#|$)/i.test(src) ? 'image/jpeg' : 'image/png', 0.88));
+            } catch (e) { finish(null); }
+        };
+        im.onerror = () => finish(null);
+        im.src = src;
+    });
+}
+
+async function backupMakePayload(o) {
+    const data = { app: BACKUP_APP, format: BACKUP_FORMAT, exportedAt: new Date().toISOString(), contents: [] };
+    let embedded = 0, failed = 0;
+    if (o.roster) {
+        data.roster = JSON.parse(JSON.stringify(roster));
+        if (o.embed) {
+            await Promise.all(data.roster.map(async p => {
+                const a = (p.avatar || '').trim();
+                if (!a || a.startsWith('data:')) return;
+                const du = await backupImageToDataUrl(a);
+                if (du) { p.avatar = du; embedded++; } else failed++;
+            }));
+        }
+        data.contents.push('roster');
+    }
+    if (o.history) { data.history = backupParse(localStorage.getItem('beyblade_history') || '{}', {}); data.contents.push('history'); }
+    if (o.cost) { const c = backupParse(localStorage.getItem('beyblade_cost_table') || 'null', null); if (c) { data.costTable = c; data.contents.push('costTable'); } }
+    if (o.state && appState.matches && appState.matches.length) { data.appState = JSON.parse(JSON.stringify(appState)); data.contents.push('appState'); }
+    const text = JSON.stringify(data);
+    return { text, embedded, failed, bytes: new Blob([text]).size };
+}
+
+// 選項改變時重新組備份文字 (背景進行；按鈕點下去時直接使用結果)
+window.backupInvalidate = function() {
+    const o = backupOpts(); const sig = JSON.stringify(o);
+    const info = document.getElementById('bkExportInfo');
+    if (!o.roster && !o.history && !o.cost && !o.state) { backupBuilt = null; info.textContent = '請至少勾選一項要備份的內容。'; return; }
+    info.textContent = '準備備份內容中…';
+    const entry = { sig, text: null, res: null };
+    entry.promise = backupMakePayload(o).then(res => {
+        entry.res = res;
+        if (backupBuilt === entry) info.textContent = `備份檔大小約 ${backupKb(res.bytes)} KB` + (res.embedded ? `，已打包 ${res.embedded} 張頭像` : '') + (res.failed ? `；${res.failed} 張頭像因圖片主機不允許讀取而保留網址` : '') + '。';
+        return res;
+    }).catch(e => { if (backupBuilt === entry) info.textContent = '準備失敗：' + (e && e.message || e); throw e; });
+    entry.promise.catch(() => {});
+    backupBuilt = entry;
+};
+async function backupGetBuilt() {
+    if (!backupBuilt) { backupInvalidate(); }
+    if (!backupBuilt) throw new Error('請至少勾選一項要備份的內容');
+    return backupBuilt.promise;
+}
+
+function backupSaveFile(text, name) {
+    const blob = new Blob([text], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.rel = 'noopener'; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+}
+window.backupDownload = async function() {
+    try {
+        const b = await backupGetBuilt(); const name = backupFileName();
+        backupSaveFile(b.text, name);
+        backupSay(`已產生 ${name} (約 ${backupKb(b.bytes)} KB)。手機若沒有跳出下載，請改按「分享 / 存到手機」或「複製備份文字」。`, 'ok');
+    } catch (e) { backupSay('匯出失敗：' + (e && e.message || e), 'err'); }
+};
+window.backupShare = async function() {
+    try {
+        const b = await backupGetBuilt(); const name = backupFileName();
+        let file = new File([b.text], name, { type: 'application/json' });
+        if (!(navigator.canShare && navigator.canShare({ files: [file] }))) file = new File([b.text], name, { type: 'text/plain' }); // 部分瀏覽器只收純文字檔
+        await navigator.share({ files: [file], title: 'Beyblade 賽事系統備份' });
+        backupSay('已送出分享。', 'ok');
+    } catch (e) {
+        if (e && e.name === 'AbortError') return; // 使用者自己取消
+        backupSay((e && e.name === 'NotAllowedError') ? '備份內容剛準備好，請再按一次「分享」。' : '分享失敗：' + (e && e.message || e) + '。請改用「下載備份檔」或「複製備份文字」。', 'err');
+    }
+};
+window.backupCopy = async function() {
+    try {
+        const b = await backupGetBuilt(); let ok = false;
+        try { await navigator.clipboard.writeText(b.text); ok = true; } catch (e) {}
+        if (!ok) { const ta = document.createElement('textarea'); ta.value = b.text; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;'; document.body.appendChild(ta); ta.focus(); ta.select(); try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); }
+        backupSay(ok ? `已複製備份文字 (約 ${backupKb(b.bytes)} KB)。到另一台裝置的「匯入還原 → 貼上備份文字」貼上即可。` : '這個瀏覽器不允許複製，請改用「下載備份檔」。', ok ? 'ok' : 'err');
+    } catch (e) { backupSay('複製失敗：' + (e && e.message || e), 'err'); }
 };
 
-window.importHistoryBackup = function(event) {
-    let file = event.target.files[0];
-    if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            let importedData = JSON.parse(e.target.result);
-            if(typeof importedData === 'object') {
-                if(confirm("即將匯入生涯紀錄檔 (.json)。\n這將會與您目前的紀錄合併（若有相同ID賽事則會覆蓋更新）。確定要繼續嗎？")) {
-                    let currentHistory = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
-                    let newHistory = { ...currentHistory, ...importedData };
-                    localStorage.setItem('beyblade_history', JSON.stringify(newHistory));
-                    renderHistory();
-                    if(typeof renderPartStatsTable === 'function' && document.getElementById('partStatsModal').style.display === 'block') { renderPartStatsTable(); }
-                    alert("✅ 生涯大數據紀錄匯入成功！");
-                }
-            } else { alert("❌ 檔案格式錯誤，請選擇系統專用的 .json 備份檔。"); }
-        } catch(err) { alert("❌ 檔案解析失敗，這可能不是系統生成的有效 JSON 備份檔。"); }
-        event.target.value = ''; 
+// ---------- 匯入 ----------
+function backupReadFile(f) {
+    return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result)); fr.onerror = () => rej(fr.error || new Error('瀏覽器無法讀取這個檔案')); fr.readAsText(f, 'utf-8'); });
+}
+window.backupPickFile = function(input) {
+    const f = input.files && input.files[0]; if (!f) return;
+    backupSay('讀取檔案中…');
+    backupReadFile(f).then(text => backupHandleText(text, `${f.name} (${backupKb(f.size)} KB)`)).catch(e => backupSay('讀取檔案失敗：' + (e && e.message || e), 'err'));
+    try { input.value = ''; } catch (e) {}   // 清掉選擇，下次選同一個檔案也會觸發
+};
+window.backupReadPasted = function() { backupHandleText(document.getElementById('bkPaste').value, '貼上的內容'); };
+
+// 清理匯入的選手資料：補預設值、舊版單一牌組搬進 deckSets、擋掉重名與格式不對的項目
+function backupNormalizeRoster(arr) {
+    const out = [], seen = new Set(); let skipped = 0;
+    (Array.isArray(arr) ? arr : []).forEach((raw, idx) => {
+        if (!raw || typeof raw !== 'object' || typeof raw.name !== 'string' || !raw.name.trim()) { skipped++; return; }
+        const p = JSON.parse(JSON.stringify(raw)); p.name = p.name.trim();
+        if (seen.has(p.name)) { skipped++; return; } seen.add(p.name);
+        p.avatar = (typeof p.avatar === 'string') ? p.avatar.trim().replace(/'/g, '%27') : '';
+        if (p.xPos === undefined) p.xPos = 50; if (p.yPos === undefined) p.yPos = 50; if (p.scale === undefined) p.scale = 100;
+        if (typeof p.color !== 'string' || !/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%deg]+\))$/i.test(p.color.trim())) p.color = defaultColors[idx % defaultColors.length];
+        if (p.id === undefined || p.id === null) p.id = Date.now() + idx;
+        migrateDeckSets(p);
+        out.push(p);
+    });
+    return { list: out, skipped };
+}
+function backupCleanHistory(obj) {
+    const out = {}; let n = 0, skipped = 0;
+    Object.keys(obj || {}).forEach(k => { const v = obj[k]; if (v && typeof v === 'object' && v.results && typeof v.results === 'object') { out[k] = v; n++; } else skipped++; });
+    return { obj: out, n, skipped };
+}
+function backupCleanState(st) {
+    if (!st || typeof st !== 'object' || !Array.isArray(st.matches) || !Array.isArray(st.players) || st.matches.length === 0) return null;
+    const out = Object.assign({ id: null, tournamentName: '', timeString: '', players: [], matches: [], ruleMode: 'basic', costLimit: null }, st);
+    out.ruleMode = normalizeRuleMode(out.ruleMode);
+    return out;
+}
+
+// 解析備份文字 → backupPending，並顯示內容預覽讓使用者確認
+function backupHandleText(text, label) {
+    backupPending = null; document.getElementById('bkPreview').innerHTML = '';
+    text = String(text || '').replace(/^﻿/, '').trim();   // 去掉 BOM (手機 / 部分 App 轉存時會加上，JSON.parse 會直接失敗)
+    if (!text) return backupSay('這個檔案是空的 (0 KB)。若是從通訊軟體或雲端轉存的，請確認已下載完成再選取。', 'err');
+    if (text[0] === '<') return backupSay('這看起來是網頁 (HTML)，不是備份檔：多半是下載到登入頁或錯誤頁，請重新下載備份檔。', 'err');
+    let obj;
+    try { obj = JSON.parse(text); }
+    catch (e) { return backupSay(`無法解析成 JSON (${e.message})。檔案可能被截斷或被其他 App 改過，檔案開頭是：「${text.slice(0, 40).replace(/\s+/g, ' ')}」。`, 'err'); }
+
+    const p = { label, kind: '', exportedAt: null, roster: null, history: null, cost: null, state: null, notes: [] };
+    if (obj && !Array.isArray(obj) && obj.app === BACKUP_APP) {
+        if (Number(obj.format) > BACKUP_FORMAT) p.notes.push('這份備份來自較新的版本，部分內容可能無法還原。');
+        p.kind = '完整備份'; p.exportedAt = obj.exportedAt || null;
+        if (obj.roster !== undefined) { const r = backupNormalizeRoster(obj.roster); if (r.list.length) p.roster = r.list; if (r.skipped) p.notes.push(`選手資料有 ${r.skipped} 筆格式不對或重名，已略過。`); }
+        if (obj.history !== undefined) { const h = backupCleanHistory(obj.history); if (h.n) p.history = h.obj; if (h.skipped) p.notes.push(`歷史紀錄有 ${h.skipped} 筆格式不對，已略過。`); }
+        if (obj.costTable && Array.isArray(obj.costTable.rows) && typeof obj.costTable.items === 'object') p.cost = obj.costTable;
+        p.state = backupCleanState(obj.appState);
+    } else if (obj && !Array.isArray(obj) && Array.isArray(obj.rows) && obj.items && typeof obj.items === 'object') {
+        p.kind = 'Cost / Tier 表 (單獨匯出的 JSON)'; p.cost = obj;
+    } else if (Array.isArray(obj) && obj.length && obj[0] && typeof obj[0] === 'object' && 'name' in obj[0]) {
+        p.kind = '選手名單'; const r = backupNormalizeRoster(obj); if (r.list.length) p.roster = r.list;
+    } else if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        const h = backupCleanHistory(obj);
+        if (h.n) { p.kind = '舊版生涯歷史備份'; p.history = h.obj; if (h.skipped) p.notes.push(`有 ${h.skipped} 筆格式不對，已略過。`); }
+    }
+    if (!p.roster && !p.history && !p.cost && !p.state) return backupSay('這個檔案裡沒有可以匯入的內容，請確認選的是本系統匯出的備份檔。', 'err');
+    backupPending = p; renderBackupPreview(); backupSay('');
+}
+
+function renderBackupPreview() {
+    const p = backupPending; if (!p) return;
+    const localNames = new Set(roster.map(r => r.name));
+    const localHist = backupParse(localStorage.getItem('beyblade_history') || '{}', {}) || {};
+    const when = p.exportedAt ? new Date(p.exportedAt).toLocaleString('zh-TW', { hour12: false }) : '';
+    let h = `<p class="backup-tip" style="color:#fff;">檔案：${escapeHtml(p.label)}<br>類型：${escapeHtml(p.kind)}${when ? '，匯出時間 ' + escapeHtml(when) : ''}</p>`;
+    const radios = (name, a, b) => `<div class="bk-sub"><label><input type="radio" name="${name}" value="merge" checked> ${a}</label><label><input type="radio" name="${name}" value="replace"> ${b}</label></div>`;
+    if (p.roster) {
+        const same = p.roster.filter(r => localNames.has(r.name)).length;
+        const decks = p.roster.reduce((n, r) => n + [].concat(...Object.values(r.deckSets || {})).filter(d => d && d.parts && d.parts.TopPart).length, 0);
+        h += `<label class="bk-row"><input type="checkbox" id="bkiRoster" checked><span><b>選手與裝備庫：${p.roster.length} 位選手、${decks} 副牌組</b><small>${p.roster.map(r => escapeHtml(r.name)).slice(0, 12).join('、')}${p.roster.length > 12 ? '…' : ''}${same ? `；其中 ${same} 位與本機同名` : ''}</small></span></label>` +
+              radios('bkiRosterMode', '合併 (同名選手以備份為準，其他選手保留)', '全部取代 (本機名單改成備份內容)');
+    }
+    if (p.history) {
+        const keys = Object.keys(p.history), same = keys.filter(k => localHist[k]).length;
+        h += `<label class="bk-row"><input type="checkbox" id="bkiHistory" checked><span><b>生涯歷史紀錄：${keys.length} 場</b><small>${same ? `其中 ${same} 場與本機編號相同 (以備份為準)` : '全部是本機沒有的賽事'}</small></span></label>` +
+              radios('bkiHistoryMode', '合併 (保留本機其他賽事)', '全部取代 (本機歷史改成備份內容)');
+    }
+    if (p.cost) h += `<label class="bk-row"><input type="checkbox" id="bkiCost" checked><span><b>Cost / Tier 表：${p.cost.rows.length} 個欄位、${Object.keys(p.cost.items).length} 個零件</b><small>會取代本機目前的 Cost 表 (匯入後仍可在 Cost 表按復原)</small></span></label>`;
+    if (p.state) h += `<label class="bk-row"><input type="checkbox" id="bkiState" ${(appState.matches || []).length ? '' : 'checked'}><span><b>進行中的賽程：「${escapeHtml(p.state.tournamentName || '未命名')}」${p.state.matches.length} 場對局</b><small>${(appState.matches || []).length ? '本機目前有進行中的賽程，匯入會直接取代它 (所以預設不勾選)' : '本機目前沒有進行中的賽程'}</small></span></label>`;
+    if (p.notes.length) h += `<p class="backup-tip" style="color:#f1c40f;">${p.notes.map(escapeHtml).join('<br>')}</p>`;
+    h += `<div class="bk-actions"><button class="btn-green" onclick="backupApply()">✅ 確認匯入</button><button class="btn-danger" onclick="backupCancelImport()">取消</button></div>`;
+    document.getElementById('bkPreview').innerHTML = h;
+}
+window.backupCancelImport = function() { backupPending = null; document.getElementById('bkPreview').innerHTML = ''; backupSay(''); };
+
+// 所有 localStorage 寫入先全部嘗試，任何一項失敗 (手機瀏覽器約 5MB 上限) 就還原已寫入的，避免只匯入一半
+function backupWriteAll(map) {
+    const old = {}, done = [];
+    try { Object.keys(map).forEach(k => { old[k] = localStorage.getItem(k); localStorage.setItem(k, map[k]); done.push(k); }); }
+    catch (e) {
+        done.forEach(k => { try { if (old[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, old[k]); } catch (e2) {} });
+        throw new Error((e && e.name === 'QuotaExceededError') ? '瀏覽器儲存空間不足 (手機瀏覽器通常只有約 5MB)，本機資料沒有被改動。可以改成不勾選「頭像圖片一起打包」重新匯出，或先清掉不需要的歷史紀錄。' : ('寫入失敗：' + (e && e.message || e)));
+    }
+}
+// 備份裡的牌組零件圖片是匯出裝置當時的路徑 (本機 images/ 或遠端網址)；依零件編號換成這個網頁目前使用的圖片位置
+function backupRefreshPartImages(list) {
+    const map = {};
+    Object.keys(arsenalPartsDb || {}).forEach(cat => (arsenalPartsDb[cat] || []).forEach(g => g.variants.forEach(v => { map[cat + '|' + v.id] = v.image; })));
+    let n = 0;
+    list.forEach(p => [].concat(...Object.values(p.deckSets || {})).forEach(d => {
+        if (!d || !d.parts) return;
+        Object.values(d.parts).forEach(part => { if (part && part.id && part.category) { const img = map[part.category + '|' + part.id]; if (img && part.image !== img) { part.image = img; n++; } } });
+    }));
+    return n;
+}
+
+window.backupApply = function() {
+    const p = backupPending; if (!p) return;
+    const chk = id => { const e = document.getElementById(id); return !!(e && e.checked); };
+    const mode = name => { const e = document.querySelector(`input[name="${name}"]:checked`); return e ? e.value : 'merge'; };
+    try {
+        const doRoster = p.roster && chk('bkiRoster'), doHist = p.history && chk('bkiHistory'), doCost = p.cost && chk('bkiCost'), doState = p.state && chk('bkiState');
+        if (!doRoster && !doHist && !doCost && !doState) return backupSay('請至少勾選一項要匯入的內容。', 'err');
+        const writes = {}, lines = [];
+        let nextRoster = roster;
+        if (doRoster) {
+            const incoming = JSON.parse(JSON.stringify(p.roster)); backupRefreshPartImages(incoming);
+            if (mode('bkiRosterMode') === 'replace') { nextRoster = incoming; lines.push(`選手 ${incoming.length} 位 (取代)`); }
+            else {
+                nextRoster = roster.slice(); let added = 0, updated = 0;
+                incoming.forEach(ip => {
+                    const i = nextRoster.findIndex(r => r.name === ip.name);
+                    if (i >= 0) { ip.id = nextRoster[i].id; nextRoster[i] = ip; updated++; }
+                    else { if (nextRoster.some(r => r.id === ip.id)) ip.id = Date.now() + nextRoster.length; nextRoster.push(ip); added++; }
+                });
+                lines.push(`選手 新增 ${added}、更新 ${updated} 位`);
+            }
+            writes['beyblade_roster'] = JSON.stringify(nextRoster);
+        }
+        if (doHist) {
+            const cur = backupParse(localStorage.getItem('beyblade_history') || '{}', {}) || {};
+            const next = mode('bkiHistoryMode') === 'replace' ? p.history : Object.assign({}, cur, p.history);
+            writes['beyblade_history'] = JSON.stringify(next); lines.push(`歷史紀錄 ${Object.keys(p.history).length} 場 (${mode('bkiHistoryMode') === 'replace' ? '取代' : '合併，共 ' + Object.keys(next).length + ' 場'})`);
+        }
+        // 進行中賽程用到的選手必須都在名單裡，否則計分面板會找不到選手資料
+        const stateAfter = doState ? p.state : appState;
+        if (stateAfter.matches && stateAfter.matches.length) {
+            const names = new Set(nextRoster.map(r => r.name)), missing = stateAfter.players.filter(n => !names.has(n));
+            if (missing.length) return backupSay(`進行中的賽程包含選手「${missing.join('、')}」，但匯入後的名單裡找不到他。請改用「合併」，或同時匯入備份裡的賽程，或先清除目前賽程。本機資料沒有被改動。`, 'err');
+        }
+        if (doState) { writes['beyblade_app_state'] = JSON.stringify(p.state); lines.push(`進行中賽程 ${p.state.matches.length} 場對局`); }
+        backupWriteAll(writes);
+        if (doRoster) roster = nextRoster;
+        if (doState) appState = p.state;
+        if (doCost) { CostTier.setTable(p.cost); lines.push('Cost 表'); }
+        // 重畫畫面
+        if (doState) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ''; }
+        renderRosterList(); renderPlayerBoxes(); if (typeof refreshPlayerSelectOptions === 'function') refreshPlayerSelectOptions();
+        if (appState.matches && appState.matches.length) renderMatches();
+        syncRuleModeUI(); renderHistory();
+        if (typeof renderPartStatsTable === 'function' && document.getElementById('partStatsModal').style.display === 'block') renderPartStatsTable();
+        backupPending = null; document.getElementById('bkPreview').innerHTML = '';
+        backupSay('匯入完成：' + lines.join('、') + '。', 'ok');
+    } catch (e) { backupSay('匯入失敗：' + (e && e.message || e), 'err'); }
+};
+
+// 舊按鈕與舊流程的相容入口
+window.exportHistoryBackup = function() { openBackupModal('export'); };
+window.importHistoryBackup = function(event) { openBackupModal('import'); if (event && event.target) backupPickFile(event.target); };
+
+// ---- 頭像：從相簿 / 檔案選圖，縮成小圖後存成 data URL (這樣備份才帶得走，也不用先把圖放上網) ----
+window.pickAvatarFile = function(input) {
+    const f = input.files && input.files[0]; if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+        const im = new Image();
+        im.onload = () => {
+            const r = Math.min(1, 360 / Math.max(im.naturalWidth, im.naturalHeight, 1));
+            const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * r)); c.height = Math.max(1, Math.round(im.naturalHeight * r));
+            c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+            document.getElementById('editAvatarUrl').value = c.toDataURL(/jpe?g/i.test(f.type) ? 'image/jpeg' : 'image/png', 0.88);
+            updateAvatarPreview();
+        };
+        im.onerror = () => alert('這個檔案不是可以讀取的圖片。');
+        im.src = fr.result;
     };
-    reader.readAsText(file);
+    fr.onerror = () => alert('讀取圖片失敗。');
+    fr.readAsDataURL(f);
+    try { input.value = ''; } catch (e) {}
 };
 
 // ================== Cost 賽整合 (CostTier 模組 + Cost 上限 + 驗證) ==================
@@ -3687,6 +4372,11 @@ window.openCostTier = function() {
     dockOpen('cost');
     CostTier.mount(document.getElementById('costTierRoot')); // 第一次開啟才建立畫面；之後只是重繪
     ensureCostSplitter();
+    // 手機：長篇使用說明第一次開啟時先收合，把畫面讓給 Cost 表 (使用者之後手動展開就維持展開)
+    if (!window.__costHelpFolded && window.matchMedia && window.matchMedia('(max-width: 640px)').matches) {
+        window.__costHelpFolded = true;
+        document.querySelectorAll('#costTierModal .dock-help').forEach(d => { d.open = false; });
+    }
 };
 window.closeCostTier = function() {
     document.getElementById('costTierModal').style.display = 'none'; dockSync();
