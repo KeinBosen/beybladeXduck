@@ -621,6 +621,14 @@
         body.dock-side #costTierModal.ct-hide-panel .ct-board-wrap { flex: 1 1 100%; }
         .ct-root .ct-board { max-width: 100%; }   /* 欄位太窄時，磚塊在欄內自動換行，不再出現橫向捲動 */
 
+        /* localStorage 寫入失敗的提示條 (固定在畫面底部，蓋在所有視窗之上) */
+        #storageWarn { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); max-width: 900px; margin: 0 auto; z-index: 99999; display: none; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(58,12,12,0.98); border: 2px solid #e74c3c; border-radius: 14px; color: #ffd6d0; font-size: 16px; line-height: 1.5; box-shadow: 0 8px 30px rgba(0,0,0,0.75); }
+        #storageWarn.show { display: flex; }
+        #storageWarn .sw-text { flex: 1 1 auto; min-width: 0; }
+        #storageWarn .sw-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+        #storageWarn .sw-actions button { margin: 0; min-height: 44px; padding: 6px 14px; font-size: 15px; }
+        @media (max-width: 640px) { #storageWarn { flex-direction: column; align-items: stretch; font-size: 15px; } #storageWarn .sw-actions button { flex: 1; } }
+
         /* ================= 手機版 (螢幕寬度 ≤ 640px) =================
            原則：①字級縮到 14~17px，輸入欄位一律 ≥16px (iOS 聚焦時才不會自動放大畫面)
                  ②按鈕與可點區域至少 40~44px 高 ③表單改成「標籤在上、欄位在下」、表格改成卡片
@@ -1442,8 +1450,10 @@
     try {
       localStorage.setItem(CONFIG.storageKey, JSON.stringify(state));
       setStatus('已自動儲存 ' + new Date().toLocaleTimeString('zh-TW', { hour12: false }));
+      if (typeof storageWriteOk === 'function') storageWriteOk(CONFIG.storageKey);
     } catch (e) {
       setStatus('儲存失敗（' + e.name + '，可能是圖片太多、超出瀏覽器儲存空間）', true);
+      if (typeof notifyStorageFail === 'function') notifyStorageFail(CONFIG.storageKey, e);
     }
   }
   function scheduleSave() {
@@ -2957,6 +2967,80 @@ function escapeHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// ---------- 頭像 (background-image) 安全組字 ----------
+// 頭像網址是使用者自己輸入的 (也可能來自別人給的備份檔)，直接拼進 style="..." 有兩個問題：
+//   1. 網址含雙引號 " 或 > 會提早結束 HTML 屬性，甚至被拿來夾帶 onerror= 之類的屬性
+//   2. 網址含單引號 ' 或反斜線會讓 CSS 字串提早結束，頭像就不顯示
+// avatarCssUrl：只做 CSS 跳脫，回傳 url('…')，給 element.style.xxx 這種不經過 HTML 的地方用。
+// avatarStyleAttr：回傳可以直接放進 style="…" 的 background-* 宣告，網址與數字都已處理。
+function avatarCssUrl(u) {
+    const s = String(u == null ? '' : u).trim();
+    return "url('" + s.replace(/[\\']/g, '\\$&').replace(/\r\n|[\r\n\f]/g, '\\A ') + "')";
+}
+// 轉成有限數字，不行就用預設值；null、空字串、布林不算數字 (Number(null) 會得到 0，不是想要的結果)
+function finiteOr(v, fb) { if (v === null || v === '' || typeof v === 'boolean') return fb; const n = Number(v); return Number.isFinite(n) ? n : fb; }
+function avatarStyleAttr(r) {
+    const num = finiteOr;
+    const s = String(r.avatar == null ? '' : r.avatar).trim();
+    // 快速路徑：data URL 與一般網址只含下列字元時不需要任何跳脫 (避免對幾百 KB 的 data URL 每次重繪都做字串替換)
+    const url = /^[A-Za-z0-9\-._~:\/?#@!$*+,;=%()\[\]]*$/.test(s) ? `url('${s}')` : escapeHtml(avatarCssUrl(s));
+    return `background-image:${url}; background-size:${num(r.scale, 100)}%; background-position:${num(r.xPos, 50)}% ${num(r.yPos, 50)}%;`;
+}
+
+// ---------- localStorage 寫入失敗的處理 ----------
+// 儲存空間滿 (QuotaExceededError)、隱私瀏覽模式或被瀏覽器封鎖時，setItem 會丟例外。
+// 如果沒接住，同一個函式後面的重繪會被中斷 (例如計分時 saveState 失敗，畫面就不更新)。
+// 所以所有寫入都走 safeSetItem：失敗時資料仍留在記憶體、畫面照常更新，並在底部顯示提示條，提醒使用者備份。
+const STORAGE_LABELS = { beyblade_roster: '選手名單', beyblade_history: '生涯歷史', beyblade_app_state: '進行中的賽程', beyblade_cost_table: 'Cost 表' };
+// pending：寫入失敗的 key → 最後一次想寫的內容；之後有任何一次寫入成功 (代表空間回來了) 就自動補寫
+const storageFail = { labels: new Set(), quota: false, extra: '', hiddenUntil: 0, pending: {} };
+const storageLabel = key => STORAGE_LABELS[key] || String(key);
+function isQuotaError(e) { return !!e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014); }
+function renderStorageWarn() {
+    let bar = document.getElementById('storageWarn');
+    if (!storageFail.labels.size || Date.now() < storageFail.hiddenUntil) { if (bar) bar.classList.remove('show'); return; }
+    if (!bar) {
+        if (!document.body) return;
+        bar = document.createElement('div'); bar.id = 'storageWarn'; bar.setAttribute('role', 'alert');
+        document.body.appendChild(bar);
+    }
+    const names = [...storageFail.labels].map(escapeHtml).join('、');
+    bar.innerHTML = `<div class="sw-text">⚠️ ${storageFail.quota ? '瀏覽器的儲存空間已滿' : '瀏覽器不允許儲存資料 (可能是隱私瀏覽模式或被其他設定封鎖)'}，「${names}」的最新變更沒有存下來。畫面上仍是最新內容，但重新整理或關閉頁面後會消失。${storageFail.quota ? '請先按「💾 備份」把資料存成檔案，再刪除不需要的歷史紀錄，或把頭像換成較小的圖。' : ''}${storageFail.extra ? '<br>' + escapeHtml(storageFail.extra) : ''}</div>`
+        + `<div class="sw-actions"><button class="btn-yellow" onclick="openBackupModal('export')">💾 備份</button><button class="btn-danger" onclick="dismissStorageWarn()" aria-label="關閉提示">✕</button></div>`;
+    bar.classList.add('show');
+}
+function dismissStorageWarn() { storageFail.hiddenUntil = Date.now() + 60000; renderStorageWarn(); } // 關掉後 1 分鐘內不再跳出
+function notifyStorageFail(key, e, extra) {
+    storageFail.labels.add(storageLabel(key));
+    storageFail.quota = storageFail.quota || isQuotaError(e);
+    storageFail.extra = extra || '';
+    renderStorageWarn();
+    if (window.console) console.warn('localStorage 寫入失敗：' + key, e);
+}
+// 某個 key 寫入成功：清掉它的失敗紀錄；全部都恢復了就收起提示條
+function storageWriteOk(key) {
+    delete storageFail.pending[key];
+    if (storageFail.labels.delete(storageLabel(key))) {
+        if (!storageFail.labels.size) { storageFail.quota = false; storageFail.extra = ''; }
+        renderStorageWarn();
+    }
+}
+// 有一次寫入成功代表空間回來了，把先前失敗的其他資料補寫進去
+function retryPendingWrites() {
+    Object.keys(storageFail.pending).forEach(k => {
+        try { localStorage.setItem(k, storageFail.pending[k]); storageWriteOk(k); } catch (e) { /* 還是寫不進去就保留，下次再試 */ }
+    });
+}
+// 寫入成功回傳 true，失敗回傳 false (並顯示提示條)；extra 是額外要顯示的說明
+function safeSetItem(key, value, extra) {
+    try {
+        localStorage.setItem(key, value);
+        storageWriteOk(key);
+        if (Object.keys(storageFail.pending).length) setTimeout(retryPendingWrites, 0);
+        return true;
+    } catch (e) { storageFail.pending[key] = value; notifyStorageFail(key, e, extra); return false; }
+}
+
 function createEmptyDeck() {
     return [ { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} }, { mode: 'standard', parts: {} } ];
 }
@@ -3060,7 +3144,7 @@ function migrateDeckPartNames() {
     if (changed) saveRoster();
     return changed;
 }
-function saveRoster() { localStorage.setItem('beyblade_roster', JSON.stringify(roster)); if (document.body.classList.contains('dock-side') && typeof refreshPlayerSelectOptions === 'function') refreshPlayerSelectOptions(); }
+function saveRoster() { safeSetItem('beyblade_roster', JSON.stringify(roster)); if (document.body.classList.contains('dock-side') && typeof refreshPlayerSelectOptions === 'function') refreshPlayerSelectOptions(); }
 
 function openRosterModal() { renderRosterList(); dockOpen('roster'); }
 function closeRosterModal() { document.getElementById('rosterModal').style.display = 'none'; dockSync(); renderPlayerBoxes(); if(appState.matches.length > 0) renderMatches(); renderHistory(); }
@@ -3069,7 +3153,7 @@ function renderRosterList() {
     const container = document.getElementById('rosterListContainer'); container.innerHTML = '';
     roster.forEach((p, index) => {
         let avatarStyle = "";
-        if(p.avatar && p.avatar.trim() !== "") { avatarStyle = `background-image:url('${p.avatar}'); background-size:${p.scale}%; background-position:${p.xPos}% ${p.yPos}%; color:transparent;`; }
+        if(p.avatar && p.avatar.trim() !== "") { avatarStyle = `${avatarStyleAttr(p)} color:transparent;`; }
         let avatarContent = avatarStyle ? "" : `<span style="font-size:32px; color:#aaa; line-height:120px;">圖</span>`;
         let leftBtn = index === 0 ? `<button disabled title="已在最左側">◀</button>` : `<button onclick="moveRosterLeft(${index})" title="向左移動">◀</button>`;
         let rightBtn = index === roster.length - 1 ? `<button disabled title="已在最右側">▶</button>` : `<button onclick="moveRosterRight(${index})" title="向右移動">▶</button>`;
@@ -3120,7 +3204,7 @@ function updateAvatarPreview() {
     let scale = document.getElementById('editScale').value, x = document.getElementById('editX').value, y = document.getElementById('editY').value, url = document.getElementById('editAvatarUrl').value.trim();
     document.getElementById('valScale').innerText = scale; document.getElementById('valX').innerText = x; document.getElementById('valY').innerText = y;
     let previewDiv = document.getElementById('avatarPreview'); previewDiv.style.color = p.color;
-    if(url !== "") { previewDiv.style.backgroundImage = `url('${url}')`; previewDiv.style.backgroundSize = `${scale}%`; previewDiv.style.backgroundPosition = `${x}% ${y}%`; previewDiv.innerText = ""; } else { previewDiv.style.backgroundImage = "none"; previewDiv.innerHTML = `<span style="line-height:170px; font-size:24px; color:#aaa;">無圖片</span>`; }
+    if(url !== "") { previewDiv.style.backgroundImage = avatarCssUrl(url); previewDiv.style.backgroundSize = `${scale}%`; previewDiv.style.backgroundPosition = `${x}% ${y}%`; previewDiv.innerText = ""; } else { previewDiv.style.backgroundImage = "none"; previewDiv.innerHTML = `<span style="line-height:170px; font-size:24px; color:#aaa;">無圖片</span>`; }
 }
 function saveAvatarEdit() { if(currentEditIndex === -1) return; roster[currentEditIndex].scale = document.getElementById('editScale').value; roster[currentEditIndex].xPos = document.getElementById('editX').value; roster[currentEditIndex].yPos = document.getElementById('editY').value; roster[currentEditIndex].avatar = document.getElementById('editAvatarUrl').value.trim(); saveRoster(); renderRosterList(); closeAvatarEditModal(); }
 function addNewRosterPlayer() { roster.push({ id: Date.now(), name: `新選手${roster.length+1}`, avatar: "", scale: 100, xPos: 50, yPos: 50, color: defaultColors[roster.length % defaultColors.length], deckSets: createEmptyDeckSets() }); saveRoster(); renderRosterList(); setTimeout(() => { const c = document.getElementById('rosterListContainer').querySelectorAll('.roster-card'); if(c.length>0) c[c.length-1].scrollIntoView({ behavior: 'smooth', inline: 'center' }); }, 100); }
@@ -3142,12 +3226,16 @@ function updateRosterName(index, newName) {
         if (history[tId].results && history[tId].results[oldName]) { history[tId].results[newName] = history[tId].results[oldName]; delete history[tId].results[oldName]; historyChanged = true; }
         if (history[tId].partStats && history[tId].partStats[oldName]) { history[tId].partStats[newName] = history[tId].partStats[oldName]; delete history[tId].partStats[oldName]; historyChanged = true; }
     }
-    if(historyChanged) localStorage.setItem('beyblade_history', JSON.stringify(history));
+    if(historyChanged) safeSetItem('beyblade_history', JSON.stringify(history));
     let appChanged = false; appState.players = appState.players.map(p => { if(p === oldName) { appChanged = true; return newName; } return p; });
     if(appChanged) saveState(); renderRosterList();
 }
 
 function formatDeckString(d) { return getDeckFullName(d); }
+
+// 牌組編輯器的暫存狀態 (宣告放在使用它的函式之前，避免被當成隱性全域變數或在宣告前被存取)
+let builderSets = null;        // 編輯中的暫存：{ basic: [...], cost: [...], xtreme: [...] }，按「儲存」才寫回選手
+let builderRuleMode = 'basic'; // 目前編輯的分頁
 
 function openDeckBuilder(index, mode) {
     currentDeckEditIndex = index;
@@ -3173,7 +3261,7 @@ function getPlayerPillHtml(name, size = "normal") {
     let color = getPlayerColor(name); let r = roster.find(x => x.name === name);
     let avatarSize = size === "small" ? "32px" : "54px"; let fontSizeText = size === "small" ? "14px" : "16px";
     let avatarHtml = `<div class="avatar" style="width:${avatarSize}; height:${avatarSize}; display:flex; align-items:center; justify-content:center; font-size:${fontSizeText}; color:#aaa; border-color:${color};">圖</div>`;
-    if(r && r.avatar && r.avatar.trim() !== "") { avatarHtml = `<div class="avatar" style="width:${avatarSize}; height:${avatarSize}; background-image:url('${r.avatar}'); background-size:${r.scale}%; background-position:${r.xPos}% ${r.yPos}%; border-color:${color};"></div>`; }
+    if(r && r.avatar && r.avatar.trim() !== "") { avatarHtml = `<div class="avatar" style="width:${avatarSize}; height:${avatarSize}; ${avatarStyleAttr(r)} border-color:${color};"></div>`; }
     let pillClass = size === "small" ? "player-pill small" : "player-pill";
     return `<div class="${pillClass}" data-player="${escapeHtml(name)}" style="color:${color}; border-color:${color}; box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 0 12px ${color}40;" onmouseover="hoverPlayer(this.dataset.player)" onmouseout="unhoverPlayer(this.dataset.player)">${avatarHtml} <span class="player-name-truncate" style="text-shadow: 0 0 8px ${color};">${escapeHtml(name)}</span></div>`;
 }
@@ -3181,28 +3269,29 @@ function hoverPlayer(name) { let color = getPlayerColor(name); document.querySel
 function unhoverPlayer(name) { let color = getPlayerColor(name); document.querySelectorAll('.player-pill').forEach(pill => { if(pill.getAttribute('data-player') === name) { pill.style.backgroundColor = 'rgba(0,0,0,0.5)'; pill.style.color = color; pill.style.boxShadow = `inset 0 0 15px rgba(0,0,0,0.8), 0 0 12px ${color}40`; } }); }
 function getPureAvatarHtml(name) {
     let color = getPlayerColor(name); let r = roster.find(x => x.name === name);
-    if(r && r.avatar && r.avatar.trim() !== "") { return `<div class="avatar" style="background-image:url('${r.avatar}'); background-size:${r.scale}%; background-position:${r.xPos}% ${r.yPos}%; border-color:${color}; width:45px; height:45px;"></div>`; }
+    if(r && r.avatar && r.avatar.trim() !== "") { return `<div class="avatar" style="${avatarStyleAttr(r)} border-color:${color}; width:45px; height:45px;"></div>`; }
     return `<div class="avatar" style="display:flex; align-items:center; justify-content:center; font-size:15px; color:#aaa; border-color:${color}; width:45px; height:45px;">圖</div>`;
 }
 
 function renderPlayerBoxes() {
-    let currentCount = parseInt(document.getElementById('playerCount').value);
-    const container = document.getElementById('playerBoxesContainer'); container.innerHTML = ''; 
-    let optionsHtml = roster.map(r => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join('');
-    
+    const currentCount = parseInt(document.getElementById('playerCount').value);
+    const container = document.getElementById('playerBoxesContainer');
+    const html = []; // 先把每位選手的欄位組成字串，最後只寫入一次 innerHTML (不在迴圈裡反覆重繪整個容器)
     for (let i = 0; i < currentCount; i++) {
-        let safeDefault = roster[i] ? roster[i].name : (roster[0] ? roster[0].name : "");
+        const safeDefault = roster[i] ? roster[i].name : (roster[0] ? roster[0].name : "");
         let selectedValue = appState.players[i] || safeDefault;
-        let color = getPlayerColor(selectedValue); let avatarHtml = getPureAvatarHtml(selectedValue);
-        
-        container.innerHTML += `
+        if (!roster.some(r => r.name === selectedValue)) selectedValue = safeDefault; // 名單裡找不到 (已改名或刪除) 就退回預設，避免下拉選單空白
+        const color = getPlayerColor(selectedValue), avatarHtml = getPureAvatarHtml(selectedValue);
+        // 直接在對應的 <option> 標上 selected，不需要之後再用 setTimeout 設值
+        const optionsHtml = roster.map(r => `<option value="${escapeHtml(r.name)}"${r.name === selectedValue ? ' selected' : ''}>${escapeHtml(r.name)}</option>`).join('');
+        html.push(`
             <div class="player-field" style="border-color:${color}40; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
                 <label style="color:${color}; text-shadow: 0 0 8px ${color};">第 ${i+1} 位</label>
                 <div style="display:flex; align-items:center; gap:12px;"><div id="selection-avatar-${i}">${avatarHtml}</div>
                 <select class="player-name-input player-name-truncate" style="color:${color}; border-color:${color}; box-shadow: inset 0 0 12px ${color}40; text-shadow: 0 0 8px ${color}; width: 180px;" onchange="updateBoxColor(this, ${i})">${optionsHtml}</select></div>
-            </div>`;
-        setTimeout(() => { document.querySelectorAll('.player-name-input')[i].value = selectedValue; }, 0);
+            </div>`);
     }
+    container.innerHTML = html.join('');
 }
 function updateBoxColor(selectElem, idx) {
     let name = selectElem.value; let color = getPlayerColor(name);
@@ -3702,7 +3791,7 @@ function renderSummary() {
     });
 }
 
-function saveState() { localStorage.setItem('beyblade_app_state', JSON.stringify(appState)); }
+function saveState() { return safeSetItem('beyblade_app_state', JSON.stringify(appState)); }
 // 讀取上次未完成的賽程；修正原本條件寫反 (!appState.matches && ...) 導致重新整理後永遠不還原的問題
 function loadState() { let saved = localStorage.getItem('beyblade_app_state'); if(saved) { try { appState = JSON.parse(saved); } catch(e) { return; } if(appState.matches && appState.matches.length > 0) { document.getElementById('playerCount').value = appState.players.length; document.getElementById('tournamentName').value = appState.tournamentName || ""; renderPlayerBoxes(); renderMatches(); syncRuleModeUI(); } } }
 function clearTournament() { if(confirm('確定要清除當前賽程與比分嗎？(生涯歷史紀錄不會受影響)')) { appState.matches = []; appState.id = null; appState.tournamentName = ""; appState.ruleMode = 'basic'; appState.costLimit = null; syncRuleModeUI(); appState.players = []; saveState(); document.getElementById('tournamentName').value = ""; document.getElementById('scheduleContainer').innerHTML = '<div style="color: #45a29e; padding: 30px; text-align: center; border: 2px dashed #45a29e; border-radius: 12px; font-size: 24px;">請先點選「生成全新賽程表」按鈕</div>'; document.getElementById('summaryBody').innerHTML = '<tr><td colspan="6" style="color: #45a29e; padding: 30px; text-align:center;">成績將隨分數點擊面板自動更新</td></tr>'; document.getElementById('playerCount').value = "5"; renderPlayerBoxes(); } }
@@ -3773,7 +3862,9 @@ function archiveTournament() {
     });
 
     history[appState.id] = { name: document.getElementById('tournamentName').value.trim() || "未命名賽事", time: appState.timeString, ruleMode: normalizeRuleMode(appState.ruleMode), costLimit: appState.costLimit == null ? null : appState.costLimit, results: stats, partStats: partStats };
-    localStorage.setItem('beyblade_history', JSON.stringify(history)); renderHistory();
+    // 先寫入再重繪。寫入失敗 (儲存空間滿) 時不顯示頒獎、也不動進行中的賽事，免得使用者以為已經存好
+    if (!safeSetItem('beyblade_history', JSON.stringify(history), '結算沒有完成：賽事仍保留在進行中。請先清出空間 (匯出備份後刪除不需要的資料)，再按一次「結算並儲存」。')) return;
+    renderHistory();
     const sortedPlayers = [...appState.players].sort((a, b) => { let netA = stats[a].g - stats[a].ls, netB = stats[b].g - stats[b].ls; if(stats[b].w !== stats[a].w) return stats[b].w - stats[a].w; return netB - netA; });
     showPodium(sortedPlayers.slice(0, 3));
 }
@@ -3835,8 +3926,8 @@ window.renderPartStatsTable = function() {
     parts.forEach(p => {
         let played = p.w + p.l; let rate = played > 0 ? Math.round((p.w/played)*100) : 0;
         html += `<tr>
-            <td><img src="${p.image}" style="width:70px; height:70px; object-fit:contain; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.8));"></td>
-            <td style="font-weight:bold; color:#fff;">${escapeHtml(p.name)}</td><td style="color:#aaa;">${catMap[p.cat] || p.cat}</td>
+            <td><img src="${escapeHtml(p.image || '')}" style="width:70px; height:70px; object-fit:contain; filter:drop-shadow(0 2px 5px rgba(0,0,0,0.8));"></td>
+            <td style="font-weight:bold; color:#fff;">${escapeHtml(p.name)}</td><td style="color:#aaa;">${escapeHtml(catMap[p.cat] || p.cat)}</td>
             <td style="font-weight:bold; font-size:20px;">${played}</td>
             <td class="win-color" style="font-weight:bold; font-size:20px;">${p.w}</td><td class="loss-color" style="font-weight:bold; font-size:20px;">${p.l}</td>
             <td style="color:#0ff; font-weight:bold; font-size:28px;">${rate}%</td>
@@ -3890,10 +3981,22 @@ function showRadar(e, pName, spin, burst, over, xtreme) {
 }
 function hideRadar() { document.getElementById('radarTooltip').style.display = 'none'; }
 
+// 賽事時間 → 毫秒，供歷史賽事排序。timeString 格式是「2026/11/27 16:36」。
+// 不用 new Date(字串) 解析：部分 Safari 版本對斜線格式會回傳 Invalid Date，排序就亂掉。這裡手動拆出數字再組成日期。
+function tourTimeValue(t, id) {
+    const m = String((t && t.time) || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})(?:\D+(\d{1,2}):(\d{2}))?/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)).getTime();
+    return tourIdValue(id);
+}
+// 賽事編號是「TRN_<建立時的毫秒時間戳>」，同一分鐘內的賽事用它排先後；格式不符回傳 0
+function tourIdValue(id) { const n = /(\d{10,})/.exec(String(id || '')); return n ? Number(n[1]) : 0; }
+
 function renderHistory() {
     let historyObj = JSON.parse(localStorage.getItem('beyblade_history') || '{}');
     let modeFilter = getHistoryModeFilter(); // 比賽模式篩選：all / basic / cost / xtreme
-    let fullHistoryArray = Object.values(historyObj).filter(t => tourMatchesMode(t, modeFilter)).sort((a,b) => new Date(a.time) - new Date(b.time));
+    let fullHistoryArray = Object.entries(historyObj).filter(([, t]) => tourMatchesMode(t, modeFilter))
+        .map(([id, t]) => ({ t, key: tourTimeValue(t, id), idn: tourIdValue(id) }))
+        .sort((a, b) => a.key - b.key || a.idn - b.idn).map(x => x.t);
     
     let aggregate = {};
     fullHistoryArray.forEach((tour) => {
@@ -4037,10 +4140,7 @@ function backupImageToDataUrl(src, maxSide) {
         im.crossOrigin = 'anonymous';
         im.onload = () => {
             try {
-                const r = Math.min(1, maxSide / Math.max(im.naturalWidth, im.naturalHeight, 1));
-                const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * r)); c.height = Math.max(1, Math.round(im.naturalHeight * r));
-                c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-                finish(c.toDataURL(/\.jpe?g(\?|#|$)/i.test(src) ? 'image/jpeg' : 'image/png', 0.88));
+                finish(avatarImageToDataUrl(im)); // 與手動上傳同一套縮圖規則 (256px JPEG)
             } catch (e) { finish(null); }
         };
         im.onerror = () => finish(null);
@@ -4138,6 +4238,24 @@ window.backupPickFile = function(input) {
 window.backupReadPasted = function() { backupHandleText(document.getElementById('bkPaste').value, '貼上的內容'); };
 
 // 清理匯入的選手資料：補預設值、舊版單一牌組搬進 deckSets、擋掉重名與格式不對的項目
+// 備份檔可能來自別人：牌組零件的文字欄位 (名稱、圖片網址) 會直接顯示在畫面上，
+// 所以匯入時就把 < > " ` 與反斜線拿掉，並把 javascript: 之類或含空白的圖片網址換成預設圖，避免夾帶 HTML。
+function backupCleanDeckParts(p) {
+    const bad = /[<>"`\\]/g;
+    Object.keys(p.deckSets || {}).forEach(k => {
+        (Array.isArray(p.deckSets[k]) ? p.deckSets[k] : []).forEach(d => {
+            if (!d || typeof d !== 'object' || !d.parts || typeof d.parts !== 'object') return;
+            Object.keys(d.parts).forEach(cat => {
+                const part = d.parts[cat];
+                if (!part || typeof part !== 'object') { delete d.parts[cat]; return; }
+                ['id', 'clean_name', 'rawName', 'category', 'sysType'].forEach(f => { if (typeof part[f] === 'string') part[f] = part[f].replace(bad, ''); });
+                let img = typeof part.image === 'string' ? part.image.replace(bad, '').trim() : '';
+                if (!img || /^(javascript|vbscript):/i.test(img) || /^data:(?!image\/)/i.test(img) || /\s/.test(img)) img = ARSENAL_FALLBACK_IMG;
+                part.image = img;
+            });
+        });
+    });
+}
 function backupNormalizeRoster(arr) {
     const out = [], seen = new Set(); let skipped = 0;
     (Array.isArray(arr) ? arr : []).forEach((raw, idx) => {
@@ -4145,10 +4263,11 @@ function backupNormalizeRoster(arr) {
         const p = JSON.parse(JSON.stringify(raw)); p.name = p.name.trim();
         if (seen.has(p.name)) { skipped++; return; } seen.add(p.name);
         p.avatar = (typeof p.avatar === 'string') ? p.avatar.trim().replace(/'/g, '%27') : '';
-        if (p.xPos === undefined) p.xPos = 50; if (p.yPos === undefined) p.yPos = 50; if (p.scale === undefined) p.scale = 100;
+        // 位置與縮放必須是數字 (會被拼進 style)；不是數字就用預設值
+        p.xPos = finiteOr(p.xPos, 50); p.yPos = finiteOr(p.yPos, 50); p.scale = finiteOr(p.scale, 100);
         if (typeof p.color !== 'string' || !/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%deg]+\))$/i.test(p.color.trim())) p.color = defaultColors[idx % defaultColors.length];
         if (p.id === undefined || p.id === null) p.id = Date.now() + idx;
-        migrateDeckSets(p);
+        migrateDeckSets(p); backupCleanDeckParts(p);
         out.push(p);
     });
     return { list: out, skipped };
@@ -4297,16 +4416,25 @@ window.exportHistoryBackup = function() { openBackupModal('export'); };
 window.importHistoryBackup = function(event) { openBackupModal('import'); if (event && event.target) backupPickFile(event.target); };
 
 // ---- 頭像：從相簿 / 檔案選圖，縮成小圖後存成 data URL (這樣備份才帶得走，也不用先把圖放上網) ----
+// 頭像縮圖：最長邊 256px、存成 JPEG。
+// 頭像在畫面上最大約 130~180px，256px 在高解析螢幕也夠清楚；JPEG 的大小只有同尺寸 PNG 的 1/6~1/10，
+// 選手多的時候才不會把瀏覽器約 5MB 的 localStorage 用完。(JPEG 沒有透明，透明處填上與頭像圓框相同的底色 #222)
+const AVATAR_MAX_SIDE = 256;
+function avatarImageToDataUrl(im) {
+    const w = im.naturalWidth || AVATAR_MAX_SIDE, h = im.naturalHeight || AVATAR_MAX_SIDE; // SVG 可能沒有固有尺寸
+    const r = Math.min(1, AVATAR_MAX_SIDE / Math.max(w, h, 1));
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * r)); c.height = Math.max(1, Math.round(h * r));
+    const g = c.getContext('2d'); g.fillStyle = '#222'; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(im, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.85);
+}
 window.pickAvatarFile = function(input) {
     const f = input.files && input.files[0]; if (!f) return;
     const fr = new FileReader();
     fr.onload = () => {
         const im = new Image();
         im.onload = () => {
-            const r = Math.min(1, 360 / Math.max(im.naturalWidth, im.naturalHeight, 1));
-            const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * r)); c.height = Math.max(1, Math.round(im.naturalHeight * r));
-            c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-            document.getElementById('editAvatarUrl').value = c.toDataURL(/jpe?g/i.test(f.type) ? 'image/jpeg' : 'image/png', 0.88);
+            document.getElementById('editAvatarUrl').value = avatarImageToDataUrl(im);
             updateAvatarPreview();
         };
         im.onerror = () => alert('這個檔案不是可以讀取的圖片。');
@@ -4771,15 +4899,16 @@ function cleanArsenalPartName(rawName, instId, shortCat) {
 
 function getDeckCoverHtml(deck) {
     if (!deck || !deck.parts || !deck.parts.TopPart) return `<img src="${ARSENAL_FALLBACK_IMG}" class="deck-img">`;
+    const img = part => escapeHtml(part && part.image ? part.image : ARSENAL_FALLBACK_IMG); // 圖片網址要跳脫後才能放進 src="..."
     if (deck.mode === 'cx2') {
-        let metal = deck.parts.TopPart ? deck.parts.TopPart.image : ARSENAL_FALLBACK_IMG; let over = deck.parts.OverBlade ? deck.parts.OverBlade.image : ARSENAL_FALLBACK_IMG; let lock = deck.parts.LockChip ? deck.parts.LockChip.image : ARSENAL_FALLBACK_IMG;
+        let metal = img(deck.parts.TopPart); let over = img(deck.parts.OverBlade); let lock = img(deck.parts.LockChip);
         return `<div class="stack-container"><img src="${metal}" class="stack-base" onerror="handleArsenalImgError(this)">${deck.parts.OverBlade ? `<img src="${over}" class="stack-mid" onerror="handleArsenalImgError(this)">` : ''}${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx2" onerror="handleArsenalImgError(this)">` : ''}</div>`;
     } 
     else if (deck.mode === 'cx1') {
-        let main = deck.parts.TopPart ? deck.parts.TopPart.image : ARSENAL_FALLBACK_IMG; let lock = deck.parts.LockChip ? deck.parts.LockChip.image : ARSENAL_FALLBACK_IMG;
+        let main = img(deck.parts.TopPart); let lock = img(deck.parts.LockChip);
         return `<div class="stack-container"><img src="${main}" class="stack-base" onerror="handleArsenalImgError(this)">${deck.parts.LockChip ? `<img src="${lock}" class="stack-top-cx1" onerror="handleArsenalImgError(this)">` : ''}</div>`;
     } 
-    return `<img src="${deck.parts.TopPart.image}" class="deck-img" onerror="handleArsenalImgError(this)">`;
+    return `<img src="${img(deck.parts.TopPart)}" class="deck-img" onerror="handleArsenalImgError(this)">`;
 }
 
 function getDeckFullName(deck) {
@@ -4791,8 +4920,6 @@ function getDeckFullName(deck) {
 }
 
 // ---------- 比賽模式分頁 ----------
-let builderSets = null;        // 編輯中的暫存：{ basic: [...], cost: [...], xtreme: [...] }，按「儲存」才寫回選手
-let builderRuleMode = 'basic'; // 目前編輯的分頁
 
 function renderBuilderModeTabs() {
     const box = document.getElementById('builderModeTabs'); if (!box || !builderSets) return;
